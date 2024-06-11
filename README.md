@@ -1,5 +1,8 @@
-# ARCAD-Transformer RPG VSCode extension
-![https://marketplace.visualstudio.com/items?itemName=arcadsoftware.arcad-transformer-rpg](https://img.shields.io/visual-studio-marketplace/v/arcadsoftware.arcad-transformer-rpg)
-![https://marketplace.visualstudio.com/items?itemName=arcadsoftware.arcad-transformer-rpg](https://img.shields.io/visual-studio-marketplace/i/arcadsoftware.arcad-transformer-rpg)
+# ARCAD-Transformer RPG idocumentation branch
 
-[ARCAD-Transformer RPG](https://marketplace.visualstudio.com/items?itemName=arcadsoftware.arcad-transformer-rpg) converts RPG code to Full Free RPG from VSCode.
+## Getting started
+1. Install docsify <p>`npm i docsify-cli -g`</p>
+2. Run docsify <p>`docsify serve docs`</p>
+
+## Deployment
+Any change pushed to this branched gets automatically published here: https://arcad-software.github.io/transformer-rpg-vscode
