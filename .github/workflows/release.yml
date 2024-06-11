@@ -1,0 +1,64 @@
+name: Build release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: main
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    - name: Update version number
+      run: npm version --allow-same-version --no-git-tag-version ${{ github.ref_name }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build and publish
+      env:
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          OPENVSX_TOKEN: ${{ secrets.OPENVSX_TOKEN }}
+      run: |
+        npx @vscode/vsce package
+        npx @vscode/vsce publish --skip-duplicate --packagePath arcad-transformer-rpg-${{ github.ref_name }}.vsix --pat $VSCE_TOKEN
+        npx ovsx publish --skip-duplicate --packagePath arcad-transformer-rpg-${{ github.ref_name }}.vsix --pat $OPENVSX_TOKEN
+
+    - name: Attach vsix
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+        asset_name: arcad-transformer-rpg-${{ github.ref_name }}.vsix
+        file: arcad-transformer-rpg-${{ github.ref_name }}.vsix        
+
+    - name: Commit changes and move release tag
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+        git commit --allow-empty -a -m "Release ${{ github.ref_name }}"
+        git tag -f ${{ github.ref_name }}        
+
+    - name: Push changes
+      run: git push --tags --force
+
+    - name: Bump version number for next cycle
+      run: npm version --no-git-tag-version prerelease --preid dev
+
+    - name: Read new version
+      id: new-version
+      uses: beaconbrigade/package-json-version@v0.3
+
+    - name: Commit version number change
+      run: |
+        git commit -a -m "Starting ${{ steps.new-version.outputs.version }} development"
+        git push
