@@ -3,7 +3,8 @@
   "publisher": "arcadsoftware",
   "displayName": "ARCAD-Transformer RPG",
   "description": "Use ARCAD Transformer RPG to convert your RPG code to Full Free RPG within VSCode.",
-  "version": "0.0.1-dev.0",
+  "version": "0.0.1-dev.0",  
+	"icon": "images/tfrrpg.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/ARCAD-Software/arcad-transformer-rpg"
@@ -47,7 +48,7 @@
     "package": "vsce package --pre-release"
   },
   "devDependencies": {
-    "@halcyontech/vscode-ibmi-types": "^2.6",
+    "@halcyontech/vscode-ibmi-types": "^2.10",
     "rimraf": "^5",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
