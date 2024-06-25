@@ -3,8 +3,8 @@
   "publisher": "arcadsoftware",
   "displayName": "ARCAD-Transformer RPG",
   "description": "Use ARCAD Transformer RPG to convert your RPG code to Full Free RPG within VSCode.",
-  "version": "0.0.1-dev.0",  
-	"icon": "images/tfrrpg.png",
+  "version": "0.0.1-dev.0",
+  "icon": "images/tfrrpg.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/ARCAD-Software/arcad-transformer-rpg"
@@ -37,7 +37,22 @@
   "main": "./dist/extension.js",
   "l10n": "./l10n",
   "contributes": {
-    "commands": []
+    "commands": [
+      {
+        "category": "ARCAD Transformer RPG",
+        "command": "arcad-transformer-rpg.convertToFullyFree",
+        "title": "Transformer : Convert to Fully Free",
+        "enablement": "code-for-ibmi:connected"
+      }
+    ],
+    "menus": {
+     "view/item/context": [
+        {
+          "command": "arcad-transformer-rpg.convertToFullyFree",
+          "when": "view == objectBrowser && viewItem == member"
+        }
+      ]
+    }
   },
   "scripts": {
     "clean": "rimraf dist",
