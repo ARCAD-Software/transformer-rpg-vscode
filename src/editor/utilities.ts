@@ -25,7 +25,7 @@ export function getCaseOptions() {
 }
 
 export function getObjectTypes() {
-    return ['*PGM', '*MODULE', '*NONE'];
+    return ['*PGM', '*MODULE'];
 }
 
 export function getSourceLineDate() {
