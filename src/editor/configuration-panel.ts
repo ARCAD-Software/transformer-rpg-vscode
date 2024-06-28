@@ -6,13 +6,20 @@ import {
     getTruncationOptions, getPrecompilationOptions, getObjectTypes
 } from "./utilities";
 import { generateCommand } from "../rpgcommands/commandUtils";
-import { IBMiMember, MemberItem } from "@halcyontech/vscode-ibmi-types";
+import { CommandResult, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { CommandParams, ConfigManager } from "../configuration";
 import { Code4i } from "../code4i";
 
 const supportedSourceTypes = ['RPGLE', 'SQLRPGLE', 'RPG', 'RPG38', 'RPT', 'RPT38', 'SQLRPG'];
 
 export const convertBool = (value: string): string => value ? '*YES' : '*NO';
+
+interface MemberItem {
+    member: IBMiMember;
+    path: string;
+    parent: any;
+}
+
 
 export async function openShowConfigWindow(node: MemberItem): Promise<void> {
     const member = node.member;
@@ -65,29 +72,44 @@ async function handlePageData(page: any, node: MemberItem): Promise<void> {
     if (page.data.buttons === 'convertnsave') {
         ConfigManager.setParams(commandParams);
     }
-
     const command = generateCommand(commandParams, node.member);
-    await executeConversionCommand(command);
-    await commands.executeCommand('code-for-ibmi.refreshObjectBrowser', (node.member as any).parent);
+    await executeConversionCommand(command).then((cmdresult) => {
+        if (cmdresult !== undefined) {
+            if (cmdresult.code === 0) {
+                window.showInformationMessage(cmdresult.stdout || cmdresult.stderr, { modal: true });
+                if (cmdresult.stdout) {
+                    const message = Code4i.getTools().parseMessages(cmdresult.stdout);
+                    if (message.findId('MSG3867')) {
+                        openConvertedMember(commandParams, node.member.extension);
+                        commands.executeCommand('code-for-ibmi.refreshObjectBrowser', (node.parent));
+                    }
+                }
+            } else {
+                window.showErrorMessage(cmdresult.stderr, { modal: true });
+            }
+        }
+    });
 }
 
-async function executeConversionCommand(command: string): Promise<void> {
+async function executeConversionCommand(command: string): Promise<CommandResult | undefined> {
     try {
-        window.withProgress({
+        return await window.withProgress({
             location: ProgressLocation.Notification,
             title: l10n.t("Converting Source Member to Fully Free Format..."),
             cancellable: false
         }, async () => {
-            const executionResult = await Code4i.getConnection().runCommand({ command });
-            if (executionResult.code === 0) {
-                window.showInformationMessage(executionResult.stdout || executionResult.stderr, { modal: true });
-            } else {
-                window.showErrorMessage(executionResult.stderr);
-            }
+            return await Code4i.getConnection().runCommand({ command });
         });
     } catch (error) {
         window.showErrorMessage(`Error executing conversion command: ${error}`);
     }
+}
+
+async function openConvertedMember(cmd: CommandParams, ext: string): Promise<void> {
+    const path = `${cmd.TOSRCLIB}/${cmd.TOSRCFILE}/${cmd.TOSRCMBR}.${ext}`;
+    Code4i.open(path, {
+        readonly: true,
+    });
 }
 
 function createTabs(member: IBMiMember, config: CommandParams): ComplexTab[] {
