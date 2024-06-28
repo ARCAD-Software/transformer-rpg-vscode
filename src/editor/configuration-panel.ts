@@ -14,10 +14,10 @@ const supportedSourceTypes = ['RPGLE', 'SQLRPGLE', 'RPG', 'RPG38', 'RPT', 'RPT38
 
 export const convertBool = (value: string): string => value ? '*YES' : '*NO';
 
-interface MemberItem {
+export interface MemberItem {
     member: IBMiMember;
     path: string;
-    parent: any;
+    parent: MemberItem;
 }
 
 

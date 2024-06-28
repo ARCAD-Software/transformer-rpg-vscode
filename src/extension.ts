@@ -1,7 +1,6 @@
 import vscode from "vscode";
 import { Code4i } from "./code4i";
-import { openShowConfigWindow } from "./editor/configuration-panel";
-import {  MemberItem } from "@halcyontech/vscode-ibmi-types";
+import { MemberItem, openShowConfigWindow } from "./editor/configuration-panel";
 
 
 export async function activate(context: vscode.ExtensionContext) {
