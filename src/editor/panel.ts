@@ -1,118 +1,16 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
-import { commands, l10n, ProgressLocation, window } from "vscode";
-import {
-    generateOptions, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions,
-    getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep,
-    getTruncationOptions, getPrecompilationOptions, getObjectTypes
-} from "./utilities";
-import { generateCommand } from "../rpgcommands/commandUtils";
-import { CommandResult, IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { CommandParams, ConfigManager } from "../configuration";
+import { l10n } from "vscode";
+import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
+import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions } from "./utilities";
 import { Code4i } from "../code4i";
+import { CommandParams } from "../configuration";
+import { ExecutionReport } from "./controller";
 
-const supportedSourceTypes = ['RPGLE', 'SQLRPGLE', 'RPG', 'RPG38', 'RPT', 'RPT38', 'SQLRPG'];
-
+let massConversion = false;
 export const convertBool = (value: string): string => value ? '*YES' : '*NO';
 
-export interface MemberItem {
-    member: IBMiMember;
-    path: string;
-    parent: MemberItem;
-}
-
-
-export async function openShowConfigWindow(node: MemberItem): Promise<void> {
-    const member = node.member;
-    if (!validateSourceType(member.extension)) {
-        showUnsupportedSourceTypeError();
-        return;
-    }
-
-    const config = ConfigManager.getParams();
-    if (!config) { return; };
-
-    const tabs = createTabs(member, config);
-    const tabwindow = setupTabWindow(tabs);
-
-    const page = await tabwindow.loadPage<any>(l10n.t("ARCAD-Transformer RPG: {0}", member.name));
-    if (page && page.data) {
-        await handlePageData(page, node);
-    }
-}
-
-function validateSourceType(sourceType: string): boolean {
-    return supportedSourceTypes.includes(sourceType.toUpperCase());
-}
-
-function showUnsupportedSourceTypeError(): void {
-    window.showErrorMessage(
-        `This Source Type is not supported. Only ${supportedSourceTypes.join(', ')} are supported.`, { modal: true }
-    );
-}
-
-function setupTabWindow(tabs: ComplexTab[]): CustomUI {
-    return Code4i.customUI()
-        .addComplexTabs(tabs)
-        .addHorizontalRule()
-        .addButtons({ id: "convert", label: l10n.t("Convert") })
-        .addButtons({ id: "convertnsave", label: l10n.t("Convert and Save Config") });
-}
-
-async function handlePageData(page: any, node: MemberItem): Promise<void> {
-    page.panel.dispose();
-    const commandParams = page.data as CommandParams;
-    const validationResult = validateParameters(commandParams);
-
-    if (!validationResult.isvalid) {
-        window.showErrorMessage(l10n.t(validationResult.message));
-        openShowConfigWindow(node);
-        return;
-    }
-
-    if (page.data.buttons === 'convertnsave') {
-        ConfigManager.setParams(commandParams);
-    }
-    const command = generateCommand(commandParams, node.member);
-    await executeConversionCommand(command).then((cmdresult) => {
-        if (cmdresult !== undefined) {
-            if (cmdresult.code === 0) {
-                window.showInformationMessage(cmdresult.stdout || cmdresult.stderr, { modal: true });
-                if (cmdresult.stdout) {
-                    const message = Code4i.getTools().parseMessages(cmdresult.stdout);
-                    if (message.findId('MSG3867')) {
-                        openConvertedMember(commandParams, node.member.extension);
-                        commands.executeCommand('code-for-ibmi.refreshObjectBrowser', (node.parent));
-                    }
-                }
-            } else {
-                window.showErrorMessage(cmdresult.stderr, { modal: true });
-            }
-        }
-    });
-}
-
-async function executeConversionCommand(command: string): Promise<CommandResult | undefined> {
-    try {
-        return await window.withProgress({
-            location: ProgressLocation.Notification,
-            title: l10n.t("Converting Source Member to Fully Free Format..."),
-            cancellable: false
-        }, async () => {
-            return await Code4i.getConnection().runCommand({ command });
-        });
-    } catch (error) {
-        window.showErrorMessage(`Error executing conversion command: ${error}`);
-    }
-}
-
-async function openConvertedMember(cmd: CommandParams, ext: string): Promise<void> {
-    const path = `${cmd.TOSRCLIB}/${cmd.TOSRCFILE}/${cmd.TOSRCMBR}.${ext}`;
-    Code4i.open(path, {
-        readonly: true,
-    });
-}
-
-function createTabs(member: IBMiMember, config: CommandParams): ComplexTab[] {
+export function createTabs(member: IBMiMember, config: CommandParams, massconversion: boolean): ComplexTab[] {
+    massConversion = massconversion;
     return [
         { label: l10n.t("Properties"), fields: createPropertiesUI(member, config).fields },
         { label: l10n.t("Conversion Options"), fields: createConversionOptions(config).fields },
@@ -120,24 +18,35 @@ function createTabs(member: IBMiMember, config: CommandParams): ComplexTab[] {
     ];
 }
 
+export function setupTabWindow(tabs: ComplexTab[]): CustomUI {
+    return Code4i.customUI()
+        .addComplexTabs(tabs)
+        .addHorizontalRule()
+        .addButtons({ id: "convert", label: l10n.t("Convert") })
+        .addButtons({ id: "convertnsave", label: l10n.t("Convert and Save Config") });
+}
+
+
+// Properties Tab
 function createPropertiesUI(member: IBMiMember, config: CommandParams): CustomUI {
     return Code4i.customUI()
         .addHeading(l10n.t("Converted Source Member Properties"), 3)
         .addParagraph(createPropertiesTable(member))
         .addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions(getObjectTypes(), config.OBJTYPE))
         .addHorizontalRule()
-        .addParagraph('Convert Calculation Specs : <code>*FREE</code>')
-        .addParagraph('Convert Declaration Specs : <code>*YES</code>')
+        .addParagraph(l10n.t('Convert Calculation Specs : <code>*FREE</code>'))
+        .addParagraph(l10n.t('Convert Declaration Specs : <code>*YES</code>'))
         .addHorizontalRule()
         .addHeading(l10n.t("Target Source Member Information"), 4)
         .addInput("TOSRCLIB", l10n.t("Library"), "", { default: member.library, readonly: false })
-        .addInput("TOSRCFILE", l10n.t("Source File"), "<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify member name for converted source", { default: config.TOSRCFILE, readonly: false })
-        .addInput("TOSRCMBR", l10n.t("Source Member"), "<code>*FROMMBR</code>: Same destination | Specify member name for converted source", { default: config.TOSRCMBR, readonly: false })
+        .addInput("TOSRCFILE", l10n.t("Source File"), l10n.t("<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify member name for converted source"), { default: config.TOSRCFILE, readonly: false })
+        .addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same destination | Specify member name for converted source"), { default: massConversion ? "*FROMMBR" : config.TOSRCMBR, readonly: massConversion })
         .addHorizontalRule()
         .addCheckbox("REPLACE", l10n.t("Replace Existing Member"), l10n.t("Replace the source member with the converted source"), convertBool(config.REPLACE) === "*YES")
         .addCheckbox("EXPCSPECPY", l10n.t("Expand Copy Book with C-Spec"), l10n.t("Expand Copy Books with C-Spec"), convertBool(config.EXPCSPECPY) === "*YES");
 }
 
+// Conversion Options Tab
 function createConversionOptions(config: CommandParams): CustomUI {
     return Code4i.customUI()
         .addHeading(l10n.t("Conversion Options"), 3)
@@ -161,6 +70,7 @@ function createConversionOptions(config: CommandParams): CustomUI {
         .addSelect("KEYWRDCASE", l10n.t("Case for key words"), generateOptions(getCaseOptions(), config.KEYWRDCASE));
 }
 
+// Advanced Conversion Options Tab
 function createAdvancedOptions(config: CommandParams): CustomUI {
     return Code4i.customUI()
         .addHeading(l10n.t("Advanced Options"), 3)
@@ -194,6 +104,7 @@ function createPropertiesTable(member: IBMiMember): string {
     </table>`;
 }
 
+
 function addRow(key: string, value?: any): string {
     if (value !== undefined) {
         return /*html*/ `<tr>
@@ -207,30 +118,52 @@ function addRow(key: string, value?: any): string {
     }
 }
 
-function validateParameters(params: CommandParams): { isvalid: boolean, message: string } {
-    const requiredFields = [
-        { field: params.TOSRCLIB, message: "Source Library cannot be empty" },
-        { field: params.TOSRCFILE, message: "Target Source File cannot be empty" },
-        { field: params.TOSRCMBR, message: "Target Source Member cannot be empty" }
-    ];
 
-    for (const { field, message } of requiredFields) {
-        const validationResult = validateNonEmpty(field, message);
-        if (!validationResult.isvalid) {
-            return validationResult;
-        }
-    }
-
-    if (params.TOSRCFILE === '*FROMFILE' && params.TOSRCMBR === '*FROMMBR') {
-        return { isvalid: false, message: "*FROMFILE and *FROMMBR cannot both be specified (target must be different than original)" };
-    }
-
-    return { isvalid: true, message: '' };
+export function commandReportUI(report: ExecutionReport[]) {
+    return Code4i.customUI().addHeading(l10n.t("Conversion Results"), 3).addParagraph(createReportTable(report));
 }
+function createReportTable(results: ExecutionReport[]): string {
+    let table = `
+        <style>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid var(--vscode-editor-foreground);
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: var(--vscode-editor-background);
+                color: var(--vscode-editor-foreground);
+            }
+            tr:nth-child(even) {
+                background-color: var(--vscode-editor-background);
+            }
+            tr:hover {
+                background-color: var(--vscode-editor-hoverHighlightBackground);
+            }
+        </style>
+        <table>
+            <tr><th>Source Member Name</th><th>Output</th></tr>`;
 
-function validateNonEmpty(field: string, message: string): { isvalid: boolean, message: string } {
-    if (field === "") {
-        return { isvalid: false, message };
-    }
-    return { isvalid: true, message: '' };
+    results.forEach(result => {
+        let color = 'var(--vscode-editor-foreground)';
+        const msg = result.result.stdout || result.result.stderr;
+        if (msg.includes('MSG3867')) {
+            color = 'var(--vscode-terminal-ansiGreen)';
+        } else if (msg.includes('MSG3866')) {
+            color = 'var(--vscode-editorError-foreground)';
+        } else if (msg.includes('MSG4178')) {
+            color = 'var(--vscode-editorWarning-foreground)';
+        }
+
+        table += `<tr style="color: ${color};">
+            <td>${result.sourceMember.name}</td>
+            <td>${msg}</td>
+        </tr>`;
+    });
+    table += `</table>`;
+    return table;
 }

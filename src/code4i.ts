@@ -1,4 +1,5 @@
 import { CodeForIBMi, IBMiEvent, OpenEditableOptions } from "@halcyontech/vscode-ibmi-types";
+import IBMiContent from "@halcyontech/vscode-ibmi-types/api/IBMiContent";
 import vscode from "vscode";
 
 let codeForIBMi: CodeForIBMi;
@@ -21,13 +22,17 @@ export namespace Code4i {
     codeForIBMi.instance.onEvent(event, todo);
   }
 
+  export function getContent(): IBMiContent {
+    return codeForIBMi.instance.getContent();
+  }
+
   export function customUI() {
     return codeForIBMi.customUI();
   }
   export function getTools() {
     return codeForIBMi.tools;
   }
-  
+
   export function open(path: string, options?: OpenEditableOptions) {
     vscode.commands.executeCommand("code-for-ibmi.openEditable", path, options);
   }

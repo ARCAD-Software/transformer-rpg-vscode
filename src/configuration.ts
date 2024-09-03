@@ -1,5 +1,4 @@
 import { workspace, ConfigurationTarget } from 'vscode';
-
 export interface CommandParams {
     SRCLIB: string;
     SRCMBR: string;
@@ -60,7 +59,5 @@ export class ConfigManager {
 
     static setParams(params: CommandParams) {
         return this.getConfiguration().update('command', params, ConfigurationTarget.Global);
-    }
-
-    
+    } 
 }

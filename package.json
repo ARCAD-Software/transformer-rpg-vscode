@@ -93,16 +93,52 @@
     },
     "commands": [
       {
-        "category": "ARCAD Transformer RPG",
-        "command": "arcad-transformer-rpg.convertToFullyFree",
-        "title": "Transformer : Convert to Fully Free",
+        "category": "TFRRPG",
+        "command": "arcad-tfrrpg-convert",
+        "title": "Convert to Fully Free",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "TFRRPG",
+        "command": "arcad-tfrrpg-conversion-list-add",
+        "title": "Add to Conversion List",
         "enablement": "code-for-ibmi:connected"
       }
     ],
+    "submenus": [
+      {
+        "id": "TFRRPG",
+        "title": "ARCAD Transformer RPG",
+        "label": "ARCAD Transformer RPG"
+      }
+    ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "arcad-tfrrpg-convert",
+          "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
+        }
+      ],
       "view/item/context": [
         {
-          "command": "arcad-transformer-rpg.convertToFullyFree",
+          "submenu": "TFRRPG",
+          "when": "view == objectBrowser && viewItem == member || viewItem == SPF"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "arcad-tfrrpg-convert",
+          "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
+        }
+      ],
+      "TFRRPG": [
+        {
+          "command": "arcad-tfrrpg-convert",
+          "group": "tfrrgp@1"
+        },
+        {
+          "command": "arcad-tfrrpg-conversion-list-add",
+          "group": "tfrrgp@2",
           "when": "view == objectBrowser && viewItem == member"
         }
       ]

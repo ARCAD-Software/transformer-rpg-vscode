@@ -1,3 +1,5 @@
+import { window } from "vscode";
+
 export function generateOptions(options: string[], selectedValue: string) {
     return options.map((type) => {
         return { text: type, description: type, value: type, selected: type === "" ? false : type === selectedValue };
@@ -9,7 +11,7 @@ export function getPrecompilationOptions() {
 }
 
 export function getIndentSizeOptions() {
-    return ['0','1', '2', '3', '4', '5'];
+    return ['0', '1', '2', '3', '4', '5'];
 }
 
 export function getConvertOptions() {
@@ -46,4 +48,16 @@ export function getWarningOptions() {
 
 export function getTruncationOptions() {
     return ['*WNG1', '*WING2', '*YES', '*NO'];
+}
+
+export function showErrorMessage(message: string, modal: boolean = false) {
+    window.showErrorMessage(message, { modal });
+}
+
+export function showInformationMessage(message: string) {
+    window.showInformationMessage(message);
+}
+
+export function showWarningMessage(message: string) {
+    window.showWarningMessage(message);
 }
