@@ -27,10 +27,12 @@ export async function openConfigWindow(param: WindowConfig): Promise<void> {
 
     const page = await tabwindow.loadPage<any>(l10n.t("ARCAD-Transformer RPG: {0}", param.member.name));
     if (page && page.data) {
+        const commandParameters = page.data as CommandParams;
+        page.panel.dispose();
         if (param.massconvt && param.getMembers) {
-            await convertMembers(page.data, param.member.library, param.getMembers);
+            await convertMembers(commandParameters, param.member.library, param.getMembers);
         } else {
-            ConfigManager.setParams(page.data);
+            ConfigManager.setParams(commandParameters);
             handleConversion(config, param.member, param.parentnode);
         }
     }
@@ -60,10 +62,10 @@ async function convertMembers(data: CommandParams, library: string, getMembers: 
     if (isConfirmtoConvert) {
         await window.withProgress({
             location: ProgressLocation.Notification,
-            title: l10n.t("Converting Members"),
+            title: l10n.t("TFRRPG"),
             cancellable: true
         }, async (progress, token) => {
-            const updatedList = await updateMemberObjectTypes(sourceMembersList, library);
+            const updatedList = await updateMemberObjectTypes(sourceMembersList, library, progress, token);
             await convertMembersWithProgress(data, updatedList, progress, token);
         });
     }
@@ -124,8 +126,10 @@ function showConversionReport(report: ExecutionReport[]): void {
     resultWindow.loadPage(l10n.t("Conversion Report"));
 }
 
-async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: string): Promise<{ objectType: string, member: IBMiMember }[]> {
+async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: string, progress: { report: (value: { increment: number, message: string }) => void }, token: CancellationToken): Promise<{ objectType: string, member: IBMiMember }[]> {
     const connection = Code4i.getConnection();
+
+
     const libraries = [memberLibrary, ...(connection.config?.libraryList || []).filter(l => l !== memberLibrary)];
     const cache: { [name: string]: string } = {};
 
@@ -152,6 +156,12 @@ async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: str
     const result = [];
 
     for (const member of members) {
+        if (token.isCancellationRequested) {
+            window.showInformationMessage(l10n.t("Process cancelled"));
+            break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+        progress.report({ increment: 0, message: l10n.t("Updating object type for {0}", member.name) });
         const objectType = await findObjectType(member.name);
         result.push({ objectType, member });
     }

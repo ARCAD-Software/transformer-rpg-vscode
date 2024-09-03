@@ -93,7 +93,7 @@ function createAdvancedOptions(config: CommandParams): CustomUI {
         .addSelect("NUMTRUNCB", l10n.t("ADD, SUB {Other}:"), generateOptions(getTruncationOptions(), config.NUMTRUNCB))
         .addSelect("NUMTRUNCM", l10n.t("MULT:"), generateOptions(getTruncationOptions(), config.NUMTRUNCM))
         .addSelect("NUMTRUNCD", l10n.t("DIV:"), generateOptions(getTruncationOptions(), config.NUMTRUNCD));
-}
+}    
 
 function createPropertiesTable(member: IBMiMember): string {
     return `<table>
@@ -153,9 +153,9 @@ function createReportTable(results: ExecutionReport[]): string {
         const msg = result.result.stdout || result.result.stderr;
         if (msg.includes('MSG3867')) {
             color = 'var(--vscode-terminal-ansiGreen)';
-        } else if (msg.includes('MSG3866')) {
+        } else if (msg.includes('MSG3866') || msg.includes('MSG3540') || msg.includes('MSG3995')) {
             color = 'var(--vscode-editorError-foreground)';
-        } else if (msg.includes('MSG4178')) {
+        } else if (msg.includes('MSG4178') || msg.includes('CPF9801')) {
             color = 'var(--vscode-editorWarning-foreground)';
         }
 

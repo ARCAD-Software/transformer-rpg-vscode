@@ -31,9 +31,7 @@ export async function activate(context: ExtensionContext) {
 						}
 					},
 				});
-			} else {
-				window.showErrorMessage("Unable to determine member information. Please ensure the active editor or node is correctly configured.");
-			}
+			} 
 		})
 	);
 	console.log("ARCAD-Transformer RPG activated");
@@ -70,6 +68,10 @@ function getMemberinfo(node: MemberItem | undefined, editor: TextEditor | undefi
 	try {
 		if (node) {
 			if (node.contextValue === NodeContext.MEMBER && node.member) {
+				if(node.member.extension && !validateSourceType(node.member.extension)) {
+					showUnsupportedSourceTypeError();
+					return undefined;
+				}
 				return node.member;
 			}
 
