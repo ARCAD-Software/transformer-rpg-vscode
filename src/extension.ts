@@ -2,8 +2,8 @@ import { ExtensionContext, commands, window, l10n, TextEditor, ProgressLocation 
 import { Code4i } from "./code4i";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { FilterType } from "@halcyontech/vscode-ibmi-types/api/Filter";
-import { openConfigWindow } from "./editor/controller";
-import { MemberItem } from "./editor/model";
+import { openConfigWindow } from "./main/controller";
+import { MemberItem } from "./main/model";
 
 const supportedSourceTypes = ['RPGLE', 'SQLRPGLE', 'RPG', 'RPG38', 'RPT', 'RPT38', 'SQLRPG'];
 
