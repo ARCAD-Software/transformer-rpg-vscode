@@ -37,8 +37,36 @@
   "main": "./dist/extension.js",
   "l10n": "./l10n",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "arcad-tfrrpg-explorer",
+          "title": "%title%",
+          "icon": "$(wand)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "id": "arcad-tfrrpg-explorer-welcome",
+        "title": "%title%",
+        "icon": "$(wand)",
+        "enablement": "code-for-ibmi:connected",
+        "contents": "%arcad-tfrrpg-explorer%",
+        "view": "arcad-tfrrpg-explorer"
+      }
+    ],
+    "views": {
+      "arcad-tfrrpg-explorer": [
+        {
+          "id": "arcad-tfrrpg-conversion-list",
+          "name": "Conversion List",
+          "when": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
+        }
+      ]
+    },
     "configuration": {
-      "title": "ARCAD Transformer RPG",
+      "title": "%title%",
       "properties": {
         "arcad-transformer-rpg.command": {
           "type": "object",
@@ -88,58 +116,219 @@
             "ALPHTONUM": "*YES",
             "KEEPDSIND": "*NO"
           }
+        },
+        "arcad-transformer-rpg.conversionList": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "connectionname": {
+                "type": "string",
+                "description": "Name of the connection"
+              },
+              "listname": {
+                "type": "string",
+                "description": "Name of the list"
+              },
+              "listdescription": {
+                "type": "string",
+                "description": "Description of the list"
+              },
+              "library": {
+                "type": "string",
+                "description": "Library name"
+              },
+              "sourcefile": {
+                "type": "string",
+                "description": "Source file name"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "targetmember": {
+                      "type": "string",
+                      "description": "Target member name"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "Status of the item",
+                      "enum": [
+                        -1,
+                        1,
+                        2
+                      ]
+                    },
+                    "srctype": {
+                      "type": "string",
+                      "description": "Source type"
+                    },
+                    "objtype": {
+                      "type": "string",
+                      "description": "Object type"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Message related to the item"
+                    },
+                    "member": {
+                      "type": "string",
+                      "description": "Member name"
+                    },
+                    "library": {
+                      "type": "string",
+                      "description": "Library name"
+                    },
+                    "conversiondate": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Date of conversion"
+                    }
+                  },
+                  "required": [
+                    "targetmember",
+                    "status",
+                    "srctype",
+                    "objtype",
+                    "member",
+                    "library"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "connectionname",
+              "items"
+            ]
+          }
         }
       }
     },
     "commands": [
       {
-        "category": "TFRRPG",
-        "command": "arcad-tfrrpg-convert",
-        "title": "Convert to Fully Free",
+        "category": "tfrrpg",
+        "command": "tfrrpg-member-convert",
+        "title": "%arcad-tfrrpg-member-convert%",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "TFRRPG",
-        "command": "arcad-tfrrpg-conversion-list-add",
-        "title": "Add to Conversion List",
-        "enablement": "code-for-ibmi:connected"
+        "category": "tfrrpg",
+        "command": "tfrrpg-list-refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "category": "tfrrpg",
+        "title": "%arcad-tfrrpg-list-create%",
+        "command": "tfrrpg-list-create",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(add)"
+      },
+      {
+        "category": "tfrrpg",
+        "title": "%arcad-tfrrpg-list-delete%",
+        "command": "tfrrpg-list-delete",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(trash)"
+      },
+      {
+        "category": "tfrrpg",
+        "title": "%arcad-tfrrpg-member-convert%",
+        "command": "tfrrpg-member-convert"
+      },
+      {
+        "category": "tfrrpg",
+        "title": "%arcad-tfrrpg-list-add%",
+        "command": "tfrrpg-list-add"
+      },
+      {
+        "category": "tfrrpg",
+        "title": "%arcad-tfrrpg-list-add-multiple%",
+        "command": "tfrrpg-list-add-multiple"
+      },
+      {
+        "category": "tfrrpg",
+        "title": "%arcad-tfrrpg-list-item-delete%",
+        "command": "tfrrpg-list-item-delete",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(trash)"
+      },
+      {
+        "category": "tfrrpg",
+        "title": "%arcad-tfrrpg-list-item-update-objtype%",
+        "command": "tfrrpg-list-item-update-objtype",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(references)"
       }
     ],
     "submenus": [
       {
-        "id": "TFRRPG",
+        "id": "arcad-tfrrpg",
         "title": "ARCAD Transformer RPG",
         "label": "ARCAD Transformer RPG"
       }
     ],
     "menus": {
+      "view/title": [
+        {
+          "command": "tfrrpg-list-create",
+          "when": "view == arcad-tfrrpg-conversion-list",
+          "group": "navigation"
+        },
+        {
+          "command": "tfrrpg-list-refresh",
+          "when": "view == arcad-tfrrpg-conversion-list",
+          "group": "navigation"
+        }
+      ],
       "commandPalette": [
         {
-          "command": "arcad-tfrrpg-convert",
+          "command": "tfrrpg-member-convert",
           "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
         }
       ],
       "view/item/context": [
         {
-          "submenu": "TFRRPG",
+          "submenu": "arcad-tfrrpg",
           "when": "view == objectBrowser && viewItem == member || viewItem == SPF"
+        },
+        {
+          "command": "tfrrpg-list-delete",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionList.*/",
+          "group": "inline"
+        },
+        {
+          "command": "tfrrpg-list-item-delete",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem.*/",
+          "group": "inline"
+        },
+        {
+          "command": "tfrrpg-list-item-update-objtype",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversion.*/",
+          "group": "inline"
         }
       ],
       "editor/context": [
         {
-          "command": "arcad-tfrrpg-convert",
+          "command": "tfrrpg-member-convert",
           "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
         }
       ],
-      "TFRRPG": [
+      "arcad-tfrrpg": [
         {
-          "command": "arcad-tfrrpg-convert",
+          "command": "tfrrpg-member-convert",
           "group": "tfrrgp@1"
         },
         {
-          "command": "arcad-tfrrpg-conversion-list-add",
+          "command": "tfrrpg-list-add",
           "group": "tfrrgp@2",
           "when": "view == objectBrowser && viewItem == member"
+        },
+        {
+          "command": "tfrrpg-list-add-multiple",
+          "group": "tfrrgp@3",
+          "when": "view == objectBrowser && viewItem == SPF"
         }
       ]
     }

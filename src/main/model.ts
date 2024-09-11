@@ -1,11 +1,21 @@
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { FilterType } from "@halcyontech/vscode-ibmi-types/api/Filter";
 
-export interface MemberItem {
+
+interface Connection {
+    name: string;
+    host: string;
+    port: number;
+    username: string;
+}
+
+export type Connections = Connection[];
+
+export interface IMemberItem {
     member: IBMiMember;
     object: IBMiMember;
     path: string;
-    parent: MemberItem;
+    parent: IMemberItem;
     contextValue: string;
     filter: Filter;
     sort: SortOptions;
@@ -26,3 +36,4 @@ export interface Filter {
     protected: boolean
     filterType: FilterType
 }
+

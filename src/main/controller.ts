@@ -1,10 +1,13 @@
 import { CommandResult, IBMiMember, MemberItem } from "@halcyontech/vscode-ibmi-types";
 import { CommandParams, ConfigManager } from "../configuration";
-import { l10n, window, ProgressLocation, CancellationToken } from "vscode";
-import { commandReportUI, createTabs, setupTabWindow } from "./panel";
+import { l10n, window, ProgressLocation, CancellationToken, commands } from "vscode";
+import { commandReportUI, createTabs, setupTabWindow } from "./webviews/panel";
 import { executeConversionCommand, handleConversion } from "./conversion";
 import { generateCommand } from "../rpgcommands/commandUtils";
 import { Code4i } from "../code4i";
+import { refreshIbmIExplorer, refreshListExplorer } from "../extension";
+import { IMemberItem } from "./model";
+import { ConversionList } from "./views/conversionListBrowser";
 
 interface WindowConfig {
     member: IBMiMember;
@@ -167,6 +170,112 @@ async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: str
     }
 
     return result;
+}
+export async function addMembersToConversionList(members: IBMiMember[] | IMemberItem): Promise<void> {
+    try {
+        const conversionList = await ConfigManager.getConversionList();
+        if (!conversionList) {
+            window.showErrorMessage(l10n.t("Failed to fetch the conversion list."));
+        }
+        if (conversionList.length === 0) {
+            const selection = await window.showInformationMessage(
+                l10n.t("No conversion list found. Create a conversion list first."),
+                l10n.t("Create new Conversion List"),
+                l10n.t("Cancel")
+            );
+            if (selection === l10n.t("Create new Conversion List")) {
+                await commands.executeCommand('tfrrpg-list-create');
+            }
+            return;
+        }
+
+        const selectedListName = await window.showQuickPick(
+            conversionList.map(list => list.listname),
+            { title: l10n.t("Select Conversion List") }
+        );
+
+        if (!selectedListName) {
+            window.showInformationMessage(l10n.t("No conversion list selected."));
+            return;
+        }
+
+        const selectedList = conversionList.find(list => list.listname === selectedListName);
+        if (!selectedList) {
+            window.showErrorMessage(l10n.t("Selected conversion list not found."));
+            return;
+        }
+
+        let membersToAdd: IBMiMember[] = [];
+
+        if (Array.isArray(members)) {
+            const selectedMembers = await window.showQuickPick(
+                members.map(member => member.name),
+                { title: l10n.t("Select Members to Add"), canPickMany: true }
+            );
+
+            if (!selectedMembers || selectedMembers.length === 0) {
+                window.showInformationMessage(l10n.t("No members selected."));
+                return;
+            }
+
+            membersToAdd = members.filter(member => selectedMembers && selectedMembers.includes(member.name));
+        } else {
+            membersToAdd = [members.member];
+        }
+
+        if (membersToAdd.length === 0) {
+            window.showInformationMessage(l10n.t("No members to add."));
+            return;
+        }
+
+        const existingMembers = selectedList ? new Set(selectedList.items.map(item => item.member)) : new Set();
+        const newMembers = membersToAdd.filter(member => !existingMembers.has(member.name));
+
+        if (newMembers.length === 0) {
+            window.showInformationMessage(l10n.t("All selected members already exist in the conversion list."));
+        }
+
+
+        if (membersToAdd.length > newMembers.length) {
+            const existingMemberNames = membersToAdd
+                .filter(member => existingMembers.has(member.name))
+                .map(member => member.name)
+                .join(', ');
+
+            window.showInformationMessage(
+                l10n.t("The following members already exist in the conversion list: {0}", existingMemberNames)
+            );
+        }
+
+        if (selectedList) {
+            addMembersToList(selectedList, newMembers);
+            await ConfigManager.updateConversionList(selectedList);
+        }
+
+
+        const message = newMembers.length > 1 ? "Members" : "Member" + " added to the conversion list.";
+        window.showInformationMessage(l10n.t(message));
+
+        refreshListExplorer();
+    } catch (error) {
+        window.showErrorMessage(l10n.t("An error occurred while adding members to the conversion list."));
+        console.error(error);
+    }
+}
+
+function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
+    members.forEach(memberItem => {
+        list.items.push({
+            conversiondate: memberItem.created || "",
+            library: memberItem.library,
+            member: memberItem.name,
+            message: "",
+            objtype: "",
+            srctype: memberItem.extension,
+            status: 0,
+            targetmember: memberItem.name
+        });
+    });
 }
 
 

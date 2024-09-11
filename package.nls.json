@@ -1,3 +1,11 @@
 {
-  
+    "title":"Transformer RPG",
+    "arcad-tfrrpg-member-convert": "Convert to Fully Free",
+    "arcad-tfrrpg-list-create": "Create a new Conversion List",
+    "arcad-tfrrpg-list-delete": "Delete Conversion List",
+    "arcad-tfrrpg-list-item-delete": "Remove from Conversion List",
+    "arcad-tfrrpg-list-add" : "Add to Conversion List",
+    "arcad-tfrrpg-list-add-multiple" : "Add Members to List",
+    "arcad-tfrrpg-list-item-update-objtype" : "Update Object Type",
+    "arcad-tfrrpg-explorer": "Use ARCAD Transformer RPG to convert your RPG code to Full Free RPG within VSCode.[Create a new Conversion List](command:tfrrpg-list-create)"
 }

@@ -1,10 +1,10 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
 import { l10n } from "vscode";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions } from "./utilities";
-import { Code4i } from "../code4i";
-import { CommandParams } from "../configuration";
-import { ExecutionReport } from "./controller";
+import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions } from "../utilities";
+import { Code4i } from "../../code4i";
+import { CommandParams } from "../../configuration";
+import { ExecutionReport } from "../controller";
 
 let massConversion = false;
 export const convertBool = (value: string): string => value ? '*YES' : '*NO';
