@@ -5,9 +5,10 @@ import { commandReportUI, createTabs, setupTabWindow } from "./webviews/panel";
 import { executeConversionCommand, handleConversion } from "./conversion";
 import { generateCommand } from "../rpgcommands/commandUtils";
 import { Code4i } from "../code4i";
-import { refreshIbmIExplorer, refreshListExplorer } from "../extension";
+import { getMembersList, refreshListExplorer } from "../extension";
 import { IMemberItem } from "./model";
 import { ConversionList } from "./views/conversionListBrowser";
+import { ConversionStatus } from "./conversionMessage";
 
 interface WindowConfig {
     member: IBMiMember;
@@ -74,13 +75,12 @@ async function convertMembers(data: CommandParams, library: string, getMembers: 
     }
 }
 
-
-async function convertMembersWithProgress(
+export async function convertMembersWithProgress(
     commandParam: CommandParams,
-    memberList: { objectType: string, member: IBMiMember }[],
-    progress: { report: (value: { increment: number, message: string }) => void },
-    token: CancellationToken
-): Promise<void> {
+    memberList: { objectType: string; member: IBMiMember }[] | IBMiMember[],
+    progress: { report: (value: { increment: number; message: string }) => void },
+    token: CancellationToken,
+): Promise<ExecutionReport[]> {  // Modify the return type to ExecutionReport[]
     const totalMembers = memberList.length;
     const executionResult: ExecutionReport[] = [];
     let previousPercentCompleted = 0;
@@ -90,26 +90,43 @@ async function convertMembersWithProgress(
             window.showInformationMessage(l10n.t("Conversion cancelled"));
             break;
         }
-        const member = memberList[i].member;
-        commandParam.OBJTYPE = memberList[i].objectType;
+
+        let member: IBMiMember;
+        if ("member" in memberList[i]) {
+            const item = memberList[i] as { objectType: string; member: IBMiMember };
+            member = item.member;
+            commandParam.OBJTYPE = item.objectType;
+        } else {
+            member = memberList[i] as IBMiMember;
+            commandParam.OBJTYPE = member.type || "";
+            commandParam.TOSRCMBR = member.name || "";
+        }
+
         await convertMember(commandParam, member, executionResult);
         const currentPercentCompleted = ((i + 1) / totalMembers) * 100;
         const increment = currentPercentCompleted - previousPercentCompleted;
         previousPercentCompleted = currentPercentCompleted;
-        progress.report({ increment, message: l10n.t("Performed Conversion for {0} of {1} members", i + 1, totalMembers) });
+        progress.report({
+            increment,
+            message: l10n.t("Performed Conversion for {0} of {1} members", i + 1, totalMembers),
+        });
     }
 
     if (executionResult.length === totalMembers) {
-        window.showInformationMessage(
-            l10n.t("All members converted successfully!"),
-            l10n.t("Show Conversion Report")
-        ).then((selection) => {
-            if (selection === l10n.t("Show Conversion Report")) {
-                showConversionReport(executionResult);
-            }
-        });
+        window
+            .showInformationMessage(
+                l10n.t("All members converted successfully!"),
+                l10n.t("Show Conversion Report")
+            )
+            .then((selection) => {
+                if (selection === l10n.t("Show Conversion Report")) {
+                    showConversionReport(executionResult);
+                }
+            });
     }
+    return executionResult;
 }
+
 
 
 async function convertMember(
@@ -118,6 +135,8 @@ async function convertMember(
     executionResult: ExecutionReport[]
 ): Promise<void> {
     const cmd = generateCommand(data, member);
+    console.log(cmd);
+
     const result = await executeConversionCommand(cmd);
     if (result) {
         executionResult.push({ sourceMember: member, result });
@@ -171,13 +190,12 @@ async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: str
 
     return result;
 }
-export async function addMembersToConversionList(members: IBMiMember[] | IMemberItem): Promise<void> {
+
+export async function addMembersToConversionList(member: IMemberItem): Promise<void> {
     try {
         const conversionList = await ConfigManager.getConversionList();
-        if (!conversionList) {
-            window.showErrorMessage(l10n.t("Failed to fetch the conversion list."));
-        }
-        if (conversionList.length === 0) {
+
+        if (!conversionList || conversionList.length === 0) {
             const selection = await window.showInformationMessage(
                 l10n.t("No conversion list found. Create a conversion list first."),
                 l10n.t("Create new Conversion List"),
@@ -189,6 +207,7 @@ export async function addMembersToConversionList(members: IBMiMember[] | IMember
             return;
         }
 
+        // Prompt the user to select a conversion list
         const selectedListName = await window.showQuickPick(
             conversionList.map(list => list.listname),
             { title: l10n.t("Select Conversion List") }
@@ -207,56 +226,43 @@ export async function addMembersToConversionList(members: IBMiMember[] | IMember
 
         let membersToAdd: IBMiMember[] = [];
 
-        if (Array.isArray(members)) {
-            const selectedMembers = await window.showQuickPick(
-                members.map(member => member.name),
-                { title: l10n.t("Select Members to Add"), canPickMany: true }
-            );
-
-            if (!selectedMembers || selectedMembers.length === 0) {
-                window.showInformationMessage(l10n.t("No members selected."));
-                return;
-            }
-
-            membersToAdd = members.filter(member => selectedMembers && selectedMembers.includes(member.name));
+        if (member.member) {
+            membersToAdd.push(member.member);
         } else {
-            membersToAdd = [members.member];
+            const selectedMembers = await getSelectedMembers(member);
+            if (selectedMembers) {
+                membersToAdd = selectedMembers;
+            }
         }
-
-        if (membersToAdd.length === 0) {
-            window.showInformationMessage(l10n.t("No members to add."));
-            return;
-        }
-
-        const existingMembers = selectedList ? new Set(selectedList.items.map(item => item.member)) : new Set();
-        const newMembers = membersToAdd.filter(member => !existingMembers.has(member.name));
+        const existingMembers = new Set(selectedList.items.map(item => item.member));
+        const newMembers = membersToAdd.filter(m => !existingMembers.has(m.name));
 
         if (newMembers.length === 0) {
             window.showInformationMessage(l10n.t("All selected members already exist in the conversion list."));
+            return;
         }
 
+        const existingMemberNames = membersToAdd
+            .filter(m => existingMembers.has(m.name))
+            .map(m => m.name)
+            .join(', ');
 
-        if (membersToAdd.length > newMembers.length) {
-            const existingMemberNames = membersToAdd
-                .filter(member => existingMembers.has(member.name))
-                .map(member => member.name)
-                .join(', ');
-
+        if (existingMemberNames) {
             window.showInformationMessage(
                 l10n.t("The following members already exist in the conversion list: {0}", existingMemberNames)
             );
         }
 
-        if (selectedList) {
-            addMembersToList(selectedList, newMembers);
-            await ConfigManager.updateConversionList(selectedList);
-        }
+        addMembersToList(selectedList, newMembers);
+        await ConfigManager.updateConversionList(selectedList);
 
-
-        const message = newMembers.length > 1 ? "Members" : "Member" + " added to the conversion list.";
-        window.showInformationMessage(l10n.t(message));
+        window.showInformationMessage(
+            l10n.t("{0} added to the conversion list.", newMembers.length > 1 ? "Members" : "Member")
+        );
 
         refreshListExplorer();
+
+
     } catch (error) {
         window.showErrorMessage(l10n.t("An error occurred while adding members to the conversion list."));
         console.error(error);
@@ -272,10 +278,46 @@ function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
             message: "",
             objtype: "",
             srctype: memberItem.extension,
-            status: 0,
-            targetmember: memberItem.name
+            status: ConversionStatus.NA,
+            targetmember: memberItem.file
         });
     });
 }
 
+async function getSelectedMembers(node: IMemberItem): Promise<IBMiMember[] | undefined> {
+    const memberQuickPick = window.createQuickPick();
+    let selectedMembers: IBMiMember[] | undefined;
 
+    try {
+        memberQuickPick.show();
+        memberQuickPick.title = l10n.t("Select Members to Add");
+        memberQuickPick.busy = true;
+        memberQuickPick.canSelectMany = true;
+        memberQuickPick.ignoreFocusOut = true;
+
+        const members = await getMembersList(node);
+        memberQuickPick.items = members.map(member => ({ label: member.name, description: member.type }));
+        memberQuickPick.busy = false;
+
+        await new Promise<void>((resolve) => {
+            memberQuickPick.onDidAccept(() => {
+                selectedMembers = memberQuickPick.selectedItems
+                    .map(item => members.find(m => m.name === item.label))
+                    .filter(m => m !== undefined) as IBMiMember[];
+                resolve();
+                memberQuickPick.dispose();
+            });
+
+            memberQuickPick.onDidHide(() => {
+                resolve();
+                memberQuickPick.dispose();
+            });
+        });
+
+        return selectedMembers;
+
+    } catch (error) {
+        console.error("Error selecting members:", error);
+        return undefined;
+    }
+}

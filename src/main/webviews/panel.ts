@@ -5,6 +5,7 @@ import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOption
 import { Code4i } from "../../code4i";
 import { CommandParams } from "../../configuration";
 import { ExecutionReport } from "../controller";
+import { getStatusColor } from "../conversionMessage";
 
 let massConversion = false;
 export const convertBool = (value: string): string => value ? '*YES' : '*NO';
@@ -14,6 +15,13 @@ export function createTabs(member: IBMiMember, config: CommandParams, massconver
     return [
         { label: l10n.t("Properties"), fields: createPropertiesUI(member, config).fields },
         { label: l10n.t("Conversion Options"), fields: createConversionOptions(config).fields },
+        { label: l10n.t("Advanced Conversion Options"), fields: createAdvancedOptions(config).fields }
+    ];
+}
+
+export function createTargetLibTabs(config: CommandParams): ComplexTab[] {
+    return [
+        { label: l10n.t("Conversion Options"), fields: createConversionOptions(config, true).fields },
         { label: l10n.t("Advanced Conversion Options"), fields: createAdvancedOptions(config).fields }
     ];
 }
@@ -35,7 +43,7 @@ function createPropertiesUI(member: IBMiMember, config: CommandParams): CustomUI
         .addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions(getObjectTypes(), config.OBJTYPE))
         .addHorizontalRule()
         .addParagraph(l10n.t('Convert Calculation Specs : <code>*FREE</code>'))
-        .addParagraph(l10n.t('Convert Declaration Specs : <code>*YES</code>'))
+        .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs : <code>*YES</code>"), convertBool(config.CVTDCLSPEC) === "*YES")
         .addHorizontalRule()
         .addHeading(l10n.t("Target Source Member Information"), 4)
         .addInput("TOSRCLIB", l10n.t("Library"), "", { default: member.library, readonly: false })
@@ -47,10 +55,17 @@ function createPropertiesUI(member: IBMiMember, config: CommandParams): CustomUI
 }
 
 // Conversion Options Tab
-function createConversionOptions(config: CommandParams): CustomUI {
-    return Code4i.customUI()
-        .addHeading(l10n.t("Conversion Options"), 3)
-        .addParagraph('FULLYFREE : <code>*YES</code>')
+function createConversionOptions(config: CommandParams, targetConversion = false): CustomUI {
+    const ui = Code4i.customUI()
+        .addHeading(l10n.t("Conversion Options"), 3);
+
+    if (targetConversion) {
+        ui.addCheckbox("REPLACE", l10n.t("Replace Existing Member"), l10n.t("Replace the source member with the converted source"), convertBool(config.REPLACE) === "*YES")
+            .addCheckbox("EXPCSPECPY", l10n.t("Expand Copy Book with C-Spec"), l10n.t("Expand Copy Books with C-Spec"), convertBool(config.EXPCSPECPY) === "*YES")
+            .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs : <code>*YES</code>"), convertBool(config.CVTDCLSPEC) === "*YES");
+    }
+
+    ui.addParagraph('FULLYFREE : <code>*YES</code>')
         .addInput("MAXNOTFREE", l10n.t("Max number of blocks not free"), "", { default: config.MAXNOTFREE, readonly: true })
         .addInput("FIRSTCOL", l10n.t("First Column (fully free)"), "", { default: config.FIRSTCOL.toString(), readonly: true })
         .addHorizontalRule()
@@ -68,7 +83,10 @@ function createConversionOptions(config: CommandParams): CustomUI {
         .addSelect("BLTFNCCASE", l10n.t("Case for the B.i.F."), generateOptions(getCaseOptions(), config.BLTFNCCASE))
         .addSelect("SPCWRDCASE", l10n.t("Case for special words"), generateOptions(getCaseOptions(), config.SPCWRDCASE))
         .addSelect("KEYWRDCASE", l10n.t("Case for key words"), generateOptions(getCaseOptions(), config.KEYWRDCASE));
+
+    return ui;
 }
+
 
 // Advanced Conversion Options Tab
 function createAdvancedOptions(config: CommandParams): CustomUI {
@@ -93,7 +111,7 @@ function createAdvancedOptions(config: CommandParams): CustomUI {
         .addSelect("NUMTRUNCB", l10n.t("ADD, SUB {Other}:"), generateOptions(getTruncationOptions(), config.NUMTRUNCB))
         .addSelect("NUMTRUNCM", l10n.t("MULT:"), generateOptions(getTruncationOptions(), config.NUMTRUNCM))
         .addSelect("NUMTRUNCD", l10n.t("DIV:"), generateOptions(getTruncationOptions(), config.NUMTRUNCD));
-}    
+}
 
 function createPropertiesTable(member: IBMiMember): string {
     return `<table>
@@ -149,20 +167,13 @@ function createReportTable(results: ExecutionReport[]): string {
             <tr><th>Source Member Name</th><th>Output</th></tr>`;
 
     results.forEach(result => {
-        let color = 'var(--vscode-editor-foreground)';
         const msg = result.result.stdout || result.result.stderr;
-        if (msg.includes('MSG3867')) {
-            color = 'var(--vscode-terminal-ansiGreen)';
-        } else if (msg.includes('MSG3866') || msg.includes('MSG3540') || msg.includes('MSG3995')) {
-            color = 'var(--vscode-editorError-foreground)';
-        } else if (msg.includes('MSG4178') || msg.includes('CPF9801')) {
-            color = 'var(--vscode-editorWarning-foreground)';
-        }
+        const color = getStatusColor(msg);
 
         table += `<tr style="color: ${color};">
-            <td>${result.sourceMember.name}</td>
-            <td>${msg}</td>
-        </tr>`;
+                    <td>${result.sourceMember.name}</td>
+                    <td>${msg}</td>
+                </tr>`;
     });
     table += `</table>`;
     return table;

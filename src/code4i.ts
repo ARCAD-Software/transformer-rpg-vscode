@@ -33,6 +33,7 @@ export namespace Code4i {
     return codeForIBMi.tools;
   }
 
+
   export function open(path: string, options?: OpenEditableOptions) {
     vscode.commands.executeCommand("code-for-ibmi.openEditable", path, options);
   }

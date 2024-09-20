@@ -8,6 +8,12 @@ import { showErrorMessage } from "./utilities";
 
 const MSGID_SUCCEED = 'MSG3867';
 
+export interface MemberParam {
+    library: string;
+    file: string;
+    name: string;
+    extension: string;
+}
 export function convertBool(value: string): string {
     return value ? '*YES' : '*NO';
 }
@@ -36,7 +42,7 @@ function processCommandResult(cmdResult: CommandResult | undefined, params: Comm
         if (cmdResult.stdout) {
             const messages = Code4i.getTools().parseMessages(cmdResult.stdout);
             if (messages.findId(MSGID_SUCCEED)) {
-                openConvertedMember(params, member.extension);
+                openMember({ library: params.TOSRCLIB, file: params.TOSRCFILE, name: params.TOSRCMBR, extension: member.extension },true);
                 commands.executeCommand('code-for-ibmi.refreshObjectBrowser', parentnode || '');
             }
         }
@@ -45,9 +51,9 @@ function processCommandResult(cmdResult: CommandResult | undefined, params: Comm
     }
 }
 
-async function openConvertedMember(cmd: CommandParams, ext: string): Promise<void> {
-    const path = `${cmd.TOSRCLIB}/${cmd.TOSRCFILE}/${cmd.TOSRCMBR}.${ext}`;
-    Code4i.open(path, { readonly: true });
+export async function openMember(param: MemberParam, readonly: boolean): Promise<void> {
+    const path = `${param.library}/${param.file}/${param.name}.${param.extension}`;
+    Code4i.open(path, { readonly: readonly });
 }
 
 export async function executeConversionCommand(command: string): Promise<CommandResult | undefined> {

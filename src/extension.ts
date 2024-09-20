@@ -1,7 +1,6 @@
 import { ExtensionContext, commands, window, l10n, TextEditor, ProgressLocation } from "vscode";
 import { Code4i } from "./code4i";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { FilterType } from "@halcyontech/vscode-ibmi-types/api/Filter";
 import { addMembersToConversionList, openConfigWindow } from "./main/controller";
 import { ConversionListProvider, ConversionListNode, ExplorerNode, ConversionItemNode, BaseConversionNode } from "./main/views/conversionListBrowser";
 import { IMemberItem } from "./main/model";
@@ -21,7 +20,12 @@ const COMMANDS = {
   DELETE_LIST: 'tfrrpg-list-delete',
   REFRESH_OBJECT_BROWSER: 'code-for-ibmi.refreshObjectBrowser',
   DELETE_LIST_ITEM: 'tfrrpg-list-item-delete',
-  UPDATE_OBJECT_TYPE: 'tfrrpg-list-item-update-objtype'
+  UPDATE_OBJECT_TYPE: 'tfrrpg-list-item-update-objtype',
+  CONVERT_TARGET_MEMBER: 'tfrrpg-list-item-member-convert',
+  EDIT_SOURCE: 'tfrrpg-list-item-source-edit',
+  EDIT_CONVERTED_SOURCE: 'tfrrpg-list-item-converted-source-edit',
+  FOCUS_OBJECT_BROWSER: 'tfrrpg-list-objectbrowser.focus',
+
 };
 
 export function activate(context: ExtensionContext): void {
@@ -47,7 +51,7 @@ function registerCommands(context: ExtensionContext): void {
   context.subscriptions.push(
     commands.registerCommand(COMMANDS.MEMBER_CONVERT, handleMemberConvert),
     commands.registerCommand(COMMANDS.ADD_MEMBER, addMembersToConversionList),
-    commands.registerCommand(COMMANDS.ADD_MULTIPLE_MEMBERS, handleAddMultipleMembers),
+    commands.registerCommand(COMMANDS.ADD_MULTIPLE_MEMBERS, addMembersToConversionList),
   );
 }
 
@@ -86,7 +90,10 @@ function initializeTreeView(context: ExtensionContext): void {
     commands.registerCommand(COMMANDS.DELETE_LIST, (node: ConversionListNode) => node.deleteConversionList(node)),
     commands.registerCommand(COMMANDS.DELETE_LIST_ITEM, (node: ConversionItemNode) => node.removeMemberFromList(node)),
     commands.registerCommand(COMMANDS.UPDATE_OBJECT_TYPE, (node: ConversionItemNode | ConversionListNode) => { node.updateMemberObjectType(); }),
-
+    commands.registerCommand(COMMANDS.CONVERT_TARGET_MEMBER, (node: ConversionItemNode | ConversionListNode) => { node.initConversion(); }),
+    commands.registerCommand(COMMANDS.EDIT_SOURCE, (node: ConversionItemNode) => { node.editMember(); }),
+    commands.registerCommand(COMMANDS.EDIT_CONVERTED_SOURCE, (node: ConversionItemNode) => { node.editConvertedMember(); }),
+    commands.registerCommand(COMMANDS.FOCUS_OBJECT_BROWSER, (node: ConversionListNode) => { node.openIBMiObjectBrowser(); }),
   );
 }
 
@@ -101,31 +108,38 @@ export function refreshIbmIExplorer(node?: any): void {
 function validateSourceType(sourceType: string): boolean {
   return SUPPORTED_SOURCE_TYPES.has(sourceType.toUpperCase());
 }
-
-async function getMembersList(node: IMemberItem): Promise<IBMiMember[]> {
-  return window.withProgress({
-    location: ProgressLocation.Notification,
-    title: l10n.t("Fetching members list..."),
-    cancellable: false
-  }, async () => {
-    try {
-      const members = await Code4i.getContent().getMemberList({
-        library: node.object.library,
-        sourceFile: node.object.name,
-        members: node.filter.member,
-        extensions: node.filter.memberType,
-        filterType: node.filter.filterType as FilterType,
-        sort: node.sort
-      });
-      return filterMembers(members);
-    } catch (error) {
-      window.showErrorMessage(l10n.t("Failed to fetch members list. Please check your connection or configuration."));
-      return [];
-    }
-  });
+export async function getMembersList(node: IMemberItem, showProgress = false): Promise<IBMiMember[]> {
+  if (showProgress) {
+    return window.withProgress({
+      location: ProgressLocation.Notification,
+      title: l10n.t("Fetching members list..."),
+      cancellable: false
+    }, async () => {
+      return fetchMembers(node);
+    });
+  } else {
+    return fetchMembers(node);
+  }
 }
 
-// Filter members based on supported source types
+async function fetchMembers(node: IMemberItem): Promise<IBMiMember[]> {
+  try {
+    const members = await Code4i.getContent().getMemberList({
+      library: node.object.library,
+      sourceFile: node.object.name,
+      members: node.filter.member,
+      extensions: node.filter.memberType,
+      sort: node.sort
+    });
+    return filterMembers(members);
+  } catch (error) {
+    window.showErrorMessage(l10n.t("Failed to fetch members list. Please check your connection or configuration."));
+    return [];
+  }
+}
+
+
+
 function filterMembers(members: IBMiMember[]): IBMiMember[] {
   return members.filter(member => validateSourceType(member.extension));
 }
@@ -165,15 +179,15 @@ function showUnsupportedSourceTypeError(): void {
   );
 }
 
-async function handleAddMultipleMembers(node: IMemberItem): Promise<void> {
-  const members = await getMembersList(node);
-  if (members.length === 0) {
-    window.showErrorMessage(l10n.t("No members found in the source file. Please check your configuration."));
-    return;
-  }
+// async function handleAddMultipleMembers(node: IMemberItem): Promise<void> {
+//   const members = await getMembersList(node, true);
+//   if (members.length === 0) {
+//     window.showErrorMessage(l10n.t("No members found in the source file. Please check your configuration."));
+//     return;
+//   }
 
-  addMembersToConversionList(members);
-}
+//   addMembersToConversionList(members);
+// }
 
 
 
