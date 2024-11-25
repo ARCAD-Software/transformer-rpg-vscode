@@ -389,7 +389,7 @@
     "package": "vsce package --pre-release"
   },
   "devDependencies": {
-    "@halcyontech/vscode-ibmi-types": "^2.10",
+    "@halcyontech/vscode-ibmi-types": "^2.13",
     "rimraf": "^5",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
