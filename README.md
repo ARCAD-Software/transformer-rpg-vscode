@@ -1,4 +1,4 @@
-# ARCAD-Transformer RPG idocumentation branch
+# ARCAD-Transformer RPG documentation branch
 
 ## Getting started
 1. Install docsify <p>`npm i docsify-cli -g`</p>
