@@ -1,11 +1,10 @@
-import { ExtensionContext, commands, window, TextEditor, ProgressLocation } from "vscode";
+import { ExtensionContext, commands, window, ProgressLocation, Uri } from "vscode";
 import { Code4i } from "./code4i";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { addMembersToConversionList, openConfigWindow } from "./main/controller";
 import { ConversionListProvider, ConversionListNode, ExplorerNode, ConversionItemNode } from "./main/views/conversionListBrowser";
 import { IMemberItem } from "./main/model";
 import { MESSAGES, COMMANDS } from "./utils/constants";
-import { URI } from "@vscode/prompt-tsx/dist/base/util/vs/common/uri";
 import { filterMembers, validateSourceType } from "./utils/helper";
 
 const NodeContext = {
@@ -17,7 +16,7 @@ const NodeContext = {
 export function activate(context: ExtensionContext): void {
   Code4i.initialize();
   initializeExtension(context);
-  
+
   Code4i.onEvent('connected', () => {
     console.log(MESSAGES.CONNECTED);
   });
@@ -41,7 +40,7 @@ function registerCommands(context: ExtensionContext): void {
   );
 }
 
-async function handleMemberConvert(item: IMemberItem | URI): Promise<void> {
+async function handleMemberConvert(item: IMemberItem | Uri): Promise<void> {
   let member: IBMiMember | undefined;
   let isMassConverison = false;
 

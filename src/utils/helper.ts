@@ -9,7 +9,7 @@ export function generateOptions(options: string[], selectedValue: string) {
 }
 
 export function getPrecompilationOptions() {
-    return ['*ARCAD', '**ALDON'];
+    return ['*ARCAD', '*ALDON'];
 }
 
 export function getIndentSizeOptions() {
@@ -45,11 +45,11 @@ export function getBooleanOptionsWithKeep() {
     return ['*NO', '*YES', '*KEEP'];
 }
 export function getWarningOptions() {
-    return ['*WNG1', '*YES', '*NO'];
+    return ['*YES', '*NO'];
 }
 
 export function getTruncationOptions() {
-    return ['*WNG1', '*WING2', '*YES', '*NO'];
+    return ['*WNG1', '*WNG2', '*YES', '*NO'];
 }
 
 export function validateSourceType(sourceType: string): boolean {
