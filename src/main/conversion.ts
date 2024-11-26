@@ -1,10 +1,9 @@
 
-import { commands, l10n, ProgressLocation, window, workspace } from "vscode";
+import { commands, l10n, ProgressLocation, window } from "vscode";
 import { CommandResult, IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { CommandParams, ConfigManager } from "../configuration";
+import { CommandParams } from "../configuration";
 import { Code4i } from "../code4i";
 import { generateCommand } from "../rpgcommands/commandUtils";
-import { showErrorMessage } from "./utilities";
 
 const MSGID_SUCCEED = 'MSG3867';
 
@@ -34,20 +33,42 @@ export async function handleConversion(params: CommandParams, member: IBMiMember
     });
 }
 
-function processCommandResult(cmdResult: CommandResult | undefined, params: CommandParams, member: IBMiMember, parentnode?: any) {
+function processCommandResult(
+    cmdResult: CommandResult | undefined,
+    params: CommandParams,
+    member: IBMiMember,
+    parentnode?: any
+) {
     if (!cmdResult) { return; };
 
     if (cmdResult.code === 0) {
-        window.showInformationMessage(cmdResult.stdout || cmdResult.stderr, { modal: true });
+        const successMessage = cmdResult.stdout || cmdResult.stderr || "Command executed successfully.";
+        window
+            .showInformationMessage(successMessage, "Show Output")
+            .then((action) => {
+                if (action === "Show Output") {
+                    window.showInformationMessage(cmdResult.stdout);
+                }
+            });
+
         if (cmdResult.stdout) {
             const messages = Code4i.getTools().parseMessages(cmdResult.stdout);
             if (messages.findId(MSGID_SUCCEED)) {
-                openMember({ library: params.TOSRCLIB, file: params.TOSRCFILE, name: params.TOSRCMBR, extension: member.extension },true);
-                commands.executeCommand('code-for-ibmi.refreshObjectBrowser', parentnode || '');
+                openMember(
+                    {
+                        library: params.TOSRCLIB,
+                        file: params.TOSRCFILE.toUpperCase() === "*FROMFILE" ? member.file : params.TOSRCFILE.toUpperCase(),
+                        name: params.TOSRCMBR.toUpperCase() === "*FROMMBR" ? member.name : params.TOSRCMBR.toUpperCase(),
+                        extension: member.extension || "",
+                    },
+                    true
+                );
+                commands.executeCommand("code-for-ibmi.refreshObjectBrowser", parentnode || "");
             }
         }
     } else {
-        window.showErrorMessage(cmdResult.stderr, { modal: true });
+        const errorMessage = cmdResult.stderr || "An error occurred while executing the command.";
+        window.showErrorMessage(errorMessage);
     }
 }
 
@@ -60,7 +81,7 @@ export async function executeConversionCommand(command: string): Promise<Command
     try {
         return await Code4i.getConnection().runCommand({ command });
     } catch (error: any) {
-        showErrorMessage(l10n.t("Error executing conversion command: {0}", error));
+        window.showErrorMessage(l10n.t("Error executing conversion command: {0}", error));
     }
     return undefined;
 }

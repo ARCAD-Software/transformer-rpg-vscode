@@ -1,5 +1,5 @@
 import { workspace, ConfigurationTarget } from 'vscode';
-import { ConversionItem, ConversionItemNode, ConversionList } from './main/views/conversionListBrowser';
+import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
 import { Connections } from './main/model';
 export interface CommandParams {
     SRCLIB: string;
@@ -46,6 +46,7 @@ export interface CommandParams {
     EMPTYCMT: string;
     ALPHTONUM: string;
     KEEPDSIND: string;
+    buttons: string;
 }
 
 

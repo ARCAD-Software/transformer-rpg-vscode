@@ -37,14 +37,13 @@ export async function ConversionListItemStepper(): Promise<ConversionList | unde
     }
 }
 
-
 async function getIbmiConnection(input: MultiStepInput, state: State): Promise<InputStep> {
     const connection = await input.showQuickPick({
         title: l10n.t('Choose IBMi Connection'),
         step: 1,
         totalSteps: state.totalSteps,
-        items: getIbmiConnections().map(c => ({ label: c.name, description: `Username: ${c.username} | ${c.host}:${c.port}` })) || [],
-        placeholder: 'Select a connection',
+        items: getIbmiConnections().map(c => ({ label: c.name, description: l10n.t('Username: {0} | {1}:{2}', c.username, c.host, c.port) })) || [],
+        placeholder: l10n.t('Select a connection'),
         shouldResume: () => Promise.resolve(false),
     });
 
@@ -57,7 +56,7 @@ async function getListName(input: MultiStepInput, state: State): Promise<InputSt
         title: l10n.t('List Name'),
         step: state.step + 1,
         totalSteps: state.totalSteps,
-        prompt: 'Enter the name of the conversion list',
+        prompt: l10n.t('Enter the name of the conversion list'),
         validate: async (value) => validateListName(value),
         shouldResume: () => Promise.resolve(false),
         value: state.listName || '',
@@ -67,17 +66,16 @@ async function getListName(input: MultiStepInput, state: State): Promise<InputSt
 
 }
 
-
 async function getLibraryName(input: MultiStepInput, state: State): Promise<InputStep> {
     state.libraryName = await input.showInputBox({
         title: l10n.t('Target Library Name'),
         step: state.step + 1,
         totalSteps: state.totalSteps,
-        prompt: 'Enter the name of the Target library',
+        prompt: l10n.t('Enter the name of the Target library'),
         shouldResume: () => Promise.resolve(false),
         validate: async (value) => {
             if (!value) {
-                return 'Library name is required.';
+                return l10n.t('Library name is required.');
             }
             return undefined;
         },
@@ -91,11 +89,11 @@ async function getSourceFileName(input: MultiStepInput, state: State) {
         title: l10n.t('Target Source File Name'),
         step: state.step + 1,
         totalSteps: state.totalSteps,
-        prompt: 'Enter the name of the Target Source file',
+        prompt: l10n.t('Enter the name of the Target Source file'),
         shouldResume: () => Promise.resolve(false),
         validate: async (value) => {
             if (!value) {
-                return 'Source file name is required.';
+                return l10n.t('Source file name is required.');
             }
             return undefined;
         },
@@ -105,15 +103,13 @@ async function getSourceFileName(input: MultiStepInput, state: State) {
 
 async function validateListName(name: string): Promise<string | undefined> {
     if (!name) {
-        return 'List name is required.';
+        return l10n.t('List name is required.');
     }
     const existingLists = await ConfigManager.getConversionList();
     if (existingLists.some(list => list.listname === name)) {
-        return `The list name "${name}" already exists. Please choose a different name.`;
+        return l10n.t('The list name "{0}" already exists. Please choose a different name.', name);
     }
     return undefined;
-
-
 }
 
 function getIbmiConnections(): Connections {

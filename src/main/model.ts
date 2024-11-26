@@ -11,7 +11,7 @@ interface Connection {
 
 export type Connections = Connection[];
 
-export interface IMemberItem {
+export type IMemberItem = {
     member: IBMiMember;
     object: IBMiMember;
     path: string;

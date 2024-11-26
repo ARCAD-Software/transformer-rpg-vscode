@@ -1,14 +1,14 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
 import { l10n } from "vscode";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions } from "../utilities";
+import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions } from "../../utils/helper";
 import { Code4i } from "../../code4i";
 import { CommandParams } from "../../configuration";
 import { ExecutionReport } from "../controller";
 import { getStatusColor } from "../conversionMessage";
+import { convertBool } from "../conversion";
 
 let massConversion = false;
-export const convertBool = (value: string): string => value ? '*YES' : '*NO';
 
 export function createTabs(member: IBMiMember, config: CommandParams, massconversion: boolean): ComplexTab[] {
     massConversion = massconversion;
@@ -28,6 +28,7 @@ export function createTargetLibTabs(config: CommandParams): ComplexTab[] {
 
 export function setupTabWindow(tabs: ComplexTab[]): CustomUI {
     return Code4i.customUI()
+        .addHeading(l10n.t(`${massConversion ? "Mass Conversion ✅" : "Single Member Conversion ✅"}`), 2)
         .addComplexTabs(tabs)
         .addHorizontalRule()
         .addButtons({ id: "convert", label: l10n.t("Convert") })
@@ -118,7 +119,7 @@ function createPropertiesTable(member: IBMiMember): string {
         ${addRow(l10n.t("Source Library"), member.library)}
         ${addRow(l10n.t("Source File"), member.file)}
         ${addRow(l10n.t("Source Member"), member.name)}
-        ${addRow(l10n.t("Source Type"), member.extension)}
+        ${member.extension ? addRow(l10n.t("Source Type"), member.extension) : ""}
     </table>`;
 }
 
@@ -130,7 +131,7 @@ function addRow(key: string, value?: any): string {
             <td>${value}</td>
         </tr>`;
     } else {
-        return `<tr> 
+        return /*html*/ `<tr> 
             <td colspan="2"><h3><u>${key}</u></h3></td>
         </tr>`;
     }
@@ -141,7 +142,7 @@ export function commandReportUI(report: ExecutionReport[]) {
     return Code4i.customUI().addHeading(l10n.t("Conversion Results"), 3).addParagraph(createReportTable(report));
 }
 function createReportTable(results: ExecutionReport[]): string {
-    let table = `
+    return /* html */ `
         <style>
             table {
                 width: 100%;
@@ -164,17 +165,17 @@ function createReportTable(results: ExecutionReport[]): string {
             }
         </style>
         <table>
-            <tr><th>Source Member Name</th><th>Output</th></tr>`;
-
-    results.forEach(result => {
-        const msg = result.result.stdout || result.result.stderr;
-        const color = getStatusColor(msg);
-
-        table += `<tr style="color: ${color};">
-                    <td>${result.sourceMember.name}</td>
-                    <td>${msg}</td>
-                </tr>`;
-    });
-    table += `</table>`;
-    return table;
+            <tr>
+              <th>${l10n.t("Source Member Name")}</th>
+              <th>${l10n.t("Output")}</th>
+            </tr>
+            ${results.map(result => /* html */`
+              <tr style="color: ${getStatusColor(result.result.stdout || result.result.stderr)};">
+                  <td>${result.sourceMember.name}</td>
+                  <td>${result.result.stdout || result.result.stderr}</td>
+              </tr>`
+    ).join("")}
+        </table>`;
 }
+
+

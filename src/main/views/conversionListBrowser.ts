@@ -7,7 +7,6 @@ import {
     MarkdownString,
     ProgressLocation,
     ProviderResult,
-    QuickPickItem,
     ThemeColor,
     ThemeIcon,
     TreeDataProvider,
@@ -18,7 +17,6 @@ import {
 import { CommandParams, ConfigManager } from "../../configuration";
 import { ConversionListItemStepper } from "../conversion-item";
 import { refreshListExplorer } from "../../extension";
-import { showInformationMessage } from "../utilities";
 import { createTargetLibTabs, setupTabWindow } from "../webviews/panel";
 import { convertMembersWithProgress, ExecutionReport } from "../controller";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
@@ -48,9 +46,9 @@ export interface ConversionList {
 
 const statusSuffixes: { [key in ConversionStatus]: string } = {
     [ConversionStatus.NA]: '',
-    [ConversionStatus.SUCCEED]: '_succeed',
-    [ConversionStatus.WARNING]: '_warning',
-    [ConversionStatus.FAILED]: '_failed'
+    [ConversionStatus.SUCCEED]: l10n.t('_succeed'),
+    [ConversionStatus.WARNING]: l10n.t('_warning'),
+    [ConversionStatus.FAILED]: l10n.t('_failed')
 };
 
 
@@ -88,7 +86,7 @@ export class ConversionListProvider implements TreeDataProvider<ExplorerNode> {
         ConversionListItemStepper().then(async (item) => {
             if (item) {
                 ConfigManager.addConversionList(item).then(() => {
-                    showInformationMessage("Conversion list added successfully.");
+                    window.showInformationMessage(l10n.t("Conversion list added successfully."));
                     this.refresh();
                 });
 
@@ -119,14 +117,14 @@ export abstract class ExplorerNode extends TreeItem {
 class NoListItem extends ExplorerNode {
     constructor() {
         super(
-            "Create new conversion list",
+            l10n.t("Create new conversion list"),
             "noList",
             TreeItemCollapsibleState.None,
             { codicon: 'add', themeColor: 'info', refreshable: false }
         );
         this.command = {
             command: "tfrrpg-list-create",
-            title: "Add new conversion list"
+            title: l10n.t("Add new conversion list")
         };
     }
 
@@ -138,7 +136,7 @@ class NoListItem extends ExplorerNode {
 export abstract class BaseConversionNode extends ExplorerNode {
     async updateObjectTypeForMembers(items: ConversionItem[], parentLabel: string): Promise<void> {
         const objectTypes = ["*PGM", "*MODULE", "*NONE"];
-        const response = await window.showQuickPick(objectTypes, { placeHolder: "Select member type" });
+        const response = await window.showQuickPick(objectTypes, { placeHolder: l10n.t("Select member type") });
 
         if (response) {
             for (const item of items) {
@@ -238,17 +236,17 @@ export class ConversionListNode extends BaseConversionNode {
                 if (response) {
                     const selectedItems = items.filter(item => response.includes(item.member));
                     if (!this.validateObjectType(selectedItems)) {
-                        showInformationMessage(l10n.t("Please update object type for all selected members."));
+                        window.showWarningMessage(l10n.t("Please update object type for all selected members."));
                         return;
                     }
                     const ibmiMembers: IBMiMember[] = [];
                     for (const member of selectedItems) {
-                        ibmiMembers.push({ extension: member.srctype, file: member.targetmember, library: member.library, name: member.member, type: member.objtype });
+                        ibmiMembers.push({ extension: member.srctype, file: member.targetmember, library: member.library, name: member.member, objtype: member.objtype });
                     }
-                    const report = await this.convertMembers(ibmiMembers, listItem.targetlibrary, listItem.targetsourcefile, this.conversionList?.listname);
+                    const report = await this.convertMembers(ibmiMembers, listItem.targetlibrary, listItem.targetsourcefile, this.conversionList.listname);
                     if (report.length) {
                         if (this.conversionList) {
-                            this.conversionList?.items.forEach((item, index) => {
+                            this.conversionList.items.forEach((item, index) => {
                                 item.status = setConverionStatus(report[index].result.stdout || report[index].result.stderr || "");
                                 item.message = report[index].result.stderr || report[index].result.stdout || "";
                             });
@@ -276,10 +274,10 @@ export class ConversionListNode extends BaseConversionNode {
 
     public deleteConversionList(node: ExplorerNode): void {
         if (node.label !== undefined) {
-            window.showInformationMessage('Are you sure you want to delete ${node.label}?', "Yes", "No").then((response) => {
-                if (response === "Yes") {
+            window.showInformationMessage(l10n.t('Are you sure you want to delete {0}?', node.label as string), l10n.t("Yes"), l10n.t("No")).then((response) => {
+                if (response === l10n.t("Yes")) {
                     if (node.label !== undefined) {
-                        ConfigManager.removeConversionList(node.label.toString()).then(() => {
+                        ConfigManager.removeConversionList(node.label as string).then(() => {
                             refreshListExplorer(this.parent);
                         });
                     }
@@ -292,9 +290,9 @@ export class ConversionListNode extends BaseConversionNode {
         commands.executeCommand("objectBrowser.focus");
     }
 
-     
 
-  
+
+
 }
 
 export class ConversionItemNode extends BaseConversionNode {
@@ -308,7 +306,7 @@ export class ConversionItemNode extends BaseConversionNode {
             item.member,
             `conversionItem${suffix}`,
             TreeItemCollapsibleState.None,
-            { codicon: 'diff-modified', themeColor: status, refreshable: true },
+            { codicon: 'settings-gear', themeColor: status, refreshable: true },
             parent
         );
         this.description = `${item.member} | ${item.objtype}`;
@@ -338,9 +336,9 @@ export class ConversionItemNode extends BaseConversionNode {
 
     removeMemberFromList(node: ExplorerNode): void {
         if (node.label) {
-            window.showInformationMessage(`Are you sure you want to remove ${node.label} from the list?`, "Yes", "No").then(async (response) => {
-                if (response === "Yes" && node.parent?.label && node.label) {
-                    await ConfigManager.removeConversionItem(node.parent.label.toString(), node.label.toString());
+            window.showInformationMessage(l10n.t('Are you sure you want to remove {0} from the list?', node.label as string), l10n.t("Yes"), l10n.t("No")).then(async (response) => {
+                if (response === l10n.t("Yes") && node.parent?.label && node.label) {
+                    await ConfigManager.removeConversionItem(node.parent.label.toString(), node.label as string);
                     refreshListExplorer(node.parent);
                 }
             });
@@ -360,7 +358,7 @@ export class ConversionItemNode extends BaseConversionNode {
                     file: this.conversionItem.targetmember,
                     library: this.conversionItem.library,
                     name: this.conversionItem.member,
-                    type: this.conversionItem.objtype
+                    objtype: this.conversionItem.objtype
                 }],
                 conversionList.targetlibrary,
                 conversionList.targetsourcefile,

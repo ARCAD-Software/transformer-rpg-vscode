@@ -42,7 +42,7 @@
         {
           "id": "arcad-tfrrpg-explorer",
           "title": "%title%",
-          "icon": "$(wand)"
+          "icon": "$(symbol-property)"
         }
       ]
     },

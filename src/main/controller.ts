@@ -29,15 +29,17 @@ export async function openConfigWindow(param: WindowConfig): Promise<void> {
     const tabs = createTabs(param.member, config, param.massconvt);
     const tabwindow = setupTabWindow(tabs);
 
-    const page = await tabwindow.loadPage<any>(l10n.t("ARCAD-Transformer RPG: {0}", param.member.name));
+    const page = await tabwindow.loadPage<CommandParams>(l10n.t("ARCAD-Transformer RPG: {0}", param.member.name));
     if (page && page.data) {
-        const commandParameters = page.data as CommandParams;
+        const commandParameters = page.data;
         page.panel.dispose();
         if (param.massconvt && param.getMembers) {
             await convertMembers(commandParameters, param.member.library, param.getMembers);
         } else {
-            ConfigManager.setParams(commandParameters);
-            handleConversion(config, param.member, param.parentnode);
+            if (page.data.buttons === 'convertnsave') {
+                ConfigManager.setParams(commandParameters);
+            }
+            handleConversion(commandParameters, param.member, param.parentnode);
         }
     }
 }
@@ -80,7 +82,7 @@ export async function convertMembersWithProgress(
     memberList: { objectType: string; member: IBMiMember }[] | IBMiMember[],
     progress: { report: (value: { increment: number; message: string }) => void },
     token: CancellationToken,
-): Promise<ExecutionReport[]> {  // Modify the return type to ExecutionReport[]
+): Promise<ExecutionReport[]> {
     const totalMembers = memberList.length;
     const executionResult: ExecutionReport[] = [];
     let previousPercentCompleted = 0;
@@ -98,8 +100,8 @@ export async function convertMembersWithProgress(
             commandParam.OBJTYPE = item.objectType;
         } else {
             member = memberList[i] as IBMiMember;
-            commandParam.OBJTYPE = member.type || "";
             commandParam.TOSRCMBR = member.name || "";
+            commandParam.OBJTYPE = member.objtype || "";
         }
 
         await convertMember(commandParam, member, executionResult);
@@ -238,7 +240,6 @@ export async function addMembersToConversionList(member: IMemberItem): Promise<v
         const newMembers = membersToAdd.filter(m => !existingMembers.has(m.name));
 
         if (newMembers.length === 0) {
-            window.showInformationMessage(l10n.t("All selected members already exist in the conversion list."));
             return;
         }
 
@@ -257,7 +258,7 @@ export async function addMembersToConversionList(member: IMemberItem): Promise<v
         await ConfigManager.updateConversionList(selectedList);
 
         window.showInformationMessage(
-            l10n.t("{0} added to the conversion list.", newMembers.length > 1 ? "Members" : "Member")
+            l10n.t("{0} added to the conversion list.", newMembers.length > 1 ? l10n.t("Members") : l10n.t("Member"))
         );
 
         refreshListExplorer();
@@ -277,7 +278,7 @@ function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
             member: memberItem.name,
             message: "",
             objtype: "",
-            srctype: memberItem.extension,
+            srctype: memberItem.extension!,
             status: ConversionStatus.NA,
             targetmember: memberItem.file
         });
@@ -296,7 +297,7 @@ async function getSelectedMembers(node: IMemberItem): Promise<IBMiMember[] | und
         memberQuickPick.ignoreFocusOut = true;
 
         const members = await getMembersList(node);
-        memberQuickPick.items = members.map(member => ({ label: member.name, description: member.type }));
+        memberQuickPick.items = members.map(member => ({ label: member.name, description: member.text }));
         memberQuickPick.busy = false;
 
         await new Promise<void>((resolve) => {
@@ -317,7 +318,7 @@ async function getSelectedMembers(node: IMemberItem): Promise<IBMiMember[] | und
         return selectedMembers;
 
     } catch (error) {
-        console.error("Error selecting members:", error);
+        console.error(l10n.t("Error selecting members:"), error);
         return undefined;
     }
 }

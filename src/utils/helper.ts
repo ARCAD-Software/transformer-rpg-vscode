@@ -1,4 +1,6 @@
 import { window } from "vscode";
+import { SUPPORTED_SOURCE_TYPES } from "./constants";
+import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 
 export function generateOptions(options: string[], selectedValue: string) {
     return options.map((type) => {
@@ -50,14 +52,10 @@ export function getTruncationOptions() {
     return ['*WNG1', '*WING2', '*YES', '*NO'];
 }
 
-export function showErrorMessage(message: string, modal: boolean = false) {
-    window.showErrorMessage(message, { modal });
+export function validateSourceType(sourceType: string): boolean {
+    return SUPPORTED_SOURCE_TYPES.includes(sourceType.toUpperCase());
 }
 
-export function showInformationMessage(message: string) {
-    window.showInformationMessage(message);
-}
-
-export function showWarningMessage(message: string) {
-    window.showWarningMessage(message);
+export function filterMembers(members: IBMiMember[]): IBMiMember[] {
+    return members.filter(member => validateSourceType(member.extension!));
 }
