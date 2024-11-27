@@ -324,7 +324,7 @@ export class ConversionItemNode extends BaseConversionNode {
         tooltip.supportThemeIcons = true;
         tooltip.appendMarkdown(l10n.t(`$(symbol-interface)Member Name: {0}  \n`, listItem.member));
         tooltip.appendMarkdown(l10n.t(`$(library)Source Library: {0}  \n`, listItem.library));
-        tooltip.appendMarkdown(l10n.t(`$(file-code) Source Member: {0}  \n`, listItem.targetmember));
+        tooltip.appendMarkdown(l10n.t(`$(file-code) Source File: {0}  \n`, listItem.targetmember));
         tooltip.appendMarkdown(l10n.t(`$(link) Source Type: {0}  \n`, listItem.srctype));
         tooltip.appendMarkdown(l10n.t(`$(comment) Object Type: {0}  \n`, listItem.objtype));
         tooltip.appendMarkdown(l10n.t(`$(comment) Conversion Date: {0}  \n`, listItem.conversiondate.toString()));

@@ -8,6 +8,10 @@ export function generateOptions(options: string[], selectedValue: string) {
     });
 }
 
+export function convertBool(value: string): string {
+    return value ? '*YES' : '*NO';
+}
+
 export function getPrecompilationOptions() {
     return ['*ARCAD', '*ALDON'];
 }

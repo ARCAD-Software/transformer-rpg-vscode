@@ -2,7 +2,7 @@
   "name": "arcad-transformer-rpg",
   "publisher": "arcadsoftware",
   "displayName": "ARCAD-Transformer RPG",
-  "description": "Use ARCAD Transformer RPG to convert your RPG code to Full Free RPG within VSCode.",
+  "description": "%description%",
   "version": "0.0.1-dev.0",
   "icon": "images/tfrrpg.png",
   "repository": {
@@ -58,7 +58,7 @@
       "arcad-tfrrpg-explorer": [
         {
           "id": "arcad-tfrrpg-conversion-list",
-          "name": "Conversion List",
+          "name": "%conversion_list%",
           "when": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
         }
       ]
@@ -122,23 +122,23 @@
             "properties": {
               "connectionname": {
                 "type": "string",
-                "description": "Name of the connection"
+                "description": "%connectionname_description%"
               },
               "listname": {
                 "type": "string",
-                "description": "Name of the list"
+                "description": "%listname_description%"
               },
               "description": {
                 "type": "string",
-                "description": "Description of the list"
+                "description": "%description_description%"
               },
               "targetlibrary": {
                 "type": "string",
-                "description": "Library name"
+                "description": "%targetlibrary_description%"
               },
               "targetsourcefile": {
                 "type": "string",
-                "description": "Source file name"
+                "description": "%targetsourcefile_description%"
               },
               "items": {
                 "type": "array",
@@ -147,11 +147,11 @@
                   "properties": {
                     "targetmember": {
                       "type": "string",
-                      "description": "Target member name"
+                      "description": "%targetmember_description%"
                     },
                     "status": {
                       "type": "integer",
-                      "description": "Status of the item",
+                      "description": "%status_description%",
                       "enum": [
                         -1,
                         0,
@@ -161,28 +161,28 @@
                     },
                     "srctype": {
                       "type": "string",
-                      "description": "Source type"
+                      "description": "%srctype_description%"
                     },
                     "objtype": {
                       "type": "string",
-                      "description": "Object type"
+                      "description": "%objtype_description%"
                     },
                     "message": {
                       "type": "string",
-                      "description": "Message related to the item"
+                      "description": "%message_description%"
                     },
                     "member": {
                       "type": "string",
-                      "description": "Member name"
+                      "description": "%member_description%"
                     },
                     "library": {
                       "type": "string",
-                      "description": "Library name"
+                      "description": "%library_description%"
                     },
                     "conversiondate": {
                       "type": "string",
                       "format": "date-time",
-                      "description": "Date of conversion"
+                      "description": "%conversiondate_description%"
                     }
                   },
                   "required": [
@@ -214,7 +214,7 @@
       {
         "category": "tfrrpg",
         "command": "tfrrpg-list-refresh",
-        "title": "Refresh",
+        "title": "%refresh%",
         "icon": "$(refresh)",
         "enablement": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
       },
@@ -291,8 +291,8 @@
     "submenus": [
       {
         "id": "arcad-tfrrpg",
-        "title": "ARCAD Transformer RPG",
-        "label": "ARCAD Transformer RPG"
+        "title": "%arcad_transformer_rpg%",
+        "label": "%arcad_transformer_rpg_label%"
       }
     ],
     "menus": {

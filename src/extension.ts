@@ -152,8 +152,8 @@ function getMemberInfo(node: IMemberItem | undefined): IBMiMember | undefined {
       if (node.contextValue.toLowerCase() === NodeContext.SPF) {
         return {
           library: node.object.library,
-          file: '*ALL',
-          name: node.object.name,
+          file: node.object.name,
+          name: '*ALL',
         };
       }
     }

@@ -11,6 +11,7 @@ interface Connection {
 
 export type Connections = Connection[];
 
+
 export type IMemberItem = {
     member: IBMiMember;
     object: IBMiMember;
@@ -19,7 +20,7 @@ export type IMemberItem = {
     contextValue: string;
     filter: Filter;
     sort: SortOptions;
-}
+};
 
 export declare type SortOptions = {
     order: "name" | "date";

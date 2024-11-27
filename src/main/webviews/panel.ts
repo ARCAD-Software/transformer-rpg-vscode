@@ -1,12 +1,11 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
 import { l10n } from "vscode";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions } from "../../utils/helper";
+import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions, convertBool } from "../../utils/helper";
 import { Code4i } from "../../code4i";
 import { CommandParams } from "../../configuration";
 import { ExecutionReport } from "../controller";
 import { getStatusColor } from "../conversionMessage";
-import { convertBool } from "../conversion";
 
 let massConversion = false;
 
@@ -44,7 +43,7 @@ function createPropertiesUI(member: IBMiMember, config: CommandParams): CustomUI
         .addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions(getObjectTypes(), config.OBJTYPE))
         .addHorizontalRule()
         .addParagraph(l10n.t('Convert Calculation Specs : <code>*FREE</code>'))
-        .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs : <code>*YES</code>"), convertBool(config.CVTDCLSPEC) === "*YES")
+        .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs"), convertBool(config.CVTDCLSPEC) === "*YES")
         .addHorizontalRule()
         .addHeading(l10n.t("Target Source Member Information"), 4)
         .addInput("TOSRCLIB", l10n.t("Library"), "", { default: member.library, readonly: false })

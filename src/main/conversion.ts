@@ -13,9 +13,6 @@ export interface MemberParam {
     name: string;
     extension: string;
 }
-export function convertBool(value: string): string {
-    return value ? '*YES' : '*NO';
-}
 
 export async function handleConversion(params: CommandParams, member: IBMiMember, parentnode?: any) {
     const command = generateCommand(params, member);
