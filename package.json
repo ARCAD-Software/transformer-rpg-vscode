@@ -206,27 +206,27 @@
     },
     "commands": [
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "command": "tfrrpg-member-convert",
         "title": "%arcad-tfrrpg-member-convert%",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "command": "tfrrpg-list-refresh",
         "title": "%refresh%",
         "icon": "$(refresh)",
         "enablement": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-create%",
         "command": "tfrrpg-list-create",
         "enablement": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true",
         "icon": "$(add)"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-delete%",
         "command": "tfrrpg-list-delete",
         "enablement": "code-for-ibmi:connected",
@@ -234,17 +234,17 @@
       },
       
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-member-convert%",
         "command": "tfrrpg-member-convert"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-add%",
         "command": "tfrrpg-list-add"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-add-multiple%",
         "command": "tfrrpg-list-add-multiple"
       },
@@ -256,33 +256,33 @@
         "icon": "$(list-flat)"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-item-delete%",
         "command": "tfrrpg-list-item-delete",
         "enablement": "code-for-ibmi:connected",
         "icon": "$(trash)"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-item-update-objtype%",
         "command": "tfrrpg-list-item-update-objtype",
         "enablement": "code-for-ibmi:connected",
         "icon": "$(references)"
       },
       {
-        "category": "tfrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-member-convert%",
         "command": "tfrrpg-list-item-member-convert",
         "icon": "$(run-coverage)"
       },
       {
-        "category": "tffrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-item-source-edit%",
         "command": "tfrrpg-list-item-source-edit",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "tffrrpg",
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-item-converted-source-edit%",
         "command": "tfrrpg-list-item-converted-source-edit",
         "enablement": "code-for-ibmi:connected"
@@ -312,6 +312,42 @@
         {
           "command": "tfrrpg-member-convert",
           "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
+        },
+        {
+          "command": "tfrrpg-list-delete",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-add",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-add-multiple",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-objectbrowser.focus",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-delete",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-update-objtype",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-member-convert",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-source-edit",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-converted-source-edit",
+          "when": "never"
         }
       ],
       "view/item/context": [

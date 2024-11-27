@@ -134,7 +134,7 @@ export namespace ConfigManager {
                 conversionList[listIndex].items[itemIndex] = {
                     ...conversionList[listIndex].items[itemIndex],
                     ...newItem,
-                    targetmember: newItem.targetmember || ''
+                    targetmember: newItem.targetmember ?? ''
                 };
             });
         }

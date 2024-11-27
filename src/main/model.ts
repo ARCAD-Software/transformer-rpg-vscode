@@ -12,11 +12,11 @@ interface Connection {
 export type Connections = Connection[];
 
 
-export type IMemberItem = {
+export type MemberNode = {
     member: IBMiMember;
     object: IBMiMember;
     path: string;
-    parent: IMemberItem;
+    parent: MemberNode;
     contextValue: string;
     filter: Filter;
     sort: SortOptions;

@@ -1,4 +1,4 @@
-import { l10n, QuickPickItem } from "vscode";
+import { l10n } from "vscode";
 import { MultiStepInput } from "../utils/stepper";
 import { ConfigManager } from "../configuration";
 import { Connections } from "./model";

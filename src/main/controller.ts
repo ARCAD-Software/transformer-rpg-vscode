@@ -5,10 +5,10 @@ import { commandReportUI, createTabs, setupTabWindow } from "./webviews/panel";
 import { executeConversionCommand, handleConversion } from "./conversion";
 import { generateCommand } from "../rpgcommands/commandUtils";
 import { Code4i } from "../code4i";
-import { getMembersList, refreshListExplorer } from "../extension";
-import { IMemberItem } from "./model";
+import { getMembersListWithProgress, refreshListExplorer } from "../extension";
 import { ConversionList } from "./views/conversionListBrowser";
 import { ConversionStatus } from "./conversionMessage";
+import { MemberNode } from "./model";
 
 interface WindowConfig {
     member: IBMiMember;
@@ -147,7 +147,7 @@ async function convertMember(
 
 function showConversionReport(report: ExecutionReport[]): void {
     const resultWindow = commandReportUI(report);
-    resultWindow.loadPage(l10n.t("Conversion Report"));
+    resultWindow.loadPage(l10n.t(`Conversion Report`));
 }
 
 async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: string, progress: { report: (value: { increment: number, message: string }) => void }, token: CancellationToken): Promise<{ objectType: string, member: IBMiMember }[]> {
@@ -193,7 +193,7 @@ async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: str
     return result;
 }
 
-export async function addMembersToConversionList(member: IMemberItem): Promise<void> {
+export async function addMembersToConversionList(node: MemberNode): Promise<void> {
     try {
         const conversionList = await ConfigManager.getConversionList();
 
@@ -228,10 +228,10 @@ export async function addMembersToConversionList(member: IMemberItem): Promise<v
 
         let membersToAdd: IBMiMember[] = [];
 
-        if (member.member) {
-            membersToAdd.push(member.member);
+        if (node.member) {
+            membersToAdd.push(node.member);
         } else {
-            const selectedMembers = await getSelectedMembers(member);
+            const selectedMembers = await getSelectedMembers(node);
             if (selectedMembers) {
                 membersToAdd = selectedMembers;
             }
@@ -285,7 +285,7 @@ function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
     });
 }
 
-async function getSelectedMembers(node: IMemberItem): Promise<IBMiMember[] | undefined> {
+async function getSelectedMembers(node: MemberNode): Promise<IBMiMember[] | undefined> {
     const memberQuickPick = window.createQuickPick();
     let selectedMembers: IBMiMember[] | undefined;
 
@@ -296,7 +296,7 @@ async function getSelectedMembers(node: IMemberItem): Promise<IBMiMember[] | und
         memberQuickPick.canSelectMany = true;
         memberQuickPick.ignoreFocusOut = true;
 
-        const members = await getMembersList(node);
+        const members = await getMembersListWithProgress(node);
         memberQuickPick.items = members.map(member => ({ label: member.name, description: member.text }));
         memberQuickPick.busy = false;
 

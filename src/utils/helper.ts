@@ -1,4 +1,3 @@
-import { window } from "vscode";
 import { SUPPORTED_SOURCE_TYPES } from "./constants";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 

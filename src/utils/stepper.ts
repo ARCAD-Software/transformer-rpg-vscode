@@ -1,9 +1,9 @@
 import { QuickPickItem, QuickInputButton, QuickInput, Disposable, QuickInputButtons, window } from "vscode";
 
 class InputFlowAction {
-    static back = new InputFlowAction();
-    static cancel = new InputFlowAction();
-    static resume = new InputFlowAction();
+    static readonly back = new InputFlowAction();
+    static readonly cancel = new InputFlowAction();
+    static readonly resume = new InputFlowAction();
 }
 
 type InputStep = (input: MultiStepInput) => Thenable<InputStep | void>;

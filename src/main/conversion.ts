@@ -7,13 +7,6 @@ import { generateCommand } from "../rpgcommands/commandUtils";
 
 const MSGID_SUCCEED = 'MSG3867';
 
-export interface MemberParam {
-    library: string;
-    file: string;
-    name: string;
-    extension: string;
-}
-
 export async function handleConversion(params: CommandParams, member: IBMiMember, parentnode?: any) {
     const command = generateCommand(params, member);
     window.withProgress({
@@ -36,40 +29,53 @@ function processCommandResult(
     member: IBMiMember,
     parentnode?: any
 ) {
-    if (!cmdResult) { return; };
+    if (!cmdResult) { return; }
 
     if (cmdResult.code === 0) {
-        const successMessage = cmdResult.stdout || cmdResult.stderr || "Command executed successfully.";
-        window
-            .showInformationMessage(successMessage, "Show Output")
-            .then((action) => {
-                if (action === "Show Output") {
-                    window.showInformationMessage(cmdResult.stdout);
-                }
-            });
-
-        if (cmdResult.stdout) {
-            const messages = Code4i.getTools().parseMessages(cmdResult.stdout);
-            if (messages.findId(MSGID_SUCCEED)) {
-                openMember(
-                    {
-                        library: params.TOSRCLIB,
-                        file: params.TOSRCFILE.toUpperCase() === "*FROMFILE" ? member.file : params.TOSRCFILE.toUpperCase(),
-                        name: params.TOSRCMBR.toUpperCase() === "*FROMMBR" ? member.name : params.TOSRCMBR.toUpperCase(),
-                        extension: member.extension || "",
-                    },
-                    true
-                );
-                commands.executeCommand("code-for-ibmi.refreshObjectBrowser", parentnode || "");
-            }
-        }
+        handleSuccess(cmdResult, params, member, parentnode);
     } else {
-        const errorMessage = cmdResult.stderr || "An error occurred while executing the command.";
-        window.showErrorMessage(errorMessage);
+        handleError(cmdResult);
     }
 }
 
-export async function openMember(param: MemberParam, readonly: boolean): Promise<void> {
+function handleSuccess(
+    cmdResult: CommandResult,
+    params: CommandParams,
+    member: IBMiMember,
+    parentnode?: any
+) {
+    const successMessage = cmdResult.stdout || cmdResult.stderr || "Command executed successfully.";
+    window
+        .showInformationMessage(successMessage, "Show Output")
+        .then((action) => {
+            if (action === "Show Output") {
+                window.showInformationMessage(cmdResult.stdout);
+            }
+        });
+
+    if (cmdResult.stdout) {
+        const messages = Code4i.getTools().parseMessages(cmdResult.stdout);
+        if (messages.findId(MSGID_SUCCEED)) {
+            openMember(
+                {
+                    library: params.TOSRCLIB,
+                    file: params.TOSRCFILE.toUpperCase() === "*FROMFILE" ? member.file : params.TOSRCFILE.toUpperCase(),
+                    name: params.TOSRCMBR.toUpperCase() === "*FROMMBR" ? member.name : params.TOSRCMBR.toUpperCase(),
+                    extension: member.extension ?? "",
+                },
+                true
+            );
+            commands.executeCommand("code-for-ibmi.refreshObjectBrowser", parentnode || "");
+        }
+    }
+}
+
+function handleError(cmdResult: CommandResult) {
+    const errorMessage = cmdResult.stderr || "An error occurred while executing the command.";
+    window.showErrorMessage(errorMessage);
+}
+
+export async function openMember(param: IBMiMember, readonly: boolean): Promise<void> {
     const path = `${param.library}/${param.file}/${param.name}.${param.extension}`;
     Code4i.open(path, { readonly: readonly });
 }
