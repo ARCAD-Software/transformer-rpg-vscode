@@ -161,7 +161,7 @@ export abstract class BaseConversionNode extends ExplorerNode {
                 title: l10n.t("TFRRPG"),
                 cancellable: true
             }, async (progress, token) => {
-                return await convertMembersWithProgress(commandParameters, members, progress, token).then((report) => {
+                return await convertMembersWithProgress(commandParameters, members, progress, token, name).then((report) => {
                     return report || [];
                 });
             });
@@ -308,7 +308,7 @@ export class ConversionItemNode extends BaseConversionNode {
         tooltip.appendMarkdown(l10n.t(`$(file-code) Source File: {0}  \n`, listItem.targetmember));
         tooltip.appendMarkdown(l10n.t(`$(link) Source Type: {0}  \n`, listItem.srctype));
         tooltip.appendMarkdown(l10n.t(`$(comment) Object Type: {0}  \n`, listItem.objtype));
-        tooltip.appendMarkdown(l10n.t(`$(comment) Conversion Date: {0}  \n`, listItem.conversiondate.toString()));
+        // tooltip.appendMarkdown(l10n.t(`$(comment) Conversion Date: {0}  \n`, listItem.conversiondate.toString()));
         tooltip.appendMarkdown(l10n.t(`$(comment) Status: {0}  \n`, getConversionStatus(listItem.status)));
         tooltip.appendCodeblock(listItem.message);
 

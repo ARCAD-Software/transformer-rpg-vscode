@@ -30,7 +30,7 @@ export async function openConfigWindow(param: WindowConfig): Promise<void> {
     const tabwindow = setupTabWindow(tabs);
 
     const page = await tabwindow.loadPage<CommandParams>(l10n.t("ARCAD-Transformer RPG: {0}", param.member.name));
-    if (page && page.data) {
+    if (page?.data) {
         const commandParameters = page.data;
         page.panel.dispose();
         if (param.massconvt && param.getMembers) {
@@ -82,6 +82,7 @@ export async function convertMembersWithProgress(
     memberList: { objectType: string; member: IBMiMember }[] | IBMiMember[],
     progress: { report: (value: { increment: number; message: string }) => void },
     token: CancellationToken,
+    name?: string
 ): Promise<ExecutionReport[]> {
     const totalMembers = memberList.length;
     const executionResult: ExecutionReport[] = [];
@@ -100,8 +101,8 @@ export async function convertMembersWithProgress(
             commandParam.OBJTYPE = item.objectType;
         } else {
             member = memberList[i] as IBMiMember;
-            commandParam.TOSRCMBR = member.name || "";
-            commandParam.OBJTYPE = member.objtype || "";
+            commandParam.TOSRCMBR = member.name ?? "";
+            commandParam.OBJTYPE = member.objtype ?? "";
         }
 
         await convertMember(commandParam, member, executionResult);
@@ -122,7 +123,7 @@ export async function convertMembersWithProgress(
             )
             .then((selection) => {
                 if (selection === l10n.t("Show Conversion Report")) {
-                    showConversionReport(executionResult);
+                    showConversionReport(executionResult, name ?? "");
                 }
             });
     }
@@ -145,9 +146,9 @@ async function convertMember(
     }
 }
 
-function showConversionReport(report: ExecutionReport[]): void {
+function showConversionReport(report: ExecutionReport[], itemName: string): void {
     const resultWindow = commandReportUI(report);
-    resultWindow.loadPage(l10n.t(`Conversion Report`));
+    resultWindow.loadPage(l10n.t(`Conversion Report-${itemName}`));
 }
 
 async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: string, progress: { report: (value: { increment: number, message: string }) => void }, token: CancellationToken): Promise<{ objectType: string, member: IBMiMember }[]> {
@@ -284,41 +285,37 @@ function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
         });
     });
 }
-
 async function getSelectedMembers(node: MemberNode): Promise<IBMiMember[] | undefined> {
     const memberQuickPick = window.createQuickPick();
-    let selectedMembers: IBMiMember[] | undefined;
+    memberQuickPick.title = l10n.t("Select Members to Add");
+    memberQuickPick.busy = true;
+    memberQuickPick.canSelectMany = true;
+    memberQuickPick.ignoreFocusOut = true;
 
     try {
-        memberQuickPick.show();
-        memberQuickPick.title = l10n.t("Select Members to Add");
-        memberQuickPick.busy = true;
-        memberQuickPick.canSelectMany = true;
-        memberQuickPick.ignoreFocusOut = true;
-
         const members = await getMembersListWithProgress(node);
         memberQuickPick.items = members.map(member => ({ label: member.name, description: member.text }));
         memberQuickPick.busy = false;
+        memberQuickPick.show();
 
-        await new Promise<void>((resolve) => {
+        return await new Promise<IBMiMember[] | undefined>((resolve) => {
             memberQuickPick.onDidAccept(() => {
-                selectedMembers = memberQuickPick.selectedItems
+                const selectedMembers = memberQuickPick.selectedItems
                     .map(item => members.find(m => m.name === item.label))
                     .filter(m => m !== undefined) as IBMiMember[];
-                resolve();
+                resolve(selectedMembers);
                 memberQuickPick.dispose();
             });
 
             memberQuickPick.onDidHide(() => {
-                resolve();
+                resolve(undefined);
                 memberQuickPick.dispose();
             });
         });
 
-        return selectedMembers;
-
     } catch (error) {
         console.error(l10n.t("Error selecting members:"), error);
+        memberQuickPick.dispose();
         return undefined;
     }
 }
