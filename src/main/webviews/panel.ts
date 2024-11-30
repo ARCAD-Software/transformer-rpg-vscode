@@ -46,7 +46,7 @@ function createPropertiesUI(member: IBMiMember, config: CommandParams): CustomUI
         .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs"), convertBool(config.CVTDCLSPEC) === "*YES")
         .addHorizontalRule()
         .addHeading(l10n.t("Target Source Member Information"), 4)
-        .addInput("TOSRCLIB", l10n.t("Library"), "", { default: member.library, readonly: false })
+        .addInput("TOSRCLIB", l10n.t("Library"), "", { default: config.TOSRCLIB ?? member.library, readonly: false })
         .addInput("TOSRCFILE", l10n.t("Source File"), l10n.t("<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify member name for converted source"), { default: config.TOSRCFILE, readonly: false })
         .addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same destination | Specify member name for converted source"), { default: massConversion ? "*FROMMBR" : config.TOSRCMBR, readonly: massConversion })
         .addHorizontalRule()

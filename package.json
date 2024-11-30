@@ -67,53 +67,7 @@
       "title": "%title%",
       "properties": {
         "arcad-transformer-rpg.command": {
-          "type": "object",
-          "default": {
-            "SRCLIB": "",
-            "SRCMBR": "",
-            "SRCTYPE": "",
-            "SRCFILE": "",
-            "OBJTYPE": "*NONE",
-            "CVTCLCSPEC": "*FREE",
-            "CVTDCLSPEC": "*YES",
-            "EXPCSPECPY": "*NO",
-            "FULLYFREE": "*YES",
-            "MAXNOTFREE": "*NONE",
-            "FIRSTCOL": 1,
-            "USEPARMNUM": "*NO",
-            "TOSRCFILE": "*NONE",
-            "TOSRCMBR": "*FROMMBR",
-            "TOSRCLIB": "",
-            "REPLACE": "*NO",
-            "CVT_CALL": "*YES",
-            "CVT_GOTO": "*ADVANCED",
-            "TAGFLDNAME": "ATag",
-            "CVT_KLIST": "*YES",
-            "CVT_MOVEA": "*ADVANCED",
-            "INDENT": 2,
-            "INDENTCMT": "*YES",
-            "OPCODECASE": "*MIXED",
-            "BLTFNCCASE": "*MIXED",
-            "SPCWRDCASE": "*MIXED",
-            "KEYWRDCASE": "*MIXED",
-            "FLGCVTTYPE": "*NO",
-            "CLRXREF": "*YES",
-            "CLRFRMCHG": "*YES",
-            "PRECPL": "*ARCAD",
-            "SRCDATE": "*CURRENT",
-            "CVT_SUBR": "*NO",
-            "CHECKIND": "*WNG1",
-            "SCANIND": "*WNG1",
-            "LOOKUPIND": "*WNG1",
-            "NUMTRUNCZ": "*YES",
-            "NUMTRUNCA": "*YES",
-            "NUMTRUNCB": "*NO",
-            "NUMTRUNCM": "*YES",
-            "NUMTRUNCD": "*YES",
-            "EMPTYCMT": "*KEEP",
-            "ALPHTONUM": "*YES",
-            "KEEPDSIND": "*NO"
-          }
+          "type": "object"
         },
         "arcad-transformer-rpg.conversionList": {
           "type": "array",
@@ -232,7 +186,6 @@
         "enablement": "code-for-ibmi:connected",
         "icon": "$(trash)"
       },
-      
       {
         "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-member-convert%",
@@ -365,7 +318,6 @@
           "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionList.*/",
           "group": "conversion@3"
         },
-        
         {
           "command": "tfrrpg-list-item-delete",
           "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem.*/",

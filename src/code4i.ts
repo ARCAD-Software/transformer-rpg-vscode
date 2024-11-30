@@ -10,7 +10,7 @@ export namespace Code4i {
       codeForIBMi = codeForIBMiExtension.isActive ? codeForIBMiExtension.exports : await codeForIBMiExtension.activate();
     }
     else {
-      throw new Error(vscode.l10n.t("The extension 'arcad-transformer-rpg' requires the 'halcyontechltd.code-for-ibmi' extension to be active!"));
+      throw new Error(vscode.l10n.t("The extension 'ARCAD Transformer RPG' requires the 'halcyontechltd.code-for-ibmi' extension to be active!"));
     }
   }
 

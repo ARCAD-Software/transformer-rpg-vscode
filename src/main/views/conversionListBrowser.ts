@@ -212,7 +212,7 @@ export class ConversionListNode extends BaseConversionNode {
         }
     }
 
-    async initConversion(): Promise<void> {
+    async processBatchConversion(): Promise<void> {
         if (this.conversionList) {
             const listItem = this.conversionList;
             if (listItem?.items.length) {
@@ -237,6 +237,8 @@ export class ConversionListNode extends BaseConversionNode {
                         this.conversionList.items.forEach((item, index) => {
                             item.status = setConverionStatus(report[index].result.stdout || report[index].result.stderr || "");
                             item.message = report[index].result.stderr || report[index].result.stdout || "";
+
+                            item.conversiondate = `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
                         });
                         await ConfigManager.updateConversionList(this.conversionList);
                         refreshListExplorer(this);
@@ -308,7 +310,7 @@ export class ConversionItemNode extends BaseConversionNode {
         tooltip.appendMarkdown(l10n.t(`$(file-code) Source File: {0}  \n`, listItem.targetmember));
         tooltip.appendMarkdown(l10n.t(`$(link) Source Type: {0}  \n`, listItem.srctype));
         tooltip.appendMarkdown(l10n.t(`$(comment) Object Type: {0}  \n`, listItem.objtype));
-        // tooltip.appendMarkdown(l10n.t(`$(comment) Conversion Date: {0}  \n`, listItem.conversiondate.toString()));
+        tooltip.appendMarkdown(l10n.t(`$(comment) Conversion Date: {0}  \n`, listItem.conversiondate.toString()));
         tooltip.appendMarkdown(l10n.t(`$(comment) Status: {0}  \n`, getConversionStatus(listItem.status)));
         tooltip.appendCodeblock(listItem.message);
 
@@ -330,7 +332,11 @@ export class ConversionItemNode extends BaseConversionNode {
         await this.updateObjectTypeForMembers([this.conversionItem], this.parent.label?.toString() ?? "");
     }
 
-    initConversion(): void {
+    startSingleItemConversion(): void {
+        if (this.conversionItem.objtype === "") {
+            window.showWarningMessage(l10n.t("Please update object type for this member."));
+            return;
+        }
         const conversionList = this.parent.conversionList;
         if (conversionList) {
             this.convertMembers(
@@ -348,13 +354,21 @@ export class ConversionItemNode extends BaseConversionNode {
                 if (report.length) {
                     this.conversionItem.status = setConverionStatus(report[0].result.stdout || report[0].result.stderr || "");
                     this.conversionItem.message = report[0].result.stderr || report[0].result.stdout || "";
+                    this.conversionItem.conversiondate = `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
                     ConfigManager.updateConversionItem(conversionList.listname, this.conversionItem.member, this.conversionItem).then(() => {
                         refreshListExplorer(this.parent);
                     });
+
+                    if (this.conversionItem.status === ConversionStatus.SUCCEED || this.conversionItem.status === ConversionStatus.WARNING) {
+                        openMember({
+                            library: conversionList.targetlibrary,
+                            file: conversionList.targetsourcefile,
+                            name: this.conversionItem.member,
+                            extension: this.conversionItem.srctype
+                        }, true);
+                    }
                 }
             });
-        } else {
-            console.error("Parent conversion list is undefined.");
         }
     }
 

@@ -131,7 +131,6 @@ export async function convertMembersWithProgress(
 }
 
 
-
 async function convertMember(
     data: CommandParams,
     member: IBMiMember,
@@ -274,7 +273,7 @@ export async function addMembersToConversionList(node: MemberNode): Promise<void
 function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
     members.forEach(memberItem => {
         list.items.push({
-            conversiondate: memberItem.created || "",
+            conversiondate: "",
             library: memberItem.library,
             member: memberItem.name,
             message: "",

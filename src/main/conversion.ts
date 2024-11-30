@@ -1,11 +1,10 @@
-
 import { commands, l10n, ProgressLocation, window } from "vscode";
 import { CommandResult, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { CommandParams } from "../configuration";
 import { Code4i } from "../code4i";
 import { generateCommand } from "../rpgcommands/commandUtils";
 
-const MSGID_SUCCEED = 'MSG3867';
+const SUCCESS_MSG_IDS = ['MSG3867', 'MSG1234', 'MSG5678'];
 
 export async function handleConversion(params: CommandParams, member: IBMiMember, parentnode?: any) {
     const command = generateCommand(params, member);
@@ -18,7 +17,7 @@ export async function handleConversion(params: CommandParams, member: IBMiMember
             const cmdResult = await executeConversionCommand(command);
             processCommandResult(cmdResult, params, member, parentnode);
         } catch (error: any) {
-            window.showErrorMessage(error.message);
+            window.showErrorMessage(l10n.t('Error: {0}', error.message));
         }
     });
 }
@@ -44,18 +43,19 @@ function handleSuccess(
     member: IBMiMember,
     parentnode?: any
 ) {
-    const successMessage = cmdResult.stdout || cmdResult.stderr || "Command executed successfully.";
+    const successMessage = cmdResult.stdout || cmdResult.stderr || l10n.t('Command executed successfully.');
     window
-        .showInformationMessage(successMessage, "Show Output")
+        .showInformationMessage(successMessage, l10n.t('Show Output'))
         .then((action) => {
-            if (action === "Show Output") {
+            if (action === l10n.t('Show Output')) {
                 window.showInformationMessage(cmdResult.stdout);
             }
         });
 
     if (cmdResult.stdout) {
         const messages = Code4i.getTools().parseMessages(cmdResult.stdout);
-        if (messages.findId(MSGID_SUCCEED)) {
+        const isSuccess = SUCCESS_MSG_IDS.some((msgId) => messages.findId(msgId));
+        if (isSuccess) {
             openMember(
                 {
                     library: params.TOSRCLIB,
@@ -65,13 +65,13 @@ function handleSuccess(
                 },
                 true
             );
-            commands.executeCommand("code-for-ibmi.refreshObjectBrowser", parentnode || "");
+            commands.executeCommand(l10n.t('code-for-ibmi.refreshObjectBrowser'), parentnode || "");
         }
     }
 }
 
 function handleError(cmdResult: CommandResult) {
-    const errorMessage = cmdResult.stderr || "An error occurred while executing the command.";
+    const errorMessage = cmdResult.stderr || l10n.t('An error occurred while executing the command.');
     window.showErrorMessage(errorMessage);
 }
 
@@ -84,7 +84,7 @@ export async function executeConversionCommand(command: string): Promise<Command
     try {
         return await Code4i.getConnection().runCommand({ command });
     } catch (error: any) {
-        window.showErrorMessage(l10n.t("Error executing conversion command: {0}", error));
+        window.showErrorMessage(l10n.t('Error executing conversion command: {0}', error));
     }
     return undefined;
 }

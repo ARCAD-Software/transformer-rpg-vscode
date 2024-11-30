@@ -51,15 +51,19 @@ export interface CommandParams {
 
 
 export namespace ConfigManager {
-    export function getConfiguration() {
-        return workspace.getConfiguration('arcad-transformer-rpg');
+    export function getConfiguration(scope: ConfigurationTarget = ConfigurationTarget.Global) {
+        return workspace.getConfiguration('arcad-transformer-rpg', scope === ConfigurationTarget.Workspace ? undefined : null);
     }
 
     export function getParams(): CommandParams | undefined {
-        const params = getConfiguration().get<CommandParams>('command');
-        return params;
+        const config = getConfiguration();
+        return config.get<CommandParams>('command');
     }
 
+    export async function setParams(params: CommandParams): Promise<void> {
+        const config = getConfiguration();
+        await config.update('command', params, ConfigurationTarget.Global);
+    }
     export function getConnections(): Connections | undefined {
         return workspace.getConfiguration('code-for-ibmi').get('connections');
     }
@@ -108,9 +112,6 @@ export namespace ConfigManager {
         });
     }
 
-    export function setParams(params: CommandParams): Thenable<void> {
-        return getConfiguration().update('command', params, ConfigurationTarget.Global);
-    }
 
     export async function removeConversionItem(listname: string, itemname: string): Promise<void> {
         const conversionList = await getConversionList();
@@ -141,3 +142,67 @@ export namespace ConfigManager {
     }
 
 }
+
+
+export async function initializeConfiguration(): Promise<void> {
+    const configKey = "arcad-transformer-rpg.command";
+    const defaultConfig: CommandParams = {
+        SRCLIB: "",
+        SRCMBR: "",
+        SRCTYPE: "",
+        SRCFILE: "",
+        OBJTYPE: "*NONE",
+        CVTCLCSPEC: "*FREE",
+        CVTDCLSPEC: "*YES",
+        EXPCSPECPY: "*NO",
+        FULLYFREE: "*YES",
+        MAXNOTFREE: "*NONE",
+        FIRSTCOL: 1,
+        USEPARMNUM: "*NO",
+        TOSRCFILE: "*NONE",
+        TOSRCMBR: "*FROMMBR",
+        TOSRCLIB: "",
+        REPLACE: "*NO",
+        CVT_CALL: "*YES",
+        CVT_GOTO: "*ADVANCED",
+        TAGFLDNAME: "ATag",
+        CVT_KLIST: "*YES",
+        CVT_MOVEA: "*ADVANCED",
+        INDENT: 2,
+        INDENTCMT: "*YES",
+        OPCODECASE: "*MIXED",
+        BLTFNCCASE: "*MIXED",
+        SPCWRDCASE: "*MIXED",
+        KEYWRDCASE: "*MIXED",
+        FLGCVTTYPE: "*NO",
+        CLRXREF: "*YES",
+        CLRFRMCHG: "*YES",
+        PRECPL: "*ARCAD",
+        SRCDATE: "*CURRENT",
+        CVT_SUBR: "*NO",
+        CHECKIND: "*WNG1",
+        SCANIND: "*WNG1",
+        LOOKUPIND: "*WNG1",
+        NUMTRUNCZ: "*YES",
+        NUMTRUNCA: "*YES",
+        NUMTRUNCB: "*NO",
+        NUMTRUNCM: "*YES",
+        NUMTRUNCD: "*YES",
+        EMPTYCMT: "*KEEP",
+        ALPHTONUM: "*YES",
+        KEEPDSIND: "*NO",
+        buttons: ""
+    };
+
+    const config = workspace.getConfiguration();
+    const currentConfig = config.get<CommandParams>(configKey);
+
+    if (!currentConfig || Object.keys(currentConfig).length === 0) {
+        await config.update(configKey, defaultConfig, ConfigurationTarget.Global);
+        console.log("Default configuration set for ARCAD Transformer RPG.");
+    } else {
+        console.log("Configuration already exists. Skipping default configuration initialization.");
+    }
+}
+
+

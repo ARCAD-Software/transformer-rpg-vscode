@@ -6,6 +6,7 @@ import { ConversionListProvider, ConversionListNode, ExplorerNode, ConversionIte
 import { MESSAGES, COMMANDS } from "./utils/constants";
 import { filterMembers, validateSourceType } from "./utils/helper";
 import { MemberNode } from "./main/model";
+import { initializeConfiguration } from "./configuration";
 
 const NodeContext = {
   MEMBER: 'member',
@@ -28,6 +29,7 @@ export function deactivate(): void {
 }
 
 function initializeExtension(context: ExtensionContext): void {
+  initializeConfiguration();
   initializeTreeView(context);
   registerCommands(context);
 }
@@ -89,11 +91,17 @@ function initializeTreeView(context: ExtensionContext): void {
     commands.registerCommand(COMMANDS.NEW_CONVERSION_LIST, () => contentProvider.addNewConversionList()),
     commands.registerCommand(COMMANDS.DELETE_LIST, (node: ConversionListNode) => node.deleteConversionList(node)),
     commands.registerCommand(COMMANDS.DELETE_LIST_ITEM, (node: ConversionItemNode) => node.removeMemberFromList(node)),
-    commands.registerCommand(COMMANDS.UPDATE_OBJECT_TYPE, (node: ConversionItemNode | ConversionListNode) => { node.updateMemberObjectType(); }),
-    commands.registerCommand(COMMANDS.CONVERT_TARGET_MEMBER, (node: ConversionItemNode | ConversionListNode) => { node.initConversion(); }),
+    commands.registerCommand(COMMANDS.UPDATE_OBJECT_TYPE, (node: ConversionItemNode | ConversionListNode) => node.updateMemberObjectType()),
     commands.registerCommand(COMMANDS.EDIT_SOURCE, (node: ConversionItemNode) => { node.editMember(); }),
-    commands.registerCommand(COMMANDS.EDIT_CONVERTED_SOURCE, (node: ConversionItemNode) => { node.editConvertedMember(); }),
-    commands.registerCommand(COMMANDS.FOCUS_OBJECT_BROWSER, (node: ConversionListNode) => { node.openIBMiObjectBrowser(); }),
+    commands.registerCommand(COMMANDS.EDIT_CONVERTED_SOURCE, (node: ConversionItemNode) => node.editConvertedMember()),
+    commands.registerCommand(COMMANDS.FOCUS_OBJECT_BROWSER, (node: ConversionListNode) => node.openIBMiObjectBrowser()),
+    commands.registerCommand(COMMANDS.CONVERT_TARGET_MEMBER, (node: ConversionItemNode | ConversionListNode) => {
+      if (node instanceof ConversionItemNode) {
+        node.startSingleItemConversion();
+      } else {
+        node.processBatchConversion();
+      }
+    }),
   );
 }
 
@@ -135,7 +143,6 @@ async function fetchMembers(node: MemberNode): Promise<IBMiMember[]> {
     return [];
   }
 }
-
 
 function getMemberInfo(node: MemberNode | undefined): IBMiMember | undefined {
   try {
