@@ -22,6 +22,8 @@ export interface ExecutionReport {
     result: CommandResult;
 }
 
+const openPanels = new Map<string, { dispose: () => void }>();
+
 export async function openConfigWindow(param: WindowConfig): Promise<void> {
     const config = ConfigManager.getParams();
     if (!config) { return; };
@@ -114,11 +116,14 @@ export async function convertMembersWithProgress(
             message: l10n.t("Performed Conversion for {0} of {1} members", i + 1, totalMembers),
         });
     }
-
     if (executionResult.length === totalMembers) {
+        const message = totalMembers === 1
+            ? l10n.t("Member converted successfully!")
+            : l10n.t("All members converted successfully!");
+
         window
             .showInformationMessage(
-                l10n.t("All members converted successfully!"),
+                message,
                 l10n.t("Show Conversion Report")
             )
             .then((selection) => {
@@ -145,9 +150,21 @@ async function convertMember(
     }
 }
 
-function showConversionReport(report: ExecutionReport[], itemName: string): void {
+async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
+    const title = l10n.t("Conversion Report-{0}", itemName);
+
+    if (openPanels.has(title)) {
+        openPanels.get(title)?.dispose();
+        openPanels.delete(title);
+    }
+
     const resultWindow = commandReportUI(report);
-    resultWindow.loadPage(l10n.t(`Conversion Report-${itemName}`));
+    const page = await resultWindow.loadPage(title);
+
+    if (page) {
+        openPanels.set(title, page.panel);
+    }
+
 }
 
 async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: string, progress: { report: (value: { increment: number, message: string }) => void }, token: CancellationToken): Promise<{ objectType: string, member: IBMiMember }[]> {

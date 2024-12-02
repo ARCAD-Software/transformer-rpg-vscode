@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget } from 'vscode';
+import { workspace, ConfigurationTarget, l10n } from 'vscode';
 import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
 import { Connections } from './main/model';
 export interface CommandParams {
@@ -199,9 +199,9 @@ export async function initializeConfiguration(): Promise<void> {
 
     if (!currentConfig || Object.keys(currentConfig).length === 0) {
         await config.update(configKey, defaultConfig, ConfigurationTarget.Global);
-        console.log("Default configuration set for ARCAD Transformer RPG.");
+        console.log(l10n.t("Default configuration set for ARCAD Transformer RPG."));
     } else {
-        console.log("Configuration already exists. Skipping default configuration initialization.");
+        console.log(l10n.t("Configuration already exists. Skipping default configuration initialization."));
     }
 }
 
