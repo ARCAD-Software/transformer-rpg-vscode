@@ -1,27 +1,21 @@
+import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import {
-    CancellationToken,
     commands,
-    Event,
-    EventEmitter,
     l10n,
     MarkdownString,
     ProgressLocation,
     ProviderResult,
-    ThemeColor,
-    ThemeIcon,
-    TreeDataProvider,
-    TreeItem,
     TreeItemCollapsibleState,
     window
 } from "vscode";
 import { CommandParams, ConfigManager } from "../../configuration";
-import { ConversionListItemStepper } from "../conversion-item";
 import { refreshListExplorer } from "../../extension";
-import { createTargetLibTabs, setupTabWindow } from "../webviews/panel";
 import { convertMembersWithProgress, ExecutionReport } from "../controller";
-import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { ConversionStatus, getConversionStatus, getStatusColorFromCode, setConverionStatus } from "../conversionMessage";
 import { openMember } from "../conversion";
+import { ConversionListItemStepper } from "../conversion-item";
+import { ConversionStatus, getConversionStatus, getStatusColorFromCode, setConverionStatus } from "../conversionMessage";
+import { createTargetLibTabs, setupTabWindow } from "../webviews/panel";
+import { ExplorerDataProvider, ExplorerNode } from "./common";
 
 export interface ConversionItem {
     targetmember: string;
@@ -50,34 +44,16 @@ const statusSuffixes: { [key in ConversionStatus]: string } = {
     [ConversionStatus.FAILED]: l10n.t('_failed')
 };
 
-export class ConversionListProvider implements TreeDataProvider<ExplorerNode> {
-    private _onDidChangeTreeData: EventEmitter<ExplorerNode | undefined | void> = new EventEmitter<ExplorerNode | undefined | void>();
-    readonly onDidChangeTreeData: Event<ExplorerNode | undefined | void> = this._onDidChangeTreeData.event;
 
-    getTreeItem(element: ExplorerNode): TreeItem | Thenable<TreeItem> {
-        return element;
-    }
-
-    getChildren(element?: ExplorerNode): ProviderResult<ExplorerNode[]> {
-        if (element) {
-            return element.getChildren();
-        } else {
-            return ConfigManager.getConversionList().then((lists) => {
-                if (lists.length) {
-                    return lists.map((list) => new ConversionListNode(list));
-                } else {
-                    return [new NoListItem()];
-                }
-            });
-        }
-    }
-
-    resolveTreeItem(item: TreeItem, element: ExplorerNode, token: CancellationToken): ProviderResult<TreeItem> {
-        return item;
-    }
-
-    refresh(node?: ExplorerNode): void {
-        this._onDidChangeTreeData.fire(node);
+export class ConversionListProvider extends ExplorerDataProvider {
+    getRootNodes() {
+        return ConfigManager.getConversionList().then((lists) => {
+            if (lists.length) {
+                return lists.map((list) => new ConversionListNode(list));
+            } else {
+                return [new NoListItem()];
+            }
+        });
     }
 
     public addNewConversionList(): void {
@@ -90,24 +66,6 @@ export class ConversionListProvider implements TreeDataProvider<ExplorerNode> {
             }
         });
     }
-}
-
-export abstract class ExplorerNode extends TreeItem {
-    constructor(
-        label: string,
-        contextValue: string,
-        collapsibleState: TreeItemCollapsibleState = TreeItemCollapsibleState.None,
-        options?: { codicon: string, themeColor: string, refreshable: boolean },
-        readonly parent?: ExplorerNode,
-    ) {
-        super(label, collapsibleState);
-        this.contextValue = `${contextValue}${options?.refreshable ? '_reloadable_' : ''}`;
-        if (options?.codicon) {
-            this.iconPath = new ThemeIcon(options.codicon, options.themeColor ? new ThemeColor(options.themeColor) : undefined);
-        }
-    }
-
-    abstract getChildren(): ProviderResult<ExplorerNode[]>;
 }
 
 class NoListItem extends ExplorerNode {

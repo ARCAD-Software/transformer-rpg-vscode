@@ -2,7 +2,7 @@ import { IBMiMember } from '@halcyontech/vscode-ibmi-types';
 import { CommandParams } from '../configuration';
 import { convertBool } from '../utils/helper';
 
-export function generateCommand(data: CommandParams, source: IBMiMember): string {
+export async function generateCommand(data: CommandParams, source: IBMiMember) {
     const getToSrcFile = (member: string): string => member === '*FROMFILE' ? `${data.TOSRCLIB}/${source.file}` : `${data.TOSRCLIB}/${data.TOSRCFILE}`;
     const getToSrcMbr = (member: string): string => member === '*FROMMBR' ? source.name : data.TOSRCMBR;
 

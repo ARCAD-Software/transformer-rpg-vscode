@@ -59,13 +59,23 @@
         {
           "id": "arcad-tfrrpg-conversion-list",
           "name": "%conversion_list%",
-          "when": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
+          "when": "code-for-ibmi:connected && !code-for-ibmi:objectBrowserDisabled"
+        },
+        {
+          "id": "arcad-tfrrpg-product-status",
+          "name": "%product.status%",
+          "when": "code-for-ibmi:connected"
         }
       ]
     },
     "configuration": {
       "title": "%title%",
       "properties": {
+        "arcad-transformer-rpg.forceUseOfStandaloneProduct": {
+          "type": "boolean",
+          "default": "false",
+          "description": "%forceUseOfStandaloneProduct%"
+        },
         "arcad-transformer-rpg.command": {
           "type": "object"
         },
@@ -239,6 +249,26 @@
         "title": "%arcad-tfrrpg-list-item-converted-source-edit%",
         "command": "tfrrpg-list-item-converted-source-edit",
         "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Tranformer RPG",
+        "title": "%refresh%",
+        "icon": "$(refresh)",
+        "command": "tfrrpg-product-refresh",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Tranformer RPG",
+        "title": "%check.update%",
+        "command": "tfrrpg-product-check-update",
+        "enablement": "code-for-ibmi:connected"      
+      },
+      {
+        "category": "ARCAD-Tranformer RPG",
+        "title": "%install.tfrrpg%",
+        "command": "tfrrpg-product-install",
+        "icon": "$(desktop-download)",
+        "enablement": "code-for-ibmi:connected"
       }
     ],
     "submenus": [
@@ -258,6 +288,16 @@
         {
           "command": "tfrrpg-list-refresh",
           "when": "view == arcad-tfrrpg-conversion-list",
+          "group": "navigation"
+        },
+        {
+          "command": "tfrrpg-product-refresh",
+          "when": "view == arcad-tfrrpg-product-status",
+          "group": "navigation"
+        },
+        {
+          "command": "tfrrpg-product-install",
+          "when": "view == arcad-tfrrpg-product-status && !tfrrpgStandaloneInstalled",
           "group": "navigation"
         }
       ],
@@ -299,7 +339,15 @@
           "when": "never"
         },
         {
-          "command": "tfrrpg-list-item-converted-source-edit",
+          "command": "tfrrpg-product-install",
+          "when": "never"        
+        },
+        {
+          "command": "tfrrpg-product-check-update",
+          "when": "never"        
+        },
+        {
+          "command": "tfrrpg-product-refresh",
           "when": "never"
         }
       ],
@@ -342,6 +390,11 @@
           "command": "tfrrpg-list-item-converted-source-edit",
           "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem_succeed.*/",
           "group": "conversion@2"
+        },
+        {
+          "command": "tfrrpg-product-check-update",
+          "when": "view == arcad-tfrrpg-product-status && viewItem === installedProductNode_standalone",
+          "group": "01tfrrpProductg@01"
         }
       ],
       "editor/context": [
@@ -377,15 +430,18 @@
     "package": "vsce package --pre-release"
   },
   "devDependencies": {
-    "@halcyontech/vscode-ibmi-types": "^2.13",
-    "rimraf": "^5",
+    "@halcyontech/vscode-ibmi-types": "2.14.4",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
-    "@types/vscode": "^1.84.0",
-    "@types/node": "18.x",
-    "typescript": "^5.2.2",
     "esbuild-loader": "^3.0.1",
+    "rimraf": "^5",
+    "typescript": "^5.2.2",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "axios": "^1.7.8"
   }
 }

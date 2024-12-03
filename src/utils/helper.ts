@@ -1,5 +1,5 @@
-import { SUPPORTED_SOURCE_TYPES } from "./constants";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
+import { SUPPORTED_SOURCE_TYPES } from "./constants";
 
 export function generateOptions(options: string[], selectedValue: string) {
     return options.map((type) => {

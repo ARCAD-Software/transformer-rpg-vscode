@@ -9,7 +9,6 @@ export const COMMANDS = {
     ADD_MULTIPLE_MEMBERS: 'tfrrpg-list-add-multiple',
     REFRESH_LIST: 'tfrrpg-list-refresh',
     DELETE_LIST: 'tfrrpg-list-delete',
-    REFRESH_OBJECT_BROWSER: 'code-for-ibmi.refreshObjectBrowser',
     DELETE_LIST_ITEM: 'tfrrpg-list-item-delete',
     UPDATE_OBJECT_TYPE: 'tfrrpg-list-item-update-objtype',
     CONVERT_TARGET_MEMBER: 'tfrrpg-list-item-member-convert',
@@ -19,7 +18,6 @@ export const COMMANDS = {
   };
   
   export const MESSAGES = {
-    CONNECTED: l10n.t("Connected to IBM i server. ARCAD-Transformer RPG initialized."),
     ACTIVATED: l10n.t("ARCAD-Transformer RPG activated. Waiting for connection to IBM i server..."),
     DEACTIVATED: l10n.t("ARCAD-Transformer RPG deactivated"),
     FETCHING_MEMBERS: l10n.t("Fetching members list..."),

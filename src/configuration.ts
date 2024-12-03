@@ -1,6 +1,6 @@
-import { workspace, ConfigurationTarget, l10n } from 'vscode';
-import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
+import { ConfigurationTarget, workspace } from 'vscode';
 import { Connections } from './main/model';
+import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
 export interface CommandParams {
     SRCLIB: string;
     SRCMBR: string;
@@ -141,6 +141,9 @@ export namespace ConfigManager {
         }
     }
 
+    export function forceStandaloneProduct() {
+        return getConfiguration().get<boolean>("forceUseOfStandaloneProduct", false);
+    }
 }
 
 
