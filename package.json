@@ -2,9 +2,9 @@
   "name": "arcad-transformer-rpg",
   "publisher": "arcadsoftware",
   "displayName": "ARCAD-Transformer RPG",
-  "description": "Use ARCAD Transformer RPG to convert your RPG code to Full Free RPG within VSCode.",
-  "version": "0.0.1-dev.0",  
-	"icon": "images/tfrrpg.png",
+  "description": "%description%",
+  "version": "0.0.1-dev.0",
+  "icon": "images/tfrrpg.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/ARCAD-Software/arcad-transformer-rpg"
@@ -37,7 +37,336 @@
   "main": "./dist/extension.js",
   "l10n": "./l10n",
   "contributes": {
-    "commands": []
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "arcad-tfrrpg-explorer",
+          "title": "%title%",
+          "icon": "$(symbol-property)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "title": "%title%",
+        "enablement": "code-for-ibmi:connected",
+        "contents": "%arcad-tfrrpg-explorer-msg%",
+        "view": "arcad-tfrrpg-explorer"
+      }
+    ],
+    "views": {
+      "arcad-tfrrpg-explorer": [
+        {
+          "id": "arcad-tfrrpg-conversion-list",
+          "name": "%conversion_list%",
+          "when": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "%title%",
+      "properties": {
+        "arcad-transformer-rpg.command": {
+          "type": "object"
+        },
+        "arcad-transformer-rpg.conversionList": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "connectionname": {
+                "type": "string",
+                "description": "%connectionname_description%"
+              },
+              "listname": {
+                "type": "string",
+                "description": "%listname_description%"
+              },
+              "description": {
+                "type": "string",
+                "description": "%description_description%"
+              },
+              "targetlibrary": {
+                "type": "string",
+                "description": "%targetlibrary_description%"
+              },
+              "targetsourcefile": {
+                "type": "string",
+                "description": "%targetsourcefile_description%"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "targetmember": {
+                      "type": "string",
+                      "description": "%targetmember_description%"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "%status_description%",
+                      "enum": [
+                        -1,
+                        0,
+                        1,
+                        2
+                      ]
+                    },
+                    "srctype": {
+                      "type": "string",
+                      "description": "%srctype_description%"
+                    },
+                    "objtype": {
+                      "type": "string",
+                      "description": "%objtype_description%"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "%message_description%"
+                    },
+                    "member": {
+                      "type": "string",
+                      "description": "%member_description%"
+                    },
+                    "library": {
+                      "type": "string",
+                      "description": "%library_description%"
+                    },
+                    "conversiondate": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "%conversiondate_description%"
+                    }
+                  },
+                  "required": [
+                    "targetmember",
+                    "status",
+                    "srctype",
+                    "objtype",
+                    "member",
+                    "library"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "connectionname",
+              "items"
+            ]
+          }
+        }
+      }
+    },
+    "commands": [
+      {
+        "category": "ARCAD-Transformer RPG",
+        "command": "tfrrpg-member-convert",
+        "title": "%arcad-tfrrpg-member-convert%",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "command": "tfrrpg-list-refresh",
+        "title": "%refresh%",
+        "icon": "$(refresh)",
+        "enablement": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-create%",
+        "command": "tfrrpg-list-create",
+        "enablement": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true",
+        "icon": "$(add)"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-delete%",
+        "command": "tfrrpg-list-delete",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(trash)"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-member-convert%",
+        "command": "tfrrpg-member-convert"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-add%",
+        "command": "tfrrpg-list-add"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-add-multiple%",
+        "command": "tfrrpg-list-add-multiple"
+      },
+      {
+        "category": "tfrrgp",
+        "title": "%arcad-tfrrpg-objectbrowser-focus%",
+        "command": "tfrrpg-list-objectbrowser.focus",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(list-flat)"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-item-delete%",
+        "command": "tfrrpg-list-item-delete",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(trash)"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-item-update-objtype%",
+        "command": "tfrrpg-list-item-update-objtype",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(references)"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-member-convert%",
+        "command": "tfrrpg-list-item-member-convert",
+        "icon": "$(run-coverage)"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-item-source-edit%",
+        "command": "tfrrpg-list-item-source-edit",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-item-converted-source-edit%",
+        "command": "tfrrpg-list-item-converted-source-edit",
+        "enablement": "code-for-ibmi:connected"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "arcad-tfrrpg",
+        "title": "%arcad_transformer_rpg%",
+        "label": "%arcad_transformer_rpg_label%"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "tfrrpg-list-create",
+          "when": "view == arcad-tfrrpg-conversion-list",
+          "group": "navigation"
+        },
+        {
+          "command": "tfrrpg-list-refresh",
+          "when": "view == arcad-tfrrpg-conversion-list",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tfrrpg-member-convert",
+          "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
+        },
+        {
+          "command": "tfrrpg-list-delete",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-add",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-add-multiple",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-objectbrowser.focus",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-delete",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-update-objtype",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-member-convert",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-source-edit",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-list-item-converted-source-edit",
+          "when": "never"
+        }
+      ],
+      "view/item/context": [
+        {
+          "submenu": "arcad-tfrrpg",
+          "when": "view == objectBrowser && viewItem == member || viewItem == SPF"
+        },
+        {
+          "command": "tfrrpg-list-delete",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionList.*/",
+          "group": "inline"
+        },
+        {
+          "command": "tfrrpg-list-objectbrowser.focus",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionList.*/",
+          "group": "conversion@3"
+        },
+        {
+          "command": "tfrrpg-list-item-delete",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem.*/",
+          "group": "inline"
+        },
+        {
+          "command": "tfrrpg-list-item-update-objtype",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversion.*/",
+          "group": "inline"
+        },
+        {
+          "command": "tfrrpg-list-item-member-convert",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversion.*/",
+          "group": "inline"
+        },
+        {
+          "command": "tfrrpg-list-item-source-edit",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem.*/",
+          "group": "conversion@1"
+        },
+        {
+          "command": "tfrrpg-list-item-converted-source-edit",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem_succeed.*/",
+          "group": "conversion@2"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "tfrrpg-member-convert",
+          "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
+        }
+      ],
+      "arcad-tfrrpg": [
+        {
+          "command": "tfrrpg-member-convert",
+          "group": "tfrrgp@1"
+        },
+        {
+          "command": "tfrrpg-list-add",
+          "group": "tfrrgp@2",
+          "when": "view == objectBrowser && viewItem == member"
+        },
+        {
+          "command": "tfrrpg-list-add-multiple",
+          "group": "tfrrgp@3",
+          "when": "view == objectBrowser && viewItem == SPF"
+        }
+      ]
+    }
   },
   "scripts": {
     "clean": "rimraf dist",
@@ -48,7 +377,7 @@
     "package": "vsce package --pre-release"
   },
   "devDependencies": {
-    "@halcyontech/vscode-ibmi-types": "^2.10",
+    "@halcyontech/vscode-ibmi-types": "^2.13",
     "rimraf": "^5",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
