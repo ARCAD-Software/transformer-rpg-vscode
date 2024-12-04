@@ -153,7 +153,7 @@ class TransformerRPGProduct {
             const restoreLibrary = await runCommand(`RSTLIB SAVLIB(ARCAD_RPGD) RSTLIB(ARCAD_RPG) DEV(*SAVF) SAVF(${workLibrary}/${workFile}) MBROPT(*ALL) ALWOBJDIF(*ALL)`);
             let failed = restoreLibrary?.code !== 0;
             if (failed) {
-              const messages = Code4i.getTools().parseMessages(cpyfrmstmf.stderr || cpyfrmstmf.stdout);
+              const messages = Code4i.getTools().parseMessages(restoreLibrary.stderr || restoreLibrary.stdout);
               const maybeOK = messages.findId("CPF3773");
               if(maybeOK){
                 const notRestored = Number(/^(\d+) .+ (\d+) .*$/.exec(maybeOK.text)?.at(2));
