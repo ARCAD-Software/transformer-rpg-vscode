@@ -198,11 +198,6 @@
       },
       {
         "category": "ARCAD-Transformer RPG",
-        "title": "%arcad-tfrrpg-member-convert%",
-        "command": "tfrrpg-member-convert"
-      },
-      {
-        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-add%",
         "command": "tfrrpg-list-add"
       },
@@ -334,7 +329,7 @@
       "commandPalette": [
         {
           "command": "tfrrpg-member-convert",
-          "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
+          "when": "resourceScheme === member && resourceExtname =~ /\\.(?:sql)?rpgle/i"
         },
         {
           "command": "tfrrpg-list-delete",
@@ -457,7 +452,7 @@
       "editor/context": [
         {
           "command": "tfrrpg-member-convert",
-          "when": "resourceExtname =~ /\\.(?:sql)?rpgle/i"
+          "when": "resourceScheme === member && resourceExtname =~ /\\.(?:sql)?rpgle/i"
         }
       ],
       "arcad-tfrrpg": [
