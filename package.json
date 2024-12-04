@@ -452,7 +452,8 @@
       "editor/context": [
         {
           "command": "tfrrpg-member-convert",
-          "when": "resourceScheme === member && resourceExtname =~ /\\.(?:sql)?rpgle/i"
+          "when": "resourceScheme === member && resourceExtname =~ /\\.(?:sql)?rpgle/i",
+          "group": "tfrrgp@01"
         }
       ],
       "arcad-tfrrpg": [
