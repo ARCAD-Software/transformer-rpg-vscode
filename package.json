@@ -251,45 +251,45 @@
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "ARCAD-Tranformer RPG",
+        "category": "ARCAD-Transformer RPG",
         "title": "%refresh%",
         "icon": "$(refresh)",
         "command": "tfrrpg-product-refresh",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "ARCAD-Tranformer RPG",
+        "category": "ARCAD-Transformer RPG",
         "title": "%check.update%",
         "command": "tfrrpg-product-check-update",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "ARCAD-Tranformer RPG",
+        "category": "ARCAD-Transformer RPG",
         "title": "%install.tfrrpg%",
         "command": "tfrrpg-product-install",
         "icon": "$(desktop-download)",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "ARCAD-Tranformer RPG",
+        "category": "ARCAD-Transformer RPG",
         "title": "%update.tfrrpg%",
         "command": "tfrrpg-product-update",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "ARCAD-Tranformer RPG",
+        "category": "ARCAD-Transformer RPG",
         "title": "%apply.license%",
         "command": "tfrrpg-product-apply-license",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "ARCAD-Tranformer RPG",
+        "category": "ARCAD-Transformer RPG",
         "title": "%check.license%",
         "command": "tfrrpg-product-check-license",
         "enablement": "code-for-ibmi:connected"
       },
       {
-        "category": "ARCAD-Tranformer RPG",
+        "category": "ARCAD-Transformer RPG",
         "title": "%change.language%",
         "command": "tfrrpg-product-change-language",
         "icon": "$(code-review)",
