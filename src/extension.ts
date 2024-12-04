@@ -1,27 +1,39 @@
-import { ExtensionContext, commands, window, ProgressLocation, Uri } from "vscode";
-import { Code4i } from "./code4i";
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { addMembersToConversionList, openConfigWindow } from "./main/controller";
-import { ConversionListProvider, ConversionListNode, ExplorerNode, ConversionItemNode } from "./main/views/conversionListBrowser";
-import { MESSAGES, COMMANDS } from "./utils/constants";
-import { filterMembers, validateSourceType } from "./utils/helper";
-import { MemberNode } from "./main/model";
+import { ExtensionContext, OutputChannel, ProgressLocation, Uri, commands, l10n, window, workspace } from "vscode";
+import { Code4i } from "./code4i";
 import { initializeConfiguration } from "./configuration";
+import { addMembersToConversionList, openConfigWindow } from "./main/controller";
+import { MemberNode } from "./main/model";
+import { ExplorerNode } from "./main/views/common";
+import { ConversionItemNode, ConversionListNode, ConversionListProvider } from "./main/views/conversionListBrowser";
+import { ProductStatusDataProvider } from "./main/views/productStatus";
+import { initializeProduct } from "./product";
+import { COMMANDS, MESSAGES } from "./utils/constants";
+import { filterMembers, validateSourceType } from "./utils/helper";
 
 const NodeContext = {
   MEMBER: 'member',
   SPF: 'spf'
 } as const;
 
+let output: OutputChannel;
+export function tfrrpgOutput() {
+  if (output) {
+    return output;
+  }
+  else {
+    throw new Error(l10n.t("ARCAD-Transformer RPG is not active"));
+  }
+}
 
 export function activate(context: ExtensionContext): void {
-  Code4i.initialize();
+  Code4i.initialize(context);
   initializeExtension(context);
-
-  Code4i.onEvent('connected', () => {
-    console.log(MESSAGES.CONNECTED);
-  });
   console.log(MESSAGES.ACTIVATED);
+
+  output = window.createOutputChannel("ARCAD-Transformer RPG", { log: true });
+  output.clear();
+  context.subscriptions.push(output);
 }
 
 export function deactivate(): void {
@@ -30,8 +42,9 @@ export function deactivate(): void {
 
 function initializeExtension(context: ExtensionContext): void {
   initializeConfiguration();
-  initializeTreeView(context);
+  initializeTreeViews(context);
   registerCommands(context);
+  initializeProduct(context);
 }
 
 function registerCommands(context: ExtensionContext): void {
@@ -77,18 +90,25 @@ function launchSourceConversion(node: MemberNode, member: IBMiMember, isMassConv
   });
 }
 
-function initializeTreeView(context: ExtensionContext): void {
-  const contentProvider = new ConversionListProvider();
+function initializeTreeViews(context: ExtensionContext): void {
+  const conversionContentProvider = new ConversionListProvider();
   const conversionListView = window.createTreeView(`arcad-tfrrpg-conversion-list`, {
-    treeDataProvider: contentProvider,
+    treeDataProvider: conversionContentProvider,
     showCollapseAll: true,
     canSelectMany: true,
   });
 
+  const productContentProvider = new ProductStatusDataProvider(context);
+  const productView = window.createTreeView("arcad-tfrrpg-product-status", {
+    treeDataProvider: productContentProvider,
+    showCollapseAll: true
+  });
+
   context.subscriptions.push(
     conversionListView,
-    commands.registerCommand(COMMANDS.REFRESH_LIST, () => contentProvider.refresh()),
-    commands.registerCommand(COMMANDS.NEW_CONVERSION_LIST, () => contentProvider.addNewConversionList()),
+    productView,
+    commands.registerCommand(COMMANDS.REFRESH_LIST, () => conversionContentProvider.refresh()),
+    commands.registerCommand(COMMANDS.NEW_CONVERSION_LIST, () => conversionContentProvider.addNewConversionList()),
     commands.registerCommand(COMMANDS.DELETE_LIST, (node: ConversionListNode) => node.deleteConversionList(node)),
     commands.registerCommand(COMMANDS.DELETE_LIST_ITEM, (node: ConversionItemNode) => node.removeMemberFromList(node)),
     commands.registerCommand(COMMANDS.UPDATE_OBJECT_TYPE, (node: ConversionItemNode | ConversionListNode) => node.updateMemberObjectType()),
@@ -102,17 +122,20 @@ function initializeTreeView(context: ExtensionContext): void {
         node.processBatchConversion();
       }
     }),
+    commands.registerCommand("tfrrpg-product-view-description", (description: string) => {
+      productView.description = description;
+    }),
+    workspace.onDidChangeConfiguration(change => {
+      if (['arcad.connection.instance', "arcad-transformer-rpg.forceUseOfStandaloneProduct"].some(conf => change.affectsConfiguration(conf))) {
+        productContentProvider.refresh();
+      }
+    })
   );
 }
 
 export function refreshListExplorer(node?: ExplorerNode): void {
   commands.executeCommand(COMMANDS.REFRESH_LIST, node);
 }
-
-export function refreshIbmIExplorer(node?: any): void {
-  commands.executeCommand(COMMANDS.REFRESH_OBJECT_BROWSER, node || '');
-}
-
 
 export async function getMembersListWithProgress(node: MemberNode): Promise<IBMiMember[]> {
   return window.withProgress({
@@ -172,4 +195,6 @@ function showUnsupportedSourceTypeError(): void {
   window.showErrorMessage(MESSAGES.UNSUPPORTED_SOURCE_TYPE, { modal: true });
 }
 
-
+export function getARCADInstance() {
+  return workspace.getConfiguration('arcad').get<string>('connection.instance', 'AD');
+}

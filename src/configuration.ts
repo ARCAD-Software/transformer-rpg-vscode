@@ -1,6 +1,7 @@
-import { workspace, ConfigurationTarget, l10n } from 'vscode';
-import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
+import { ConfigurationTarget, l10n, workspace } from 'vscode';
+import { tfrrpgOutput } from './extension';
 import { Connections } from './main/model';
+import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
 export interface CommandParams {
     SRCLIB: string;
     SRCMBR: string;
@@ -141,6 +142,9 @@ export namespace ConfigManager {
         }
     }
 
+    export function forceStandaloneProduct() {
+        return getConfiguration().get<boolean>("forceUseOfStandaloneProduct", false);
+    }
 }
 
 
@@ -199,9 +203,9 @@ export async function initializeConfiguration(): Promise<void> {
 
     if (!currentConfig || Object.keys(currentConfig).length === 0) {
         await config.update(configKey, defaultConfig, ConfigurationTarget.Global);
-        console.log(l10n.t("Default configuration set for ARCAD Transformer RPG."));
+        tfrrpgOutput().appendLine(l10n.t("Default configuration set for ARCAD Transformer RPG."));
     } else {
-        console.log(l10n.t("Configuration already exists. Skipping default configuration initialization."));
+        tfrrpgOutput().appendLine(l10n.t("Configuration already exists. Skipping default configuration initialization."));
     }
 }
 

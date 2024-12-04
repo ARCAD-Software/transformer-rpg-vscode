@@ -1,13 +1,13 @@
-import { commands, l10n, ProgressLocation, window } from "vscode";
 import { CommandResult, IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { CommandParams } from "../configuration";
+import { commands, l10n, ProgressLocation, window } from "vscode";
 import { Code4i } from "../code4i";
+import { CommandParams } from "../configuration";
 import { generateCommand } from "../rpgcommands/commandUtils";
 
 const SUCCESS_MSG_IDS = ['MSG3867', 'MSG1234', 'MSG5678'];
 
 export async function handleConversion(params: CommandParams, member: IBMiMember, parentnode?: any) {
-    const command = generateCommand(params, member);
+    const command = await generateCommand(params, member);
     window.withProgress({
         location: ProgressLocation.Notification,
         title: l10n.t('Executing Conversion Command'),

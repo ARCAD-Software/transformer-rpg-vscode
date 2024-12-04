@@ -1,14 +1,14 @@
 import { CommandResult, IBMiMember, MemberItem } from "@halcyontech/vscode-ibmi-types";
-import { CommandParams, ConfigManager } from "../configuration";
-import { l10n, window, ProgressLocation, CancellationToken, commands } from "vscode";
-import { commandReportUI, createTabs, setupTabWindow } from "./webviews/panel";
-import { executeConversionCommand, handleConversion } from "./conversion";
-import { generateCommand } from "../rpgcommands/commandUtils";
+import { CancellationToken, commands, l10n, ProgressLocation, window } from "vscode";
 import { Code4i } from "../code4i";
+import { CommandParams, ConfigManager } from "../configuration";
 import { getMembersListWithProgress, refreshListExplorer } from "../extension";
-import { ConversionList } from "./views/conversionListBrowser";
+import { generateCommand } from "../rpgcommands/commandUtils";
+import { executeConversionCommand, handleConversion } from "./conversion";
 import { ConversionStatus } from "./conversionMessage";
 import { MemberNode } from "./model";
+import { ConversionList } from "./views/conversionListBrowser";
+import { commandReportUI, createTabs, setupTabWindow } from "./webviews/panel";
 
 interface WindowConfig {
     member: IBMiMember;
@@ -141,9 +141,7 @@ async function convertMember(
     member: IBMiMember,
     executionResult: ExecutionReport[]
 ): Promise<void> {
-    const cmd = generateCommand(data, member);
-    console.log(cmd);
-
+    const cmd = await generateCommand(data, member);
     const result = await executeConversionCommand(cmd);
     if (result) {
         executionResult.push({ sourceMember: member, result });

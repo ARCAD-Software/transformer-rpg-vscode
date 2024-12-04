@@ -59,7 +59,7 @@ export function getStatusColorFromCode(status: number): string {
 
 export function getStatusColor(msg: string): string {
     let color = 'var(--vscode-editor-foreground)';
-    
+
     if (msg.includes('MSG3867')) {
         color = 'var(--vscode-terminal-ansiGreen)';
     } else if (msg.includes('MSG3866') || msg.includes('MSG3540') || msg.includes('MSG3995')) {
