@@ -142,8 +142,6 @@ async function convertMember(
     executionResult: ExecutionReport[]
 ): Promise<void> {
     const cmd = await generateCommand(data, member);
-    console.log(cmd);
-
     const result = await executeConversionCommand(cmd);
     if (result) {
         executionResult.push({ sourceMember: member, result });

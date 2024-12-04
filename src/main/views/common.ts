@@ -1,5 +1,5 @@
 import vscode from "vscode";
-export abstract class ExplorerNode extends vscode.TreeItem {
+export class ExplorerNode extends vscode.TreeItem {
     constructor(
         label: string,
         contextValue: string,
@@ -15,6 +15,13 @@ export abstract class ExplorerNode extends vscode.TreeItem {
     }
 
     getChildren?(): vscode.ProviderResult<ExplorerNode[]>;
+}
+
+export class TextNode extends ExplorerNode {
+    constructor(label: string, options?: { description?: string, icon?: string, parent?: ExplorerNode }) {
+        super(label, label, vscode.TreeItemCollapsibleState.None, { codicon: options?.icon }, options?.parent);
+        this.description = options?.description;
+    }
 }
 
 export abstract class ExplorerDataProvider implements vscode.TreeDataProvider<ExplorerNode> {

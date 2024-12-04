@@ -1,10 +1,11 @@
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { ExtensionContext, ProgressLocation, Uri, commands, window, workspace } from "vscode";
+import { ExtensionContext, OutputChannel, ProgressLocation, Uri, commands, l10n, window, workspace } from "vscode";
 import { Code4i } from "./code4i";
 import { initializeConfiguration } from "./configuration";
 import { addMembersToConversionList, openConfigWindow } from "./main/controller";
 import { MemberNode } from "./main/model";
-import { ConversionItemNode, ConversionListNode, ConversionListProvider, ExplorerNode } from "./main/views/conversionListBrowser";
+import { ExplorerNode } from "./main/views/common";
+import { ConversionItemNode, ConversionListNode, ConversionListProvider } from "./main/views/conversionListBrowser";
 import { ProductStatusDataProvider } from "./main/views/productStatus";
 import { initializeProduct } from "./product";
 import { COMMANDS, MESSAGES } from "./utils/constants";
@@ -15,11 +16,24 @@ const NodeContext = {
   SPF: 'spf'
 } as const;
 
+let output: OutputChannel;
+export function tfrrpgOutput() {
+  if (output) {
+    return output;
+  }
+  else {
+    throw new Error(l10n.t("ARCAD-Transformer RPG is not active"));
+  }
+}
 
 export function activate(context: ExtensionContext): void {
   Code4i.initialize(context);
   initializeExtension(context);
   console.log(MESSAGES.ACTIVATED);
+
+  output = window.createOutputChannel("ARCAD-Transformer RPG", { log: true });
+  output.clear();
+  context.subscriptions.push(output);
 }
 
 export function deactivate(): void {
@@ -108,6 +122,14 @@ function initializeTreeViews(context: ExtensionContext): void {
         node.processBatchConversion();
       }
     }),
+    commands.registerCommand("tfrrpg-product-view-description", (description: string) => {
+      productView.description = description;
+    }),
+    workspace.onDidChangeConfiguration(change => {
+      if (['arcad.connection.instance', "arcad-transformer-rpg.forceUseOfStandaloneProduct"].some(conf => change.affectsConfiguration(conf))) {
+        productContentProvider.refresh();
+      }
+    })
   );
 }
 

@@ -14,7 +14,7 @@ export const COMMANDS = {
     CONVERT_TARGET_MEMBER: 'tfrrpg-list-item-member-convert',
     EDIT_SOURCE: 'tfrrpg-list-item-source-edit',
     EDIT_CONVERTED_SOURCE: 'tfrrpg-list-item-converted-source-edit',
-    FOCUS_OBJECT_BROWSER: 'tfrrpg-list-objectbrowser.focus',
+    FOCUS_OBJECT_BROWSER: 'tfrrpg-list-objectbrowser.focus'
   };
   
   export const MESSAGES = {

@@ -1,5 +1,5 @@
 {
-    "title": "Transformer RPG",
+    "title": "ARCAD-Transformer RPG",
     "arcad-tfrrpg-member-convert": "Convert to Fully Free",
     "arcad-tfrrpg-list-create": "Create a new Conversion List",
     "arcad-tfrrpg-list-delete": "Delete Conversion List",
@@ -31,6 +31,10 @@
     "conversiondate_description": "Date of conversion",
     "product.status": "Product status",
     "forceUseOfStandaloneProduct": "Force the use of the standalone product",
-    "check.update":"Check for update",
-    "install.tfrrpg":"Install ARCAD-Tranformer RPG"
+    "check.update": "Check for update",
+    "install.tfrrpg": "Install ARCAD-Tranformer RPG",
+    "update.tfrrpg": "Update runtime",
+    "apply.license": "Apply license key",
+    "check.license": "Check license key",
+    "change.language": "Change language"
 }

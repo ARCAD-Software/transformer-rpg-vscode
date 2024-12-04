@@ -73,7 +73,7 @@
       "properties": {
         "arcad-transformer-rpg.forceUseOfStandaloneProduct": {
           "type": "boolean",
-          "default": "false",
+          "default": false,
           "description": "%forceUseOfStandaloneProduct%"
         },
         "arcad-transformer-rpg.command": {
@@ -261,13 +261,38 @@
         "category": "ARCAD-Tranformer RPG",
         "title": "%check.update%",
         "command": "tfrrpg-product-check-update",
-        "enablement": "code-for-ibmi:connected"      
+        "enablement": "code-for-ibmi:connected"
       },
       {
         "category": "ARCAD-Tranformer RPG",
         "title": "%install.tfrrpg%",
         "command": "tfrrpg-product-install",
         "icon": "$(desktop-download)",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Tranformer RPG",
+        "title": "%update.tfrrpg%",
+        "command": "tfrrpg-product-update",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Tranformer RPG",
+        "title": "%apply.license%",
+        "command": "tfrrpg-product-apply-license",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Tranformer RPG",
+        "title": "%check.license%",
+        "command": "tfrrpg-product-check-license",
+        "enablement": "code-for-ibmi:connected"
+      },
+      {
+        "category": "ARCAD-Tranformer RPG",
+        "title": "%change.language%",
+        "command": "tfrrpg-product-change-language",
+        "icon": "$(code-review)",
         "enablement": "code-for-ibmi:connected"
       }
     ],
@@ -291,15 +316,20 @@
           "group": "navigation"
         },
         {
-          "command": "tfrrpg-product-refresh",
-          "when": "view == arcad-tfrrpg-product-status",
-          "group": "navigation"
+          "command": "tfrrpg-product-change-language",
+          "when": "view == arcad-tfrrpg-product-status && tfrrpgStandaloneInstalled",
+          "group": "navigation@01"
         },
         {
           "command": "tfrrpg-product-install",
           "when": "view == arcad-tfrrpg-product-status && !tfrrpgStandaloneInstalled",
-          "group": "navigation"
-        }
+          "group": "navigation@02"
+        },
+        {
+          "command": "tfrrpg-product-refresh",
+          "when": "view == arcad-tfrrpg-product-status",
+          "group": "navigation@99"
+        }        
       ],
       "commandPalette": [
         {
@@ -340,14 +370,26 @@
         },
         {
           "command": "tfrrpg-product-install",
-          "when": "never"        
+          "when": "never"
         },
         {
           "command": "tfrrpg-product-check-update",
-          "when": "never"        
+          "when": "never"
         },
         {
           "command": "tfrrpg-product-refresh",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-product-apply-license",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-product-check-license",
+          "when": "never"
+        },
+        {
+          "command": "tfrrpg-product-change-language",
           "when": "never"
         }
       ],
@@ -392,9 +434,24 @@
           "group": "conversion@2"
         },
         {
-          "command": "tfrrpg-product-check-update",
+          "command": "tfrrpg-product-update",
           "when": "view == arcad-tfrrpg-product-status && viewItem === installedProductNode_standalone",
           "group": "01tfrrpProductg@01"
+        },
+        {
+          "command": "tfrrpg-product-check-update",
+          "when": "view == arcad-tfrrpg-product-status && viewItem === installedProductNode_standalone",
+          "group": "02tfrrpProductg@01"
+        },
+        {
+          "command": "tfrrpg-product-check-license",
+          "when": "view == arcad-tfrrpg-product-status && viewItem =~ /^licenseProductNode/",
+          "group": "01tfrrpProductLicenseg@01"
+        },
+        {
+          "command": "tfrrpg-product-apply-license",
+          "when": "view == arcad-tfrrpg-product-status && viewItem =~ /^licenseProductNode/",
+          "group": "02tfrrpProductLicenseg@01"
         }
       ],
       "editor/context": [
