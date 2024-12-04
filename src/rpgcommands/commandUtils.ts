@@ -1,12 +1,13 @@
 import { IBMiMember } from '@halcyontech/vscode-ibmi-types';
 import { CommandParams } from '../configuration';
+import { product } from '../product';
 import { convertBool } from '../utils/helper';
 
 export async function generateCommand(data: CommandParams, source: IBMiMember) {
     const getToSrcFile = (member: string): string => member === '*FROMFILE' ? `${data.TOSRCLIB}/${source.file}` : `${data.TOSRCLIB}/${data.TOSRCFILE}`;
     const getToSrcMbr = (member: string): string => member === '*FROMMBR' ? source.name : data.TOSRCMBR;
-
-    return `ARCAD_RPG/ACVTRPGFRE SRCFILE(${source.library}/${source.file}) SRCMBR(${source.name}) SRCTYPE(${source.extension}) ` +
+    
+    return `${await product.getProductLibrary()}/ACVTRPGFRE SRCFILE(${source.library}/${source.file}) SRCMBR(${source.name}) SRCTYPE(${source.extension}) ` +
         `OBJTYPE(${data.OBJTYPE}) CVTCLCSPEC(*FREE) CVTDCLSPEC(${convertBool(data.CVTDCLSPEC)}) ` +
         `EXPCSPECPY(${convertBool(data.EXPCSPECPY)}) FULLYFREE(*YES) ` +
         `MAXNOTFREE(${data.MAXNOTFREE}) FIRSTCOL(${data.FIRSTCOL}) USEPARMNUM(${convertBool(data.USEPARMNUM)}) ` +
