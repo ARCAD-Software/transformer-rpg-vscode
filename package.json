@@ -495,6 +495,6 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "axios": "^1.7.8"
+    "axios": "^1.7.9"
   }
 }
