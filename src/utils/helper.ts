@@ -1,4 +1,4 @@
-import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
+import { IBMiMember, IBMiMessage } from "@halcyontech/vscode-ibmi-types";
 import { SUPPORTED_SOURCE_TYPES } from "./constants";
 
 export function generateOptions(options: string[], selectedValue?: string) {
@@ -61,4 +61,8 @@ export function validateSourceType(sourceType: string): boolean {
 
 export function filterMembers(member: IBMiMember) {
     return validateSourceType(member.extension);
+}
+
+export function filterConversionMessage(message: IBMiMessage) {
+    return !["MSG3565", "CPC0904", "CPD4090"].includes(message.id);
 }

@@ -1,3 +1,5 @@
+import { IBMiMessages } from "@halcyontech/vscode-ibmi-types";
+
 export enum ConversionStatus {
     NA = -1,
     SUCCEED = 0,
@@ -9,10 +11,12 @@ const MSGID_SUCCEED1 = 'MSG3867';
 const MSGID_SUCCEED2 = 'MSG3868';
 const MSGID_SUCCEED3 = 'MSG4330';
 const MSGID_SUCCEED4 = 'MSG4409';
+export const ConversionOKs = [MSGID_SUCCEED1, MSGID_SUCCEED2, MSGID_SUCCEED3, MSGID_SUCCEED4];
+
 const MSGID_WARNING1 = 'MSG4178';
 const MSGID_WARNING2 = 'CPF9801';
 const MSGID_WARNING3 = 'MSG4331';
-
+export const ConversionWarnings = ['MSG3872', 'MSG3873', 'MSG4331'];
 
 export function getConversionStatus(status: number): string {
     switch (status) {
@@ -57,18 +61,16 @@ export function getStatusColorFromCode(status: number): string {
     return color;
 }
 
-export function getStatusColor(msg: string): string {
-    let color = 'var(--vscode-editor-foreground)';
-
-    if (msg.includes('MSG3867')) {
-        color = 'var(--vscode-terminal-ansiGreen)';
-    } else if (msg.includes('MSG3866') || msg.includes('MSG3540') || msg.includes('MSG3995')) {
-        color = 'var(--vscode-editorError-foreground)';
-    } else if (msg.includes('MSG4178') || msg.includes('CPF9801')) {
-        color = 'var(--vscode-editorWarning-foreground)';
+export function getStatusColor(ok: boolean, messages: IBMiMessages) {
+    if (ok || ConversionOKs.some(messages.findId)) {
+        return 'var(--vscode-terminal-ansiGreen)';
+    } else if (ConversionWarnings.some(messages.findId)) {
+        return 'var(--vscode-editorWarning-foreground)';
+    } else if (messages.findId('MSG4178')) { //Already Fully-free
+        return 'var(--vscode-editor-foreground)';
+    } else {
+        return 'var(--vscode-editorError-foreground)';
     }
-
-    return color;
 }
 
 

@@ -69,7 +69,7 @@ async function handleMemberConvert(item: ConversionActionTarget | Uri): Promise<
     if ("object" in item) {
       //Converting members from a source file
       openConfigWindow({
-        conversionTarget: { library: item.object.library, file: item.object.name },
+        conversionTarget: { library: item.object.library, file: item.object.name, filter: { type: item.filter.filterType, members: item.filter.member, extensions: item.filter.memberType } },
         parentnode
       });
     }

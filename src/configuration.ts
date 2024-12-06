@@ -3,10 +3,6 @@ import { tfrrpgOutput } from './extension';
 import { Connections } from './main/model';
 import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
 export interface CommandParams {
-    SRCLIB: string;
-    SRCMBR: string;
-    SRCTYPE: string;
-    SRCFILE: string;
     CVTCLCSPEC: string;
     CVTDCLSPEC: string;
     EXPCSPECPY: string;
@@ -14,9 +10,6 @@ export interface CommandParams {
     MAXNOTFREE: string;
     FIRSTCOL: number;
     USEPARMNUM: string;
-    TOSRCFILE: string;
-    TOSRCMBR: string;
-    TOSRCLIB: string;
     REPLACE: string;
     CVT_CALL: string;
     CVT_GOTO: string;
@@ -46,7 +39,15 @@ export interface CommandParams {
     EMPTYCMT: string;
     ALPHTONUM: string;
     KEEPDSIND: string;
-    buttons: string;
+    buttons?: string;
+    SRCLIB?: string;
+    SRCMBR?: string;
+    SRCTYPE?: string;
+    SRCFILE?: string;
+    OBJTYPE?: string;
+    TOSRCLIB?: string;
+    TOSRCFILE?: string
+    TOSRCMBR?: string;
 }
 
 
@@ -62,6 +63,18 @@ export namespace ConfigManager {
 
     export async function setParams(params: CommandParams): Promise<void> {
         const config = getConfiguration();
+
+        //Remove transient fields
+        delete params.buttons;
+        delete params.OBJTYPE;
+        delete params.SRCLIB;
+        delete params.SRCMBR;
+        delete params.SRCTYPE;
+        delete params.SRCFILE;
+        delete params.TOSRCLIB;
+        delete params.TOSRCFILE;
+        delete params.TOSRCMBR;
+
         await config.update('command', params, ConfigurationTarget.Global);
     }
     export function getConnections(): Connections | undefined {
@@ -192,8 +205,7 @@ export async function initializeConfiguration(): Promise<void> {
         NUMTRUNCD: "*YES",
         EMPTYCMT: "*KEEP",
         ALPHTONUM: "*YES",
-        KEEPDSIND: "*NO",
-        buttons: ""
+        KEEPDSIND: "*NO"
     };
 
     const config = workspace.getConfiguration();

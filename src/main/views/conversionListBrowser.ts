@@ -3,14 +3,13 @@ import {
     commands,
     l10n,
     MarkdownString,
-    ProgressLocation,
     ProviderResult,
     TreeItemCollapsibleState,
     window
 } from "vscode";
 import { CommandParams, ConfigManager } from "../../configuration";
 import { refreshListExplorer } from "../../extension";
-import { convertMembersWithProgress, ExecutionReport } from "../controller";
+import { convertTargets, ExecutionReport } from "../controller";
 import { openMember } from "../conversion";
 import { ConversionListItemStepper } from "../conversion-item";
 import { ConversionStatus, getConversionStatus, getStatusColorFromCode, setConverionStatus } from "../conversionMessage";
@@ -115,15 +114,7 @@ export abstract class BaseConversionNode extends ExplorerNode {
             const commandParameters = page.data as CommandParams;
             commandParameters.TOSRCLIB = targetlibrary;
             commandParameters.TOSRCFILE = targetFile;
-            return await window.withProgress({
-                location: ProgressLocation.Notification,
-                title: l10n.t("TFRRPG"),
-                cancellable: true
-            }, async (progress, token) => {
-                return await convertMembersWithProgress(commandParameters, members, progress, token, name).then((report) => {
-                    return report || [];
-                });
-            });
+            return convertTargets(commandParameters, members, name) || [];
         }
         return [];
     }

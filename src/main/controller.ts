@@ -1,15 +1,16 @@
 import { BrowserItem, CommandResult, IBMiMember, MemberItem, ObjectItem } from "@halcyontech/vscode-ibmi-types";
-import vscode, { CancellationToken, commands, l10n, ProgressLocation, window } from "vscode";
+import vscode, { commands, l10n, ProgressLocation, window } from "vscode";
+import { Code4i } from "../code4i";
 import { CommandParams, ConfigManager } from "../configuration";
 import { refreshListExplorer, tfrrpgOutput } from "../extension";
 import { generateCommand } from "../rpgcommands/commandUtils";
 import { MESSAGES } from "../utils/constants";
-import { findObjectType, listConvertibleMembers, listObjects } from "./api";
-import { executeConversionCommand, handleConversion } from "./conversion";
+import { findObjectType, listConvertibleMembers } from "./api";
+import { handleConversion as convertSingleMember, executeConversionCommand } from "./conversion";
 import { ConversionStatus } from "./conversionMessage";
 import { ConversionTarget } from "./model";
 import { ConversionList } from "./views/conversionListBrowser";
-import { commandReportUI, createTabs, setupTabWindow } from "./webviews/panel";
+import { createTabs, setupTabWindow, showConversionReport } from "./webviews/panel";
 
 interface ConversionConfiguration {
     conversionTarget: ConversionTarget
@@ -20,8 +21,6 @@ export interface ExecutionReport {
     target: ConversionTarget
     result: CommandResult
 }
-
-const openPanels = new Map<string, { dispose: () => void }>();
 
 export async function openConfigWindow(param: ConversionConfiguration): Promise<void> {
     const config = ConfigManager.getParams();
@@ -35,44 +34,35 @@ export async function openConfigWindow(param: ConversionConfiguration): Promise<
             const commandParameters = page.data;
             page.panel.dispose();
             if (multiple) {
-                await convertMembers(commandParameters, param.conversionTarget);
+                await convertMultipleMembers(commandParameters, param.conversionTarget);
             } else {
                 if (page.data.buttons === 'convertnsave') {
                     ConfigManager.setParams(commandParameters);
                 }
-                handleConversion(commandParameters, param.conversionTarget, param.parentnode);
+                convertSingleMember(commandParameters, param.conversionTarget, param.parentnode);
             }
         }
     }
 }
 
-async function convertMembers(data: CommandParams, conversionTarget: ConversionTarget): Promise<void> {
-    const sourceMembersList = await getMembersListWithProgress(conversionTarget);
+async function convertMultipleMembers(data: CommandParams, conversionTarget: ConversionTarget): Promise<void> {
+    const sourceMembersList: ConversionTarget[] = (await getMembersListWithProgress(conversionTarget))
+        .map(member => ({ library: member.library, file: member.file, member: member.name, extension: member.extension }));
     if (sourceMembersList.length) {
         const memberNames = sourceMembersList
             .slice(0, 10)
-            .map(member => member.name)
-            .join(', ');
+            .map(member => `- ${member.member}`)
+            .join('\n');
 
-        const displayedNames = sourceMembersList.length > 10
-            ? `${memberNames},...`
-            : memberNames;
-
+        const detail = `${memberNames}${sourceMembersList.length > 10 ? l10n.t(`\n- ${sourceMembersList.length - 10} more...`) : ''}`;
         const isConfirmtoConvert = await window.showWarningMessage(
-            l10n.t(`Confirm to convert {0} members?\n{1}`, sourceMembersList.length, displayedNames),
-            { modal: true },
+            l10n.t(`Do you confirm the conversion of {0} members?`, sourceMembersList.length),
+            { modal: true, detail },
             l10n.t("Yes"),
-            l10n.t("No")
         );
         if (isConfirmtoConvert) {
-            await window.withProgress({
-                location: ProgressLocation.Notification,
-                title: l10n.t("TFRRPG"),
-                cancellable: true
-            }, async (progress, token) => {
-                await lookupMemberObjectTypes(sourceMembersList, conversionTarget.library, progress, token);
-                await convertMembersWithProgress(data, sourceMembersList, progress, token);
-            });
+            await lookupMemberObjectTypes(sourceMembersList, conversionTarget.library);
+            await convertTargets(data, sourceMembersList, conversionTarget.library);
         }
     }
     else {
@@ -102,92 +92,92 @@ async function getMembersListWithProgress(target: ConversionTarget): Promise<IBM
     });
 }
 
-export async function convertMembersWithProgress(
+export async function convertTargets(
     commandParam: CommandParams,
     conversions: ConversionTarget[],
-    progress: { report: (value: { increment: number; message: string }) => void },
-    token: CancellationToken,
-    name?: string
+    name: string
 ): Promise<ExecutionReport[]> {
-    const totalMembers = conversions.length;
-    const executionResult: ExecutionReport[] = [];
-    const increment = 100 / conversions.length;
-    let current = 1;
-    for (const conversion of conversions) {
-        if (token.isCancellationRequested) {
-            window.showInformationMessage(l10n.t("Conversion cancelled"));
-            break;
+    return await window.withProgress({
+        location: ProgressLocation.Notification,
+        title: l10n.t("Converting members"),
+        cancellable: true
+    }, async (progress, token) => {
+        const totalMembers = conversions.length;
+        const executionResult: ExecutionReport[] = [];
+        const increment = 100 / conversions.length;
+        let current = 1;
+        let converted = 0;
+        for (const conversion of conversions) {
+            if (token.isCancellationRequested) {
+                window.showInformationMessage(l10n.t("Conversion cancelled"));
+                break;
+            }
+
+            if (await convertMember(commandParam, conversion, executionResult)) {
+                converted++;
+            }
+            progress.report({
+                increment,
+                message: l10n.t("{0}/{1}", current++, totalMembers),
+            });
         }
 
-        await convertMember(commandParam, conversion, executionResult);
-        progress.report({
-            increment,
-            message: l10n.t("Performed Conversion for {0} of {1} members", current++, totalMembers),
-        });
-    }
-    if (executionResult.length === totalMembers) {
-        const message = totalMembers === 1
-            ? l10n.t("Member converted successfully!")
-            : l10n.t("All members converted successfully!");
-
-        window
-            .showInformationMessage(
-                message,
+        const allConverted = (converted === totalMembers);
+        const openReport = (open?: string) => { if (open) { showConversionReport(executionResult, name || ""); } };
+        if (allConverted) {
+            window.showInformationMessage(totalMembers === 1
+                ? l10n.t("Member converted successfully!")
+                : l10n.t("All members converted successfully!"),
                 l10n.t("Show Conversion Report")
-            )
-            .then((selection) => {
-                if (selection === l10n.t("Show Conversion Report")) {
-                    showConversionReport(executionResult, name ?? "");
-                }
-            });
-    }
-    return executionResult;
-}
+            ).then(openReport);
+        }
+        else {
+            window.showErrorMessage(
+                totalMembers === 1
+                    ? l10n.t("Member conversion failed!")
+                    : l10n.t("{0}/{1} members could not be converted!", totalMembers - converted, totalMembers),
+                l10n.t("Show Conversion Report")
+            ).then(openReport);
+        }
 
+        return executionResult;
+    });
+}
 
 async function convertMember(
     data: CommandParams,
     member: ConversionTarget,
     executionResult: ExecutionReport[]
-): Promise<void> {
+) {
     const cmd = await generateCommand(data, member);
     const result = await executeConversionCommand(cmd);
     if (result) {
         executionResult.push({ target: member, result });
     }
+
+    return result && (result.code === 0 || Code4i.getTools().parseMessages(result.stderr || result.stdout).findId("MSG4178"));
 }
 
-async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
-    const title = l10n.t("Conversion Report-{0}", itemName);
+async function lookupMemberObjectTypes(targets: ConversionTarget[], library: string) {
+    await window.withProgress({
+        location: ProgressLocation.Notification,
+        title: l10n.t("Looking up members' object types"),
+        cancellable: true
+    }, async (progress, token) => {
+        const cache = new Map;
+        const increment = 100 / targets.length;
+        let current = 1;
+        for (const target of targets) {
+            if (token.isCancellationRequested) {
+                return;
+            }
 
-    if (openPanels.has(title)) {
-        openPanels.get(title)?.dispose();
-        openPanels.delete(title);
-    }
-
-    const resultWindow = commandReportUI(report);
-    const page = await resultWindow.loadPage(title);
-
-    if (page) {
-        openPanels.set(title, page.panel);
-    }
-
-}
-
-async function lookupMemberObjectTypes(targets: ConversionTarget[], library: string, progress: { report: (value: { increment: number, message: string }) => void }, token: CancellationToken) {
-    const cache = await listObjects(library);
-    const increment = 100 / targets.length;
-    for (const target of targets) {
-        if (token.isCancellationRequested) {
-            window.showInformationMessage(l10n.t("Process cancelled"));
-            break;
+            if (target.member) {
+                target.objectType = await findObjectType(library, target.member, cache);
+                progress.report({ increment, message: `${current++}/${targets.length}` });
+            }
         }
-
-        if (target.member) {
-            progress.report({ increment, message: l10n.t("Updating object type for {0}", target.member) });
-            target.objectType = await findObjectType(library, target.member, cache);
-        }
-    }
+    });
 }
 
 export async function addMembersToConversionList(node: MemberItem | ObjectItem): Promise<void> {

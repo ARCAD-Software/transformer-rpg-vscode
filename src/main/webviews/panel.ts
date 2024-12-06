@@ -2,7 +2,7 @@ import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomU
 import { l10n } from "vscode";
 import { Code4i } from "../../code4i";
 import { CommandParams } from "../../configuration";
-import { convertBool, generateOptions, getBooleanOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
+import { convertBool, filterConversionMessage, generateOptions, getBooleanOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
 import { ExecutionReport } from "../controller";
 import { getStatusColor } from "../conversionMessage";
 import { ConversionTarget } from "../model";
@@ -34,21 +34,31 @@ export function setupTabWindow(tabs: ComplexTab[], multiple: boolean): CustomUI 
 
 // Properties Tab
 function createPropertiesUI(conversion: ConversionTarget, config: CommandParams): CustomUI {
-    return Code4i.customUI()
-        .addHeading(l10n.t("Converted Source Member Properties"), 3)
-        .addParagraph(createPropertiesTable(conversion))
-        .addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions(getObjectTypes(), conversion.objectType))
-        .addHorizontalRule()
+    const ui = Code4i.customUI();
+    ui.addHeading(l10n.t("Converted Source Member Properties"), 3)
+        .addParagraph(createPropertiesTable(conversion));
+
+    if (conversion.member) {
+        ui.addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions([...getObjectTypes(), "*NONE"], conversion.objectType));
+    }
+
+    ui.addHorizontalRule()
         .addParagraph(l10n.t('Convert Calculation Specs : <code>*FREE</code>'))
         .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs"), convertBool(config.CVTDCLSPEC) === "*YES")
         .addHorizontalRule()
         .addHeading(l10n.t("Target Source Member Information"), 4)
-        .addInput("TOSRCLIB", l10n.t("Library"), "", { default: config.TOSRCLIB || conversion.library })
-        .addInput("TOSRCFILE", l10n.t("Source File"), l10n.t("<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify member name for converted source"), { default: config.TOSRCFILE, readonly: false })
-        .addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same destination | Specify member name for converted source"), { default: conversion.member ? config.TOSRCMBR : "*FROMMBR", readonly: !conversion.member })
-        .addHorizontalRule()
+        .addInput("TOSRCLIB", l10n.t("Library"), "", { default: conversion.library })
+        .addInput("TOSRCFILE", l10n.t("Source File"), l10n.t("<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify source file name for converted source"), { default: conversion.file, readonly: false });
+
+    if (conversion.member) {
+        ui.addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same member name | Specify member name for converted source"), { default: "*FROMMBR" });
+    }
+
+    ui.addHorizontalRule()
         .addCheckbox("REPLACE", l10n.t("Replace Existing Member"), l10n.t("Replace the source member with the converted source"), convertBool(config.REPLACE) === "*YES")
         .addCheckbox("EXPCSPECPY", l10n.t("Expand Copy Book with C-Spec"), l10n.t("Expand Copy Books with C-Spec"), convertBool(config.EXPCSPECPY) === "*YES");
+
+    return ui;
 }
 
 // Conversion Options Tab
@@ -134,9 +144,29 @@ function addRow(key: string, value?: any): string {
 }
 
 
-export function commandReportUI(report: ExecutionReport[]) {
-    return Code4i.customUI().addHeading(l10n.t("Conversion Results"), 3).addParagraph(createReportTable(report));
+const openReports = new Map<string, { dispose: () => void }>();
+export async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
+    const title = l10n.t("Conversion Report-{0}", itemName);
+
+    if (openReports.has(title)) {
+        openReports.get(title)?.dispose();
+        openReports.delete(title);
+    }
+
+    const page = await commandReportUI(report).loadPage(title);
+    if (page) {
+        openReports.set(title, page.panel);
+    }
+
 }
+
+function commandReportUI(report: ExecutionReport[]) {
+    return Code4i.customUI()
+        .setOptions({ fullWidth: true })
+        .addHeading(l10n.t("Conversion Results"), 3)
+        .addParagraph(createReportTable(report));
+}
+
 function createReportTable(results: ExecutionReport[]): string {
     return /* html */ `
         <style>
@@ -162,16 +192,16 @@ function createReportTable(results: ExecutionReport[]): string {
         </style>
         <table>
             <tr>
-              <th>${l10n.t("Source Member Name")}</th>
+              <th>${l10n.t("Member Name")}</th>
               <th>${l10n.t("Output")}</th>
             </tr>
-            ${results.map(result => /* html */`
-              <tr style="color: ${getStatusColor(result.result.stdout || result.result.stderr)};">
-                  <td>${result.target.member}</td>
-                  <td>${result.result.stdout || result.result.stderr}</td>
-              </tr>`
-    ).join("")}
+            ${results.map(result => {
+        const ok = result.result.code === 0;
+        const messages = Code4i.getTools().parseMessages(result.result.stdout || result.result.stderr);
+        return /* html */` <tr style="color: ${getStatusColor(ok, messages)};">
+                  <td>${result.target.member} (${result.target.objectType || '-'})</td>
+                  <td>${messages.messages.filter(filterConversionMessage).map(m => `- [${m.id}] ${m.text}`).join("<br />")}</td>
+              </tr>`;
+    }).join("")}
         </table>`;
 }
-
-
