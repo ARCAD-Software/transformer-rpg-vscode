@@ -89,7 +89,7 @@ class TransformerRPGProduct {
       return this.getStandaloneLibrary();
     }
     else {
-      return this.getARCADProductLibrary();
+      return this.getARCADCommandLibrary();
     }
   }
 
