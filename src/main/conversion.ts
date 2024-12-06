@@ -50,7 +50,7 @@ function processCommandResult(
             }
         }
         else {
-            window.showInformationMessage(l10n.t("Failed to convert {0}.", target.member!), l10n.t("Show output")).then(openOutput);
+            window.showErrorMessage(l10n.t("Failed to convert {0}.", target.member!), l10n.t("Show output")).then(openOutput);
         }
     }
 }
