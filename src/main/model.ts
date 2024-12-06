@@ -1,6 +1,4 @@
-import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { FilterType } from "@halcyontech/vscode-ibmi-types/api/Filter";
-
 
 interface Connection {
     name: string;
@@ -11,30 +9,15 @@ interface Connection {
 
 export type Connections = Connection[];
 
-
-export type MemberNode = {
-    member: IBMiMember;
-    object: IBMiMember;
-    path: string;
-    parent: MemberNode;
-    contextValue: string;
-    filter: Filter;
-    sort: SortOptions;
-};
-
-export declare type SortOptions = {
-    order: "name" | "date";
-    ascending?: boolean;
-};
-
-export interface Filter {
-    name: string
+export type ConversionTarget = {
     library: string
-    object: string
-    types: string[]
-    member: string
-    memberType: string
-    protected: boolean
-    filterType: FilterType
-}
-
+    file: string
+    member?: string
+    extension?: string
+    objectType?: string
+    filter?: {
+        members?: string
+        extensions?: string
+        type: FilterType
+    }
+};

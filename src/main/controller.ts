@@ -1,119 +1,128 @@
-import { CommandResult, IBMiMember, MemberItem } from "@halcyontech/vscode-ibmi-types";
-import { CancellationToken, commands, l10n, ProgressLocation, window } from "vscode";
-import { Code4i } from "../code4i";
+import { BrowserItem, CommandResult, IBMiMember, MemberItem, ObjectItem } from "@halcyontech/vscode-ibmi-types";
+import vscode, { CancellationToken, commands, l10n, ProgressLocation, window } from "vscode";
 import { CommandParams, ConfigManager } from "../configuration";
-import { getMembersListWithProgress, refreshListExplorer } from "../extension";
+import { refreshListExplorer, tfrrpgOutput } from "../extension";
 import { generateCommand } from "../rpgcommands/commandUtils";
+import { MESSAGES } from "../utils/constants";
+import { findObjectType, listConvertibleMembers, listObjects } from "./api";
 import { executeConversionCommand, handleConversion } from "./conversion";
 import { ConversionStatus } from "./conversionMessage";
-import { MemberNode } from "./model";
+import { ConversionTarget } from "./model";
 import { ConversionList } from "./views/conversionListBrowser";
 import { commandReportUI, createTabs, setupTabWindow } from "./webviews/panel";
 
-interface WindowConfig {
-    member: IBMiMember;
-    massconvt: boolean;
-    parentnode?: MemberItem;
-    getMembers?: () => Promise<IBMiMember[]>;
+interface ConversionConfiguration {
+    conversionTarget: ConversionTarget
+    parentnode?: BrowserItem
 }
 
 export interface ExecutionReport {
-    sourceMember: IBMiMember;
-    result: CommandResult;
+    target: ConversionTarget
+    result: CommandResult
 }
 
 const openPanels = new Map<string, { dispose: () => void }>();
 
-export async function openConfigWindow(param: WindowConfig): Promise<void> {
+export async function openConfigWindow(param: ConversionConfiguration): Promise<void> {
     const config = ConfigManager.getParams();
-    if (!config) { return; };
+    if (config) {
+        const multiple = !param.conversionTarget.member;
+        const tabs = createTabs(param.conversionTarget, config);
+        const tabwindow = setupTabWindow(tabs, multiple);
 
-    const tabs = createTabs(param.member, config, param.massconvt);
-    const tabwindow = setupTabWindow(tabs);
-
-    const page = await tabwindow.loadPage<CommandParams>(l10n.t("ARCAD-Transformer RPG: {0}", param.member.name));
-    if (page?.data) {
-        const commandParameters = page.data;
-        page.panel.dispose();
-        if (param.massconvt && param.getMembers) {
-            await convertMembers(commandParameters, param.member.library, param.getMembers);
-        } else {
-            if (page.data.buttons === 'convertnsave') {
-                ConfigManager.setParams(commandParameters);
+        const page = await tabwindow.loadPage<CommandParams>(l10n.t("ARCAD-Transformer RPG: {0}", param.conversionTarget.member || param.conversionTarget.file));
+        if (page?.data) {
+            const commandParameters = page.data;
+            page.panel.dispose();
+            if (multiple) {
+                await convertMembers(commandParameters, param.conversionTarget);
+            } else {
+                if (page.data.buttons === 'convertnsave') {
+                    ConfigManager.setParams(commandParameters);
+                }
+                handleConversion(commandParameters, param.conversionTarget, param.parentnode);
             }
-            handleConversion(commandParameters, param.member, param.parentnode);
         }
     }
 }
 
-async function convertMembers(data: CommandParams, library: string, getMembers: () => Promise<IBMiMember[]>): Promise<void> {
-    const sourceMembersList = await getMembers();
-    if (!sourceMembersList.length) {
+async function convertMembers(data: CommandParams, conversionTarget: ConversionTarget): Promise<void> {
+    const sourceMembersList = await getMembersListWithProgress(conversionTarget);
+    if (sourceMembersList.length) {
+        const memberNames = sourceMembersList
+            .slice(0, 10)
+            .map(member => member.name)
+            .join(', ');
+
+        const displayedNames = sourceMembersList.length > 10
+            ? `${memberNames},...`
+            : memberNames;
+
+        const isConfirmtoConvert = await window.showWarningMessage(
+            l10n.t(`Confirm to convert {0} members?\n{1}`, sourceMembersList.length, displayedNames),
+            { modal: true },
+            l10n.t("Yes"),
+            l10n.t("No")
+        );
+        if (isConfirmtoConvert) {
+            await window.withProgress({
+                location: ProgressLocation.Notification,
+                title: l10n.t("TFRRPG"),
+                cancellable: true
+            }, async (progress, token) => {
+                await lookupMemberObjectTypes(sourceMembersList, conversionTarget.library, progress, token);
+                await convertMembersWithProgress(data, sourceMembersList, progress, token);
+            });
+        }
+    }
+    else {
         window.showInformationMessage(l10n.t("No members found to convert"));
         return;
     }
-    const memberNames = sourceMembersList
-        .slice(0, 10)
-        .map(member => member.name)
-        .join(', ');
+}
 
-    const displayedNames = sourceMembersList.length > 10
-        ? `${memberNames},...`
-        : memberNames;
-
-    const isConfirmtoConvert = await window.showWarningMessage(
-        l10n.t(`Confirm to convert {0} members?\n{1}`, sourceMembersList.length, displayedNames),
-        { modal: true },
-        l10n.t("Yes"),
-        l10n.t("No")
-    );
-    if (isConfirmtoConvert) {
-        await window.withProgress({
-            location: ProgressLocation.Notification,
-            title: l10n.t("TFRRPG"),
-            cancellable: true
-        }, async (progress, token) => {
-            const updatedList = await updateMemberObjectTypes(sourceMembersList, library, progress, token);
-            await convertMembersWithProgress(data, updatedList, progress, token);
-        });
-    }
+async function getMembersListWithProgress(target: ConversionTarget): Promise<IBMiMember[]> {
+    return window.withProgress({
+        location: ProgressLocation.Notification,
+        title: MESSAGES.FETCHING_MEMBERS,
+        cancellable: false
+    }, async () => {
+        try {
+            return listConvertibleMembers(target);
+        } catch (error) {
+            tfrrpgOutput().appendLine(l10n.t("Failed to fetch members list: {0}", JSON.stringify(error)));
+            window.showErrorMessage(MESSAGES.FETCH_FAILED, l10n.t("Open output"))
+                .then(open => {
+                    if (open) {
+                        tfrrpgOutput().show();
+                    }
+                });
+            return [];
+        }
+    });
 }
 
 export async function convertMembersWithProgress(
     commandParam: CommandParams,
-    memberList: { objectType: string; member: IBMiMember }[] | IBMiMember[],
+    conversions: ConversionTarget[],
     progress: { report: (value: { increment: number; message: string }) => void },
     token: CancellationToken,
     name?: string
 ): Promise<ExecutionReport[]> {
-    const totalMembers = memberList.length;
+    const totalMembers = conversions.length;
     const executionResult: ExecutionReport[] = [];
-    let previousPercentCompleted = 0;
-
-    for (let i = 0; i < totalMembers; i++) {
+    const increment = 100 / conversions.length;
+    let current = 1;
+    for (const conversion of conversions) {
         if (token.isCancellationRequested) {
             window.showInformationMessage(l10n.t("Conversion cancelled"));
             break;
         }
 
-        let member: IBMiMember;
-        if ("member" in memberList[i]) {
-            const item = memberList[i] as { objectType: string; member: IBMiMember };
-            member = item.member;
-            commandParam.OBJTYPE = item.objectType;
-        } else {
-            member = memberList[i] as IBMiMember;
-            commandParam.TOSRCMBR = member.name ?? "";
-            commandParam.OBJTYPE = member.objtype ?? "";
-        }
-
-        await convertMember(commandParam, member, executionResult);
-        const currentPercentCompleted = ((i + 1) / totalMembers) * 100;
-        const increment = currentPercentCompleted - previousPercentCompleted;
-        previousPercentCompleted = currentPercentCompleted;
+        await convertMember(commandParam, conversion, executionResult);
         progress.report({
             increment,
-            message: l10n.t("Performed Conversion for {0} of {1} members", i + 1, totalMembers),
+            message: l10n.t("Performed Conversion for {0} of {1} members", current++, totalMembers),
         });
     }
     if (executionResult.length === totalMembers) {
@@ -138,13 +147,13 @@ export async function convertMembersWithProgress(
 
 async function convertMember(
     data: CommandParams,
-    member: IBMiMember,
+    member: ConversionTarget,
     executionResult: ExecutionReport[]
 ): Promise<void> {
     const cmd = await generateCommand(data, member);
     const result = await executeConversionCommand(cmd);
     if (result) {
-        executionResult.push({ sourceMember: member, result });
+        executionResult.push({ target: member, result });
     }
 }
 
@@ -165,54 +174,27 @@ async function showConversionReport(report: ExecutionReport[], itemName: string)
 
 }
 
-async function updateMemberObjectTypes(members: IBMiMember[], memberLibrary: string, progress: { report: (value: { increment: number, message: string }) => void }, token: CancellationToken): Promise<{ objectType: string, member: IBMiMember }[]> {
-    const connection = Code4i.getConnection();
-
-
-    const libraries = [memberLibrary, ...(connection.config?.libraryList || []).filter(l => l !== memberLibrary)];
-    const cache: { [name: string]: string } = {};
-
-    const rows = await connection.runSQL(`select OBJNAME, OBJTYPE from table (QSYS2.OBJECT_STATISTICS('${memberLibrary}','PGM MODULE','*ALL'))`);
-    rows.forEach(row => {
-        if (row.OBJNAME !== null) {
-            cache[row.OBJNAME] = String(row.OBJTYPE);
-        }
-    });
-
-    const findObjectType = async (name: string): Promise<string> => {
-        if (cache[name]) {
-            return cache[name];
-        }
-        for (const lib of libraries) {
-            const [row] = await connection.runSQL(`select OBJNAME, OBJTYPE from table (QSYS2.OBJECT_STATISTICS('${lib}','PGM MODULE','${name}'))`);
-            if (row) {
-                return String(row.OBJTYPE);
-            }
-        }
-        return "*NONE";
-    };
-
-    const result = [];
-
-    for (const member of members) {
+async function lookupMemberObjectTypes(targets: ConversionTarget[], library: string, progress: { report: (value: { increment: number, message: string }) => void }, token: CancellationToken) {
+    const cache = await listObjects(library);
+    const increment = 100 / targets.length;
+    for (const target of targets) {
         if (token.isCancellationRequested) {
             window.showInformationMessage(l10n.t("Process cancelled"));
             break;
         }
-        await new Promise(resolve => setTimeout(resolve, 100));
-        progress.report({ increment: 0, message: l10n.t("Updating object type for {0}", member.name) });
-        const objectType = await findObjectType(member.name);
-        result.push({ objectType, member });
-    }
 
-    return result;
+        if (target.member) {
+            progress.report({ increment, message: l10n.t("Updating object type for {0}", target.member) });
+            target.objectType = await findObjectType(library, target.member, cache);
+        }
+    }
 }
 
-export async function addMembersToConversionList(node: MemberNode): Promise<void> {
+export async function addMembersToConversionList(node: MemberItem | ObjectItem): Promise<void> {
     try {
         const conversionList = await ConfigManager.getConversionList();
 
-        if (!conversionList || conversionList.length === 0) {
+        if (!conversionList.length) {
             const selection = await window.showInformationMessage(
                 l10n.t("No conversion list found. Create a conversion list first."),
                 l10n.t("Create new Conversion List"),
@@ -241,14 +223,13 @@ export async function addMembersToConversionList(node: MemberNode): Promise<void
             return;
         }
 
-        let membersToAdd: IBMiMember[] = [];
-
-        if (node.member) {
+        const membersToAdd: IBMiMember[] = [];
+        if ("member" in node) {
             membersToAdd.push(node.member);
         } else {
             const selectedMembers = await getSelectedMembers(node);
             if (selectedMembers) {
-                membersToAdd = selectedMembers;
+                membersToAdd.push(...selectedMembers);
             }
         }
         const existingMembers = new Set(selectedList.items.map(item => item.member));
@@ -299,7 +280,7 @@ function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
         });
     });
 }
-async function getSelectedMembers(node: MemberNode): Promise<IBMiMember[] | undefined> {
+async function getSelectedMembers(node: ObjectItem): Promise<IBMiMember[] | undefined> {
     const memberQuickPick = window.createQuickPick();
     memberQuickPick.title = l10n.t("Select Members to Add");
     memberQuickPick.busy = true;
@@ -307,7 +288,10 @@ async function getSelectedMembers(node: MemberNode): Promise<IBMiMember[] | unde
     memberQuickPick.ignoreFocusOut = true;
 
     try {
-        const members = await getMembersListWithProgress(node);
+        const members = await getMembersListWithProgress({
+            library: node.object.library, file: node.object.name,
+            filter: { type: node.filter.filterType, members: node.filter.member, extensions: node.filter.memberType }
+        });
         memberQuickPick.items = members.map(member => ({ label: member.name, description: member.text }));
         memberQuickPick.busy = false;
         memberQuickPick.show();
@@ -328,7 +312,13 @@ async function getSelectedMembers(node: MemberNode): Promise<IBMiMember[] | unde
         });
 
     } catch (error) {
-        console.error(l10n.t("Error selecting members:"), error);
+        tfrrpgOutput().appendLine(l10n.t("Error selecting members: {0}", JSON.stringify(error)));
+        vscode.window.showErrorMessage(l10n.t("Error selecting members"), l10n.t("Open output"))
+            .then(open => {
+                if (open) {
+                    tfrrpgOutput().show();
+                }
+            });
         memberQuickPick.dispose();
         return undefined;
     }

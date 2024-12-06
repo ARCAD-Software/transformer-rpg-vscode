@@ -14,6 +14,7 @@ import { convertMembersWithProgress, ExecutionReport } from "../controller";
 import { openMember } from "../conversion";
 import { ConversionListItemStepper } from "../conversion-item";
 import { ConversionStatus, getConversionStatus, getStatusColorFromCode, setConverionStatus } from "../conversionMessage";
+import { ConversionTarget } from "../model";
 import { createTargetLibTabs, setupTabWindow } from "../webviews/panel";
 import { ExplorerDataProvider, ExplorerNode } from "./common";
 
@@ -101,12 +102,12 @@ export abstract class BaseConversionNode extends ExplorerNode {
         }
     }
 
-    async convertMembers(members: IBMiMember[], targetlibrary: string, targetFile: string, name: string): Promise<ExecutionReport[]> {
+    async convertMembers(members: ConversionTarget[], targetlibrary: string, targetFile: string, name: string): Promise<ExecutionReport[]> {
         const config = ConfigManager.getParams();
         if (!config) { return []; }
 
         const tabs = createTargetLibTabs(config);
-        const tabwindow = setupTabWindow(tabs);
+        const tabwindow = setupTabWindow(tabs, true);
 
         const page = await tabwindow.loadPage<any>(l10n.t("ARCAD-Transformer RPG: {0}", name));
         if (page?.data) {
@@ -185,7 +186,7 @@ export class ConversionListNode extends BaseConversionNode {
                     }
                     const ibmiMembers: IBMiMember[] = selectedItems.map(member => ({
                         extension: member.srctype,
-                        file: member.targetmember,
+                        file: this.conversionList!.targetsourcefile,
                         library: member.library,
                         name: member.member,
                         objtype: member.objtype
@@ -302,8 +303,8 @@ export class ConversionItemNode extends BaseConversionNode {
                     extension: this.conversionItem.srctype,
                     file: this.conversionItem.targetmember,
                     library: this.conversionItem.library,
-                    name: this.conversionItem.member,
-                    objtype: this.conversionItem.objtype
+                    member: this.conversionItem.member,
+                    objectType: this.conversionItem.objtype
                 }],
                 conversionList.targetlibrary,
                 conversionList.targetsourcefile,

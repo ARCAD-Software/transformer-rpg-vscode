@@ -1,7 +1,7 @@
 import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { SUPPORTED_SOURCE_TYPES } from "./constants";
 
-export function generateOptions(options: string[], selectedValue: string) {
+export function generateOptions(options: string[], selectedValue?: string) {
     return options.map((type) => {
         return { text: type, description: type, value: type, selected: type === "" ? false : type === selectedValue };
     });
@@ -59,6 +59,6 @@ export function validateSourceType(sourceType: string): boolean {
     return SUPPORTED_SOURCE_TYPES.includes(sourceType.toUpperCase());
 }
 
-export function filterMembers(members: IBMiMember[]): IBMiMember[] {
-    return members.filter(member => validateSourceType(member.extension!));
+export function filterMembers(member: IBMiMember) {
+    return validateSourceType(member.extension);
 }

@@ -1,15 +1,18 @@
-import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { ExtensionContext, OutputChannel, ProgressLocation, Uri, commands, l10n, window, workspace } from "vscode";
+import { BrowserItem, IBMiMember, MemberItem, ObjectItem } from "@halcyontech/vscode-ibmi-types";
+import { ExtensionContext, OutputChannel, Uri, commands, l10n, window, workspace } from "vscode";
 import { Code4i } from "./code4i";
 import { initializeConfiguration } from "./configuration";
+import { getObjectType } from "./main/api";
 import { addMembersToConversionList, openConfigWindow } from "./main/controller";
-import { MemberNode } from "./main/model";
+import { ConversionTarget } from "./main/model";
 import { ExplorerNode } from "./main/views/common";
 import { ConversionItemNode, ConversionListNode, ConversionListProvider } from "./main/views/conversionListBrowser";
 import { ProductStatusDataProvider } from "./main/views/productStatus";
 import { initializeProduct } from "./product";
 import { COMMANDS, MESSAGES } from "./utils/constants";
-import { filterMembers, validateSourceType } from "./utils/helper";
+import { validateSourceType } from "./utils/helper";
+
+type ConversionActionTarget = (BrowserItem & (ObjectItem | MemberItem));
 
 const NodeContext = {
   MEMBER: 'member',
@@ -55,39 +58,42 @@ function registerCommands(context: ExtensionContext): void {
   );
 }
 
-async function handleMemberConvert(item: MemberNode | Uri): Promise<void> {
-  let member: IBMiMember | undefined;
-  let isMassConverison = false;
-
-  if ('contextValue' in item) {
-    isMassConverison = item.contextValue.toLowerCase() === NodeContext.SPF;
-    member = getMemberInfo(item);
-    if (member) {
-      launchSourceConversion(item, member, isMassConverison);
+async function handleMemberConvert(item: ConversionActionTarget | Uri): Promise<void> {
+  if (!item || item instanceof Uri) {
+    const conversionTarget = await getConversionTargetFromEditor();
+    if (conversionTarget) {
+      openConfigWindow({ conversionTarget });
     }
   } else {
-    member = await getMemberInfoFromEditor();
-    if (member) {
-      launchSourceConversion({} as MemberNode, member, false);
+    const parentnode = item.parent;
+    if ("object" in item) {
+      //Converting members from a source file
+      openConfigWindow({
+        conversionTarget: { library: item.object.library, file: item.object.name },
+        parentnode
+      });
+    }
+    else {
+      const conversionTarget = await getConverionTarget(item.member);
+      if (conversionTarget) {
+        openConfigWindow({
+          conversionTarget,
+          parentnode
+        });
+      }
     }
   }
 }
 
 
-async function getMemberInfoFromEditor(): Promise<IBMiMember | undefined> {
+async function getConversionTargetFromEditor(): Promise<ConversionTarget | undefined> {
   const editor = window.activeTextEditor;
   if (editor) {
-    return Code4i.getConnection().parserMemberPath(editor.document.uri.path);
+    const member = Code4i.getConnection().parserMemberPath(editor.document.uri.path);
+    if (member) {
+      return { library: member.library, file: member.file, member: member.name, extension: member.extension, objectType: await getObjectType(member.library, member.name) };
+    }
   }
-}
-
-function launchSourceConversion(node: MemberNode, member: IBMiMember, isMassConverison: boolean): void {
-  openConfigWindow({
-    massconvt: isMassConverison,
-    member,
-    parentnode: node.parent,
-    getMembers: () => getMembersListWithProgress(node)
-  });
 }
 
 function initializeTreeViews(context: ExtensionContext): void {
@@ -137,62 +143,18 @@ export function refreshListExplorer(node?: ExplorerNode): void {
   commands.executeCommand(COMMANDS.REFRESH_LIST, node);
 }
 
-export async function getMembersListWithProgress(node: MemberNode): Promise<IBMiMember[]> {
-  return window.withProgress({
-    location: ProgressLocation.Notification,
-    title: MESSAGES.FETCHING_MEMBERS,
-    cancellable: false
-  }, async () => {
-    return fetchMembers(node);
-  });
-}
-
-export async function getMembersListWithoutProgress(node: MemberNode): Promise<IBMiMember[]> {
-  return fetchMembers(node);
-}
-
-async function fetchMembers(node: MemberNode): Promise<IBMiMember[]> {
+async function getConverionTarget(member: IBMiMember): Promise<ConversionTarget | undefined> {
   try {
-    const members = await Code4i.getContent().getMemberList({
-      library: node.object.library,
-      sourceFile: node.object.name,
-      members: node.filter.member,
-      extensions: node.filter.memberType,
-      sort: node.sort
-    });
-    return filterMembers(members);
-  } catch (error) {
-    window.showErrorMessage(MESSAGES.FETCH_FAILED);
-    return [];
-  }
-}
-
-function getMemberInfo(node: MemberNode | undefined): IBMiMember | undefined {
-  try {
-    if (node) {
-      if (node.contextValue === NodeContext.MEMBER && node.member) {
-        if (!validateSourceType(node.member.extension!)) {
-          showUnsupportedSourceTypeError();
-          return undefined;
-        }
-        return node.member;
-      }
-      if (node.contextValue.toLowerCase() === NodeContext.SPF) {
-        return {
-          library: node.object.library,
-          file: node.object.name,
-          name: '*ALL',
-        };
-      }
+    if (validateSourceType(member.extension)) {
+      return { library: member.library, file: member.file, member: member.name, extension: member.extension, objectType: await getObjectType(member.library, member.name) };
+    }
+    else {
+      window.showErrorMessage(MESSAGES.UNSUPPORTED_SOURCE_TYPE, { modal: true });
     }
   } catch (error) {
     window.showErrorMessage(MESSAGES.MEMBER_INFO_FAILED);
   }
   return undefined;
-}
-
-function showUnsupportedSourceTypeError(): void {
-  window.showErrorMessage(MESSAGES.UNSUPPORTED_SOURCE_TYPE, { modal: true });
 }
 
 export function getARCADInstance() {

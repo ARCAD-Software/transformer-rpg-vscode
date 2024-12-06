@@ -7,7 +7,6 @@ export interface CommandParams {
     SRCMBR: string;
     SRCTYPE: string;
     SRCFILE: string;
-    OBJTYPE: string;
     CVTCLCSPEC: string;
     CVTDCLSPEC: string;
     EXPCSPECPY: string;
@@ -155,7 +154,6 @@ export async function initializeConfiguration(): Promise<void> {
         SRCMBR: "",
         SRCTYPE: "",
         SRCFILE: "",
-        OBJTYPE: "*NONE",
         CVTCLCSPEC: "*FREE",
         CVTDCLSPEC: "*YES",
         EXPCSPECPY: "*NO",

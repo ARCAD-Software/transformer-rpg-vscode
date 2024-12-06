@@ -1,14 +1,14 @@
-import { IBMiMember } from '@halcyontech/vscode-ibmi-types';
 import { CommandParams } from '../configuration';
+import { ConversionTarget } from '../main/model';
 import { product } from '../product';
 import { convertBool } from '../utils/helper';
 
-export async function generateCommand(data: CommandParams, source: IBMiMember) {
+export async function generateCommand(data: CommandParams, source: ConversionTarget) {
     const getToSrcFile = (member: string): string => member === '*FROMFILE' ? `${data.TOSRCLIB}/${source.file}` : `${data.TOSRCLIB}/${data.TOSRCFILE}`;
-    const getToSrcMbr = (member: string): string => member === '*FROMMBR' ? source.name : data.TOSRCMBR;
+    const getToSrcMbr = (member: string): string => member === '*FROMMBR' && source.member ? source.member : data.TOSRCMBR;
     
-    return `${await product.getProductLibrary()}/ACVTRPGFRE SRCFILE(${source.library}/${source.file}) SRCMBR(${source.name}) SRCTYPE(${source.extension}) ` +
-        `OBJTYPE(${data.OBJTYPE}) CVTCLCSPEC(*FREE) CVTDCLSPEC(${convertBool(data.CVTDCLSPEC)}) ` +
+    return `${await product.getProductLibrary()}/ACVTRPGFRE SRCFILE(${source.library}/${source.file}) SRCMBR(${source.member}) SRCTYPE(${source.extension}) ` +
+        `OBJTYPE(${source.objectType}) CVTCLCSPEC(*FREE) CVTDCLSPEC(${convertBool(data.CVTDCLSPEC)}) ` +
         `EXPCSPECPY(${convertBool(data.EXPCSPECPY)}) FULLYFREE(*YES) ` +
         `MAXNOTFREE(${data.MAXNOTFREE}) FIRSTCOL(${data.FIRSTCOL}) USEPARMNUM(${convertBool(data.USEPARMNUM)}) ` +
         `TOSRCFILE(${getToSrcFile(data.TOSRCFILE)}) TOSRCMBR(${getToSrcMbr(data.TOSRCMBR)}) REPLACE(${convertBool(data.REPLACE)}) ` +

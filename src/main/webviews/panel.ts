@@ -1,16 +1,13 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
 import { l10n } from "vscode";
-import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { generateOptions, getObjectTypes, getConvertOptions, getIndentSizeOptions, getEmptyCommentLinesOptions, getCaseOptions, getWarningOptions, getBooleanOptions, getSourceLineDate, getBooleanOptionsWithKeep, getTruncationOptions, getPrecompilationOptions, convertBool } from "../../utils/helper";
 import { Code4i } from "../../code4i";
 import { CommandParams } from "../../configuration";
+import { convertBool, generateOptions, getBooleanOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
 import { ExecutionReport } from "../controller";
 import { getStatusColor } from "../conversionMessage";
+import { ConversionTarget } from "../model";
 
-let massConversion = false;
-
-export function createTabs(member: IBMiMember, config: CommandParams, massconversion: boolean): ComplexTab[] {
-    massConversion = massconversion;
+export function createTabs(member: ConversionTarget, config: CommandParams): ComplexTab[] {
     return [
         { label: l10n.t("Properties"), fields: createPropertiesUI(member, config).fields },
         { label: l10n.t("Conversion Options"), fields: createConversionOptions(config).fields },
@@ -25,9 +22,9 @@ export function createTargetLibTabs(config: CommandParams): ComplexTab[] {
     ];
 }
 
-export function setupTabWindow(tabs: ComplexTab[]): CustomUI {
+export function setupTabWindow(tabs: ComplexTab[], multiple: boolean): CustomUI {
     return Code4i.customUI()
-        .addHeading(l10n.t(`${massConversion ? "Mass Conversion ✅" : "Single Member Conversion ✅"}`), 2)
+        .addHeading(multiple ? l10n.t("Multiple Members Conversion") : l10n.t("Single Member Conversion"), 2)
         .addComplexTabs(tabs)
         .addHorizontalRule()
         .addButtons({ id: "convert", label: l10n.t("Convert") })
@@ -36,19 +33,19 @@ export function setupTabWindow(tabs: ComplexTab[]): CustomUI {
 
 
 // Properties Tab
-function createPropertiesUI(member: IBMiMember, config: CommandParams): CustomUI {
+function createPropertiesUI(conversion: ConversionTarget, config: CommandParams): CustomUI {
     return Code4i.customUI()
         .addHeading(l10n.t("Converted Source Member Properties"), 3)
-        .addParagraph(createPropertiesTable(member))
-        .addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions(getObjectTypes(), config.OBJTYPE))
+        .addParagraph(createPropertiesTable(conversion))
+        .addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions(getObjectTypes(), conversion.objectType))
         .addHorizontalRule()
         .addParagraph(l10n.t('Convert Calculation Specs : <code>*FREE</code>'))
         .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs"), convertBool(config.CVTDCLSPEC) === "*YES")
         .addHorizontalRule()
         .addHeading(l10n.t("Target Source Member Information"), 4)
-        .addInput("TOSRCLIB", l10n.t("Library"), "", { default: config.TOSRCLIB ?? member.library, readonly: false })
+        .addInput("TOSRCLIB", l10n.t("Library"), "", { default: config.TOSRCLIB || conversion.library })
         .addInput("TOSRCFILE", l10n.t("Source File"), l10n.t("<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify member name for converted source"), { default: config.TOSRCFILE, readonly: false })
-        .addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same destination | Specify member name for converted source"), { default: massConversion ? "*FROMMBR" : config.TOSRCMBR, readonly: massConversion })
+        .addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same destination | Specify member name for converted source"), { default: conversion.member ? config.TOSRCMBR : "*FROMMBR", readonly: !conversion.member })
         .addHorizontalRule()
         .addCheckbox("REPLACE", l10n.t("Replace Existing Member"), l10n.t("Replace the source member with the converted source"), convertBool(config.REPLACE) === "*YES")
         .addCheckbox("EXPCSPECPY", l10n.t("Expand Copy Book with C-Spec"), l10n.t("Expand Copy Books with C-Spec"), convertBool(config.EXPCSPECPY) === "*YES");
@@ -113,12 +110,12 @@ function createAdvancedOptions(config: CommandParams): CustomUI {
         .addSelect("NUMTRUNCD", l10n.t("DIV:"), generateOptions(getTruncationOptions(), config.NUMTRUNCD));
 }
 
-function createPropertiesTable(member: IBMiMember): string {
+function createPropertiesTable(target: ConversionTarget): string {
     return `<table>
-        ${addRow(l10n.t("Source Library"), member.library)}
-        ${addRow(l10n.t("Source File"), member.file)}
-        ${addRow(l10n.t("Source Member"), member.name)}
-        ${member.extension ? addRow(l10n.t("Source Type"), member.extension) : ""}
+        ${addRow(l10n.t("Source Library"), target.library)}
+        ${addRow(l10n.t("Source File"), target.file)}
+        ${addRow(l10n.t("Source Member"), target.member || "*ALL")}
+        ${target.extension ? addRow(l10n.t("Source Type"), target.extension) : ""}
     </table>`;
 }
 
@@ -170,7 +167,7 @@ function createReportTable(results: ExecutionReport[]): string {
             </tr>
             ${results.map(result => /* html */`
               <tr style="color: ${getStatusColor(result.result.stdout || result.result.stderr)};">
-                  <td>${result.sourceMember.name}</td>
+                  <td>${result.target.member}</td>
                   <td>${result.result.stdout || result.result.stderr}</td>
               </tr>`
     ).join("")}
