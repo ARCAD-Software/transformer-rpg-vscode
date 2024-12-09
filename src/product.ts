@@ -1,4 +1,4 @@
-import { posix } from "path";
+import { extname, posix } from "path";
 import vscode, { l10n } from "vscode";
 import { Code4i } from "./code4i";
 import { TransformerRPGLicense } from "./components/TFRRPGLIC";
@@ -130,8 +130,20 @@ class TransformerRPGProduct {
 
           try {
             progress.report({ message: l10n.t("uploading update package...") });
-            const streamfile = posix.join(directory, "tfrrpg.savf");
+            const extension = extname(installPackage.path).toLowerCase();
+            let streamfile = posix.join(directory, `tfrrpg${extension}`);
             await connection.uploadFiles([{ local: installPackage, remote: streamfile }]);
+
+            if (extension === ".zip") {
+              progress.report({ message: l10n.t("unzipping update package...") });
+              const unpzip = await connection.sendQsh({ command: `/usr/bin/ajar -x ${streamfile} && mv $(find *.savf) tfrrpg.savf`, directory });
+              if (unpzip?.code === 0) {
+                streamfile = posix.join(directory, `tfrrpg.savf`);
+              }
+              else{
+                throw l10n.t("Could not unzip package {0}: {1}", streamfile, unpzip.stderr || unpzip.stdout);
+              }
+            }
 
             progress.report({ message: l10n.t("restoring save file object...") });
             const clearResult = await clearSAVF();
@@ -155,13 +167,13 @@ class TransformerRPGProduct {
             if (failed) {
               const messages = Code4i.getTools().parseMessages(restoreLibrary.stderr || restoreLibrary.stdout);
               const maybeOK = messages.findId("CPF3773");
-              if(maybeOK){
+              if (maybeOK) {
                 const notRestored = Number(/^(\d+) .+ (\d+) .*$/.exec(maybeOK.text)?.at(2));
                 failed = notRestored !== 0;
-              }              
+              }
             }
 
-            if(failed){
+            if (failed) {
               throw l10n.t("Could not restore ARCAD_RPG library: {0}", restoreLibrary.stderr || restoreLibrary.stdout);
             }
 

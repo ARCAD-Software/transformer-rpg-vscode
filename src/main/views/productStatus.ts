@@ -48,7 +48,7 @@ export class ProductStatusDataProvider extends ExplorerDataProvider {
   private async installProduct(file?: vscode.Uri) {
     const updatePackage = file || (await vscode.window.showOpenDialog({
       canSelectMany: false,
-      filters: { 'Save File': ["savf"] },
+      filters: { 'Package': ["savf", "zip"] },
       title: l10n.t("Select ARCAD-Transformer RPG save file")
     }))?.at(0);
 
@@ -59,7 +59,6 @@ export class ProductStatusDataProvider extends ExplorerDataProvider {
   }
 
   private async checkUpdate() {
-    //TODO: implement
     vscode.window.showInformationMessage(l10n.t("No runtime update availble"));
   }
 
