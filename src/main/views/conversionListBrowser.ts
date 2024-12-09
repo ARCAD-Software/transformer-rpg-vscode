@@ -1,4 +1,3 @@
-import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import {
     commands,
     l10n,
@@ -175,12 +174,12 @@ export class ConversionListNode extends BaseConversionNode {
                         window.showWarningMessage(l10n.t("Please update object type for all selected members."));
                         return;
                     }
-                    const ibmiMembers: IBMiMember[] = selectedItems.map(member => ({
+                    const ibmiMembers: ConversionTarget[] = selectedItems.map(member => ({
                         extension: member.srctype,
                         file: this.conversionList!.targetsourcefile,
                         library: member.library,
-                        name: member.member,
-                        objtype: member.objtype
+                        member: member.member,
+                        objectType: member.objtype
                     }));
                     const report = await this.convertMembers(ibmiMembers, listItem.targetlibrary, listItem.targetsourcefile, this.conversionList.listname);
                     if (report.length) {
