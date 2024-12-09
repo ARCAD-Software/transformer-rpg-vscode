@@ -62,20 +62,19 @@ export namespace ConfigManager {
     }
 
     export async function setParams(params: CommandParams): Promise<void> {
-        const config = getConfiguration();
+        //Coyp parameters and remove transient fields
+        const savedParams = { ...params };
+        delete savedParams.buttons;
+        delete savedParams.OBJTYPE;
+        delete savedParams.SRCLIB;
+        delete savedParams.SRCMBR;
+        delete savedParams.SRCTYPE;
+        delete savedParams.SRCFILE;
+        delete savedParams.TOSRCLIB;
+        delete savedParams.TOSRCFILE;
+        delete savedParams.TOSRCMBR;
 
-        //Remove transient fields
-        delete params.buttons;
-        delete params.OBJTYPE;
-        delete params.SRCLIB;
-        delete params.SRCMBR;
-        delete params.SRCTYPE;
-        delete params.SRCFILE;
-        delete params.TOSRCLIB;
-        delete params.TOSRCFILE;
-        delete params.TOSRCMBR;
-
-        await config.update('command', params, ConfigurationTarget.Global);
+        await getConfiguration().update('command', savedParams, ConfigurationTarget.Global);
     }
     export function getConnections(): Connections | undefined {
         return workspace.getConfiguration('code-for-ibmi').get('connections');
