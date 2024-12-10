@@ -65,7 +65,7 @@ export class ProductStatusDataProvider extends ExplorerDataProvider {
   private async checkUpdate() {
     const latestUpdate = await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: l10n.t("Checking ARCAD-Transformer RPG updates") }, async () =>
       (await GitHubREST.getReleases())
-        .filter(release => !ConfigManager.checkPrereleaseUpdates() || (!release.prerelease && !release.draft))
+        .filter(release => ConfigManager.checkPrereleaseUpdates() || (!release.prerelease && !release.draft))
         .map(release => {
           const updatePackage = release.assets.find(asset => UPDATE_ASSET.test(asset.name));
           if (updatePackage) {
