@@ -86,12 +86,23 @@ export class ProductStatusDataProvider extends ExplorerDataProvider {
               vscode.commands.executeCommand("vscode.open", latestUpdate.releaseUrl);
             }
             else if (action === install) {
-              const updatePackage = await vscode.window.withProgress({
-                title: l10n.t("Downloading {0} ({1} MB)", latestUpdate.name, latestUpdate.size / 1048576),
-                location: vscode.ProgressLocation.Notification
-              }, () => GitHubREST.downloadAsset(latestUpdate));
-              this.installProduct(vscode.Uri.file(updatePackage.name))
-                .then(() => updatePackage.removeCallback());
+              try {
+                const updatePackage = await vscode.window.withProgress({
+                  title: l10n.t("Downloading {0} ({1} MB)", latestUpdate.name, latestUpdate.size / 1048576),
+                  location: vscode.ProgressLocation.Notification
+                }, () => GitHubREST.downloadAsset(latestUpdate));
+                this.installProduct(vscode.Uri.file(updatePackage.name))
+                  .then(() => updatePackage.removeCallback());
+              }
+              catch (error: any) {
+                tfrrpgOutput().appendLine(l10n.t("Error occurred while downloading standalone runtime: {0}", JSON.stringify(error)));
+                vscode.window.showErrorMessage(l10n.t("Could not download ARCAD Transformer RPG standalone runtime"), l10n.t("Open output"))
+                  .then(open => {
+                    if (open) {
+                      tfrrpgOutput().show();
+                    }
+                  });
+              }
             }
           });
       }
