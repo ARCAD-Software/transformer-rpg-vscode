@@ -1,9 +1,13 @@
 import vscode, { l10n } from "vscode";
 import { Code4i } from "../../code4i";
 import { LicenseInformation } from "../../components/TFRRPGLIC";
+import { ConfigManager } from "../../configuration";
 import { tfrrpgOutput } from "../../extension";
 import { product, tfrrpgLanguages } from "../../product";
+import { GitHubREST } from "../../utils/githubRest";
 import { ExplorerDataProvider, ExplorerNode, TextNode } from "./common";
+
+const UPDATE_ASSET = /^Arcad_Transformer_RPG_(\d+\.\d+\.\d+)\.zip$/;
 
 export class ProductStatusDataProvider extends ExplorerDataProvider {
   constructor(context: vscode.ExtensionContext) {
@@ -59,7 +63,45 @@ export class ProductStatusDataProvider extends ExplorerDataProvider {
   }
 
   private async checkUpdate() {
-    vscode.window.showInformationMessage(l10n.t("No runtime update availble"));
+    const latestUpdate = await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: l10n.t("Checking ARCAD-Transformer RPG updates") }, async () =>
+      (await GitHubREST.getReleases())
+        .filter(release => !ConfigManager.checkPrereleaseUpdates() || (!release.prerelease && !release.draft))
+        .map(release => {
+          const updatePackage = release.assets.find(asset => UPDATE_ASSET.test(asset.name));
+          if (updatePackage) {
+            return { ...updatePackage, releaseUrl: release.html_url };
+          }
+        })
+        .at(0)
+    );
+
+    if (latestUpdate) {
+      const version = UPDATE_ASSET.exec(latestUpdate.name)?.at(1);
+      if (version && product.isOlderThan(version)) {
+        const open = l10n.t("Show release");
+        const install = l10n.t("Download & install");
+        vscode.window.showInformationMessage(l10n.t("A standalone runtime update is available ({0})", version), install, open)
+          .then(async action => {
+            if (action === open) {
+              vscode.commands.executeCommand("vscode.open", latestUpdate.releaseUrl);
+            }
+            else if (action === install) {
+              const updatePackage = await vscode.window.withProgress({
+                title: l10n.t("Downloading {0} ({1} MB)", latestUpdate.name, latestUpdate.size / 1048576),
+                location: vscode.ProgressLocation.Notification
+              }, () => GitHubREST.downloadAsset(latestUpdate));
+              this.installProduct(vscode.Uri.file(updatePackage.name))
+                .then(() => updatePackage.removeCallback());
+            }
+          });
+      }
+      else {
+        vscode.window.showInformationMessage(l10n.t("You're already using the latest standalone runtime version ({0}).", product.getStandaloneVersion()));
+      }
+    }
+    else {
+      vscode.window.showInformationMessage(l10n.t("No standalone runtime update available"));
+    }
   }
 
   private async applyLicense(checkOnly?: boolean) {

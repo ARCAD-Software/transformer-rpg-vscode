@@ -36,5 +36,6 @@
     "update.tfrrpg": "Update runtime",
     "apply.license": "Apply license key",
     "check.license": "Check license key",
-    "change.language": "Change language"
+    "change.language": "Change language",
+    "checkPrereleaseUpdates": "Check prereleases when looking for standalone updates"
 }

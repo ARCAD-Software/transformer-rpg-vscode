@@ -5,6 +5,8 @@ import { TransformerRPGLicense } from "./components/TFRRPGLIC";
 import { ConfigManager } from "./configuration";
 import { getARCADInstance, tfrrpgOutput } from "./extension";
 
+const VERSION = /(\d+)\.(\d+)\.(\d+)/;
+
 async function readDataArea(library: string, name: string) {
   const [versionRow] = await Code4i.getConnection().runSQL(`Select DATA_AREA_VALUE From Table(QSYS2.DATA_AREA_INFO( DATA_AREA_NAME => '${name}', DATA_AREA_LIBRARY => '${library}'))`);
   return String(versionRow.DATA_AREA_VALUE).trim();
@@ -101,6 +103,16 @@ class TransformerRPGProduct {
     return this.arcadVersion;
   }
 
+  isOlderThan(version: string) {
+    const parsedCurrent = VERSION.exec(this.standaloneVersion);
+    const parsedVersion = VERSION.exec(version);
+    return parsedCurrent && parsedVersion && (
+      Number(parsedCurrent[1]) < Number(parsedVersion[1]) ||
+      (Number(parsedCurrent[1]) === Number(parsedVersion[1]) && Number(parsedCurrent[2]) < Number(parsedVersion[2])) ||
+      (Number(parsedCurrent[1]) === Number(parsedVersion[1]) && Number(parsedCurrent[2]) === Number(parsedVersion[2]) && Number(parsedCurrent[3]) < Number(parsedVersion[3]))
+    );
+  }
+
   private getLicenseProgram() {
     return Code4i.getConnection().getComponent<TransformerRPGLicense>(TransformerRPGLicense.ID);
   }
@@ -124,28 +136,30 @@ class TransformerRPGProduct {
         return connection.withTempDirectory(async directory => {
           const workFile = "ARCAD_RPGS";
           const workLibrary = connection.config?.tempLibrary || "ILEDITOR";
-          const runCommand = async (command: string) => connection.runCommand({ command, noLibList: true });
+          const runCommand = (command: string) => connection.runCommand({ command, noLibList: true });
           const clearSAVF = () => connection.content.checkObject({ library: workLibrary, name: workFile, type: "*FILE" })
             .then(exists => exists ? runCommand(`DLTF FILE(${workLibrary}/${workFile})`) : undefined);
 
           try {
-            progress.report({ message: l10n.t("uploading update package...") });
             const extension = extname(installPackage.path).toLowerCase();
+            const unzip = (extension === ".zip");
+            const increment = unzip ? 20 : 25;
+            progress.report({ message: l10n.t("uploading update package..."), increment });
             let streamfile = posix.join(directory, `tfrrpg${extension}`);
             await connection.uploadFiles([{ local: installPackage, remote: streamfile }]);
 
-            if (extension === ".zip") {
-              progress.report({ message: l10n.t("unzipping update package...") });
+            if (unzip) {
+              progress.report({ message: l10n.t("unzipping update package..."), increment });
               const unpzip = await connection.sendQsh({ command: `/usr/bin/ajar -x ${streamfile} && mv $(find *.savf) tfrrpg.savf`, directory });
               if (unpzip?.code === 0) {
                 streamfile = posix.join(directory, `tfrrpg.savf`);
               }
-              else{
+              else {
                 throw l10n.t("Could not unzip package {0}: {1}", streamfile, unpzip.stderr || unpzip.stdout);
               }
             }
 
-            progress.report({ message: l10n.t("restoring save file object...") });
+            progress.report({ message: l10n.t("restoring save file object..."), increment });
             const clearResult = await clearSAVF();
             if (clearResult?.code) {
               throw l10n.t("Could not delete save file {0}/{1}: {2}", workLibrary, workFile, clearResult.stderr || clearResult.stdout);
@@ -161,7 +175,7 @@ class TransformerRPGProduct {
               throw l10n.t("Could not restore {0}/{1} from streamfile: {2}", workLibrary, workFile, cpyfrmstmf.stderr || cpyfrmstmf.stdout);
             }
 
-            progress.report({ message: l10n.t("restoring ARCAD_RPG library...") });
+            progress.report({ message: l10n.t("restoring ARCAD_RPG library..."), increment });
             const restoreLibrary = await runCommand(`RSTLIB SAVLIB(ARCAD_RPGD) RSTLIB(ARCAD_RPG) DEV(*SAVF) SAVF(${workLibrary}/${workFile}) MBROPT(*ALL) ALWOBJDIF(*ALL)`);
             let failed = restoreLibrary?.code !== 0;
             if (failed) {

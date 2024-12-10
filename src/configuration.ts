@@ -156,6 +156,10 @@ export namespace ConfigManager {
     export function forceStandaloneProduct() {
         return getConfiguration().get<boolean>("forceUseOfStandaloneProduct", false);
     }
+
+    export function checkPrereleaseUpdates() {
+        return getConfiguration().get<boolean>("checkPrereleaseUpdates", false);
+    }
 }
 
 

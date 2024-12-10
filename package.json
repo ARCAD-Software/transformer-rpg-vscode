@@ -76,6 +76,11 @@
           "default": false,
           "description": "%forceUseOfStandaloneProduct%"
         },
+        "arcad-transformer-rpg.checkPrereleaseUpdates": {
+          "type": "boolean",
+          "default": false,
+          "description": "%checkPrereleaseUpdates%"
+        },
         "arcad-transformer-rpg.command": {
           "type": "object"
         },
@@ -324,7 +329,7 @@
           "command": "tfrrpg-product-refresh",
           "when": "view == arcad-tfrrpg-product-status",
           "group": "navigation@99"
-        }        
+        }
       ],
       "commandPalette": [
         {
@@ -488,6 +493,7 @@
     "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "@types/tmp": "^0.2.6",
     "esbuild-loader": "^3.0.1",
     "rimraf": "^5",
     "typescript": "^5.2.2",
@@ -495,6 +501,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "axios": "^1.7.9"
+    "axios": "^1.7.9",
+    "tmp": "^0.2.3"
   }
 }
