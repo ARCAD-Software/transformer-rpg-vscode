@@ -1,7 +1,6 @@
 import { BrowserItem, IBMiMember, MemberItem, ObjectItem } from "@halcyontech/vscode-ibmi-types";
 import { ExtensionContext, OutputChannel, Uri, commands, l10n, window, workspace } from "vscode";
 import { Code4i } from "./code4i";
-import { initializeConfiguration } from "./configuration";
 import { getObjectType } from "./main/api";
 import { addMembersToConversionList, openConfigWindow } from "./main/controller";
 import { ConversionTarget } from "./main/model";
@@ -11,6 +10,7 @@ import { ProductStatusDataProvider } from "./main/views/productStatus";
 import { initializeProduct } from "./product";
 import { COMMANDS, MESSAGES } from "./utils/constants";
 import { validateSourceType } from "./utils/helper";
+import { ConfigManager } from "./configuration";
 
 type ConversionActionTarget = (BrowserItem & (ObjectItem | MemberItem));
 
@@ -44,7 +44,7 @@ export function deactivate(): void {
 }
 
 function initializeExtension(context: ExtensionContext): void {
-  initializeConfiguration();
+  ConfigManager.initializeConfiguration(context);
   initializeTreeViews(context);
   registerCommands(context);
   initializeProduct(context);

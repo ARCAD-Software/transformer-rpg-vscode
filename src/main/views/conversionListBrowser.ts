@@ -6,13 +6,13 @@ import {
     TreeItemCollapsibleState,
     window
 } from "vscode";
-import { CommandParams, ConfigManager } from "../../configuration";
+import { ConfigManager } from "../../configuration";
 import { refreshListExplorer } from "../../extension";
 import { convertTargets, ExecutionReport } from "../controller";
 import { openMember } from "../conversion";
 import { ConversionListItemStepper } from "../conversion-item";
 import { ConversionStatus, getConversionStatus, getStatusColorFromCode, setConverionStatus } from "../conversionMessage";
-import { ConversionTarget } from "../model";
+import { CommandParams, ConversionTarget } from "../model";
 import { createTargetLibTabs, setupTabWindow } from "../webviews/panel";
 import { ExplorerDataProvider, ExplorerNode } from "./common";
 
@@ -103,9 +103,9 @@ export abstract class BaseConversionNode extends ExplorerNode {
     async convertMembers(members: ConversionTarget[], targetlibrary: string, targetFile: string, name: string): Promise<ExecutionReport[]> {
         const config = ConfigManager.getParams();
         if (!config) { return []; }
-
+        const isMultiple = members.length > 1;
         const tabs = createTargetLibTabs(config);
-        const tabwindow = setupTabWindow(tabs, true);
+        const tabwindow = setupTabWindow(tabs, isMultiple);
 
         const page = await tabwindow.loadPage<any>(l10n.t("ARCAD-Transformer RPG: {0}", name));
         if (page?.data) {
@@ -186,8 +186,7 @@ export class ConversionListNode extends BaseConversionNode {
                         this.conversionList.items.forEach((item, index) => {
                             item.status = setConverionStatus(report[index].result.stdout || report[index].result.stderr || "");
                             item.message = report[index].result.stderr || report[index].result.stdout || "";
-
-                            item.conversiondate = `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+                            item.conversiondate = new Date().toISOString();
                         });
                         await ConfigManager.updateConversionList(this.conversionList);
                         refreshListExplorer(this);
@@ -303,7 +302,7 @@ export class ConversionItemNode extends BaseConversionNode {
                 if (report.length) {
                     this.conversionItem.status = setConverionStatus(report[0].result.stdout || report[0].result.stderr || "");
                     this.conversionItem.message = report[0].result.stderr || report[0].result.stdout || "";
-                    this.conversionItem.conversiondate = `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+                    this.conversionItem.conversiondate = new Date().toISOString();
                     ConfigManager.updateConversionItem(conversionList.listname, this.conversionItem.member, this.conversionItem).then(() => {
                         refreshListExplorer(this.parent);
                     });

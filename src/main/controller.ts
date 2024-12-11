@@ -1,14 +1,14 @@
 import { BrowserItem, CommandResult, IBMiMember, MemberItem, ObjectItem } from "@halcyontech/vscode-ibmi-types";
 import vscode, { commands, l10n, ProgressLocation, window } from "vscode";
 import { Code4i } from "../code4i";
-import { CommandParams, ConfigManager } from "../configuration";
+import { ConfigManager } from "../configuration";
 import { refreshListExplorer, tfrrpgOutput } from "../extension";
 import { generateCommand } from "../rpgcommands/commandUtils";
 import { MESSAGES } from "../utils/constants";
 import { findObjectType, listConvertibleMembers } from "./api";
 import { handleConversion as convertSingleMember, executeConversionCommand } from "./conversion";
 import { ConversionStatus } from "./conversionMessage";
-import { ConversionTarget } from "./model";
+import { CommandParams, ConversionTarget } from "./model";
 import { ConversionList } from "./views/conversionListBrowser";
 import { createTabs, setupTabWindow, showConversionReport } from "./webviews/panel";
 

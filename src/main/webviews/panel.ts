@@ -1,11 +1,10 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
 import { l10n } from "vscode";
 import { Code4i } from "../../code4i";
-import { CommandParams } from "../../configuration";
 import { convertBool, filterConversionMessage, generateOptions, getBooleanOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
 import { ExecutionReport } from "../controller";
 import { getStatusColor } from "../conversionMessage";
-import { ConversionTarget } from "../model";
+import { CommandParams, ConversionTarget } from "../model";
 
 export function createTabs(member: ConversionTarget, config: CommandParams): ComplexTab[] {
     return [
@@ -69,7 +68,7 @@ function createConversionOptions(config: CommandParams, targetConversion = false
     if (targetConversion) {
         ui.addCheckbox("REPLACE", l10n.t("Replace Existing Member"), l10n.t("Replace the source member with the converted source"), convertBool(config.REPLACE) === "*YES")
             .addCheckbox("EXPCSPECPY", l10n.t("Expand Copy Book with C-Spec"), l10n.t("Expand Copy Books with C-Spec"), convertBool(config.EXPCSPECPY) === "*YES")
-            .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs : <code>*YES</code>"), convertBool(config.CVTDCLSPEC) === "*YES");
+            .addCheckbox("CVTDCLSPEC", l10n.t("Convert Declaration Specs"), l10n.t("Convert Declaration Specs"), convertBool(config.CVTDCLSPEC) === "*YES");
     }
 
     ui.addParagraph('FULLYFREE : <code>*YES</code>')
@@ -81,15 +80,15 @@ function createConversionOptions(config: CommandParams, targetConversion = false
         .addInput("TAGFLDNAME", l10n.t("Goto Label"), "", { default: config.TAGFLDNAME })
         .addCheckbox("CVT_KLIST", l10n.t("Convert Key List"), "", convertBool(config.CVT_KLIST) === "*YES")
         .addSelect("CVT_MOVEA", l10n.t("Convert MOVEA"), generateOptions(getConvertOptions(), config.CVT_MOVEA))
-        .addParagraph('Convert Subr. to Procedure : <code>*NO</code>')
-        .addCheckbox("USEPARMNUM", l10n.t("Use %ParmNum"), "", convertBool(config.USEPARMNUM) === "*YES")
         .addSelect("INDENT", l10n.t("Indentation Size (char)"), generateOptions(getIndentSizeOptions(), config.INDENT.toString()))
         .addCheckbox("INDENTCMT", l10n.t("Indent Comments"), "", convertBool(config.INDENTCMT) === "*YES")
         .addSelect("EMPTYCMT", l10n.t("Empty Comment Lines"), generateOptions(getEmptyCommentLinesOptions(), config.EMPTYCMT))
         .addSelect("OPCODECASE", l10n.t("Case for operation codes"), generateOptions(getCaseOptions(), config.OPCODECASE))
         .addSelect("BLTFNCCASE", l10n.t("Case for the B.i.F."), generateOptions(getCaseOptions(), config.BLTFNCCASE))
         .addSelect("SPCWRDCASE", l10n.t("Case for special words"), generateOptions(getCaseOptions(), config.SPCWRDCASE))
-        .addSelect("KEYWRDCASE", l10n.t("Case for key words"), generateOptions(getCaseOptions(), config.KEYWRDCASE));
+        .addSelect("KEYWRDCASE", l10n.t("Case for key words"), generateOptions(getCaseOptions(), config.KEYWRDCASE))
+        .addCheckbox("USEPARMNUM", l10n.t("Use %ParmNum"), "", convertBool(config.USEPARMNUM) === "*YES")
+        .addParagraph('Convert Subr. to Procedure : <code>*NO</code>');
 
     return ui;
 }
@@ -99,14 +98,6 @@ function createConversionOptions(config: CommandParams, targetConversion = false
 function createAdvancedOptions(config: CommandParams): CustomUI {
     return Code4i.customUI()
         .addHeading(l10n.t("Advanced Options"), 3)
-        .addSelect("KEEPDSIND", l10n.t("Keep indentation in the DS:"), generateOptions(getWarningOptions(), config.KEEPDSIND))
-        .addSelect("ALPHTONUM", l10n.t("Analyze Alpha to num. MOVE:"), generateOptions(getBooleanOptions(), config.ALPHTONUM))
-        .addSelect("PRECPL", l10n.t("Precompilation Clauses:"), generateOptions(getPrecompilationOptions(), ""))
-        .addSelect("SRCDATE", l10n.t("Source Line Date:"), generateOptions(getSourceLineDate(), config.SRCDATE))
-        .addSelect("FLGCVTTYPE", l10n.t("Mark the conversion type:"), generateOptions(getBooleanOptionsWithKeep(), config.FLGCVTTYPE))
-        .addCheckbox("CLRXREF", l10n.t("Clean Temporary Cross-reference:"), "", convertBool(config.CLRXREF) === "*YES")
-        .addCheckbox("CLRFRMCHG", l10n.t("Clean Modified Lines:"), "", convertBool(config.CLRFRMCHG) === "*YES")
-        .addHorizontalRule()
         .addHeading(l10n.t("Analyze Indicator Problems"), 4)
         .addSelect("CHECKIND", l10n.t("CHECK:"), generateOptions(getWarningOptions(), config.CHECKIND))
         .addSelect("SCANIND", l10n.t("SCAN:"), generateOptions(getWarningOptions(), config.SCANIND))
@@ -117,7 +108,16 @@ function createAdvancedOptions(config: CommandParams): CustomUI {
         .addSelect("NUMTRUNCA", l10n.t("ADD, SUB {Length(Fact1/Fact2)>Length(Result)}:"), generateOptions(getTruncationOptions(), config.NUMTRUNCA))
         .addSelect("NUMTRUNCB", l10n.t("ADD, SUB {Other}:"), generateOptions(getTruncationOptions(), config.NUMTRUNCB))
         .addSelect("NUMTRUNCM", l10n.t("MULT:"), generateOptions(getTruncationOptions(), config.NUMTRUNCM))
-        .addSelect("NUMTRUNCD", l10n.t("DIV:"), generateOptions(getTruncationOptions(), config.NUMTRUNCD));
+        .addSelect("NUMTRUNCD", l10n.t("DIV:"), generateOptions(getTruncationOptions(), config.NUMTRUNCD))
+        .addSelect("KEEPDSIND", l10n.t("Keep indentation in the DS:"), generateOptions(getWarningOptions(), config.KEEPDSIND))
+        .addHorizontalRule()
+        .addSelect("ALPHTONUM", l10n.t("Analyze Alpha to num. MOVE:"), generateOptions(getBooleanOptions(), config.ALPHTONUM))
+        .addSelect("PRECPL", l10n.t("Precompilation Clauses:"), generateOptions(getPrecompilationOptions(), config.PRECPL))
+        .addSelect("SRCDATE", l10n.t("Source Line Date:"), generateOptions(getSourceLineDate(), config.SRCDATE))
+        .addSelect("FLGCVTTYPE", l10n.t("Mark the conversion type:"), generateOptions(getBooleanOptionsWithKeep(), config.FLGCVTTYPE))
+        .addCheckbox("CLRXREF", l10n.t("Clean Temporary Cross-reference:"), "", convertBool(config.CLRXREF) === "*YES")
+        .addCheckbox("CLRFRMCHG", l10n.t("Clean Modified Lines:"), "", convertBool(config.CLRFRMCHG) === "*YES");
+
 }
 
 function createPropertiesTable(target: ConversionTarget): string {

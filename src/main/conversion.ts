@@ -1,11 +1,10 @@
 import { BrowserItem, CommandResult, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { commands, l10n, ProgressLocation, window } from "vscode";
 import { Code4i } from "../code4i";
-import { CommandParams } from "../configuration";
 import { tfrrpgOutput } from "../extension";
 import { generateCommand } from "../rpgcommands/commandUtils";
 import { ConversionOKs } from "./conversionMessage";
-import { ConversionTarget } from "./model";
+import { CommandParams, ConversionTarget } from "./model";
 import { showConversionReport } from "./webviews/panel";
 
 export async function handleConversion(params: CommandParams, target: ConversionTarget, parentnode?: BrowserItem) {

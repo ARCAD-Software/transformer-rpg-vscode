@@ -1,5 +1,4 @@
-import { CommandParams } from '../configuration';
-import { ConversionTarget } from '../main/model';
+import { CommandParams, ConversionTarget } from '../main/model';
 import { product } from '../product';
 import { convertBool } from '../utils/helper';
 
