@@ -1,3 +1,5 @@
 * [ARCAD-Transformer RPG](/)
 * [Prerequisites](pages/prerequisites.md)
 * [Getting started](pages/getting-started.md)
+* [Working with Transformer RPG](pages/working-with-tfrrpg.md)
+* [Transformer RPG View](pages/tfrrpg-view.md)
