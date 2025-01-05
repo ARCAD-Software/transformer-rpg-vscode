@@ -2,33 +2,54 @@
 
 ### Conversion Options
 
-The **Arcad Transformer-RPG** extension allows you to convert RPG files to a fully free format or add them to a conversion list for later batch processing.
+The `Arcad Transformer-RPG` extension provides powerful capabilities to convert traditional RPG source code to modern fully free format RPG. You can either convert files individually or add them to a batch conversion list for bulk conversion.
 
+
+> `Note:` The extension supports two primary conversion workflows: single member conversion and batch conversion of entire source files.
 ---
 
-## **Convert to Fully Free**
+## Convert a Single Member
+1. Navigate to the `Code for IBM i Object Explorer` in your VS Code sidebar
+2. Locate the RPGLE member you want to convert
+3. Right-click the member to open the context menu
+4. Select `Convert to Fully Free` from the available options
 
-You can convert a **single member** or **all members** of a source file to the fully free format.
+When the `Configuration Panel` appears, you'll have access to these important settings:
 
-### **1. Convert a Single Member**
-1. Right-click an RPGLE **member** in the **Code for IBM i Object Explorer**.
-2. Select **Convert to Fully Free**.
+- `Target Library Configuration`:
+  - Default library is automatically selected based on your current connection
+  - You can type a different library name or use the dropdown to select from available libraries
+  - The target library must have appropriate authorities for the conversion process
 
-   ![Select Convert to Fully Free](../media/select-convert-to-fully-free.png)
+- `Detailed Conversion Options`:
+  - `Target Format`: Choose between *FULLY FREE or *FREE
+  - `Indentation Style`: Select 2 spaces, 4 spaces, or tab
+  - `Comment Handling`: Specify how existing comments should be processed
+  - `Variable Naming`: Configure modern naming conventions for variables
+  - `Procedure Interface`: Choose between modern or traditional procedure interfaces
 
-3. The **Configuration Panel** will appear:
-   - **Target Library**: The default library is pre-selected. Modify it as needed.
-   - **Conversion Options**: Customize additional settings like target format.
-   ![Configuration Panel](../media/configuration-panel.png)
+After configuring your settings:
+- Click `Convert` to perform a one-time conversion
+- Use `Convert & Save` to store your configuration for future conversions
 
-4. Click **Convert** to convert the selected member to a fully free format.
-   - Or, click **Convert & Save** to convert and save the configuration for future use.
+##  Convert All Members of a Source File
+1. In the `Code for IBM i Object Explorer`, locate the source file containing RPGLE members
+2. Right-click the source file to access the context menu
+3. Select `Convert to Fully Free`
 
-### **2. Convert All Members of a Source File**
-1. Right-click an RPGLE **source file** in the **Code for IBM i Object Explorer**.
-2. Select **Convert to Fully Free**.
-3. The **Configuration Panel** will appear, applying to all members in the source file.
-4. After reviewing and adjusting settings, click **Convert** to convert all members of the source file to fully free format.
-5. The Process will fetch the Object type of the source members and convert them to fully free format.
+The batch conversion process includes these additional features:
+- Automatic detection of member types
+- Parallel processing for faster conversion
+- Detailed conversion logs
+- Progress tracking for large source files
+
+`Important Considerations:`
+- Ensure you have proper backup before converting multiple members
+- Review conversion logs for any warnings or errors
+
+The conversion process will:
+1. Convert fixed-format specifications to free format
+2. Apply modern RPG best practices
+3. Generate converted source in the target library
 
 ---
