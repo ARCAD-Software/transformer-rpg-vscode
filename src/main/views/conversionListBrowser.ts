@@ -134,7 +134,7 @@ export class ConversionListNode extends BaseConversionNode {
             { codicon: 'layers', themeColor: 'gitDecoration.modifiedResourceForeground', refreshable: true }
         );
         this.tooltip = this.getTooltip(list);
-        this.description = list.connectionname.toUpperCase();
+        this.description = `${list.targetlibrary} | ${list.targetsourcefile} | ${list.connectionname.toUpperCase()}`;
         this.conversionList = list;
     }
 
@@ -200,8 +200,8 @@ export class ConversionListNode extends BaseConversionNode {
         const tooltip = new MarkdownString();
         tooltip.supportThemeIcons = true;
         tooltip.appendMarkdown(l10n.t(`$(symbol-interface) Name: {0}  \n`, listItem.listname));
-        tooltip.appendMarkdown(l10n.t(`$(library) Library: {0}  \n`, listItem.targetlibrary));
-        tooltip.appendMarkdown(l10n.t(`$(file-code) Source File: {0}  \n`, listItem.targetsourcefile));
+        tooltip.appendMarkdown(l10n.t(`$(library) Target Library: {0}  \n`, listItem.targetlibrary));
+        tooltip.appendMarkdown(l10n.t(`$(file-code) Target Source File: {0}  \n`, listItem.targetsourcefile));
         tooltip.appendMarkdown(l10n.t(`$(link) Connection: {0}  \n`, listItem.connectionname));
         tooltip.appendMarkdown(l10n.t(`$(comment) Description: {0}  \n`, listItem.description));
         return tooltip;

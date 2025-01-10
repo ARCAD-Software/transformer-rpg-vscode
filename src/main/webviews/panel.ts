@@ -1,5 +1,5 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
-import { l10n } from "vscode";
+import { l10n, window } from "vscode";
 import { Code4i } from "../../code4i";
 import { convertBool, filterConversionMessage, generateOptions, getBooleanOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
 import { ExecutionReport } from "../controller";
@@ -144,21 +144,12 @@ function addRow(key: string, value?: any): string {
 }
 
 
-const openReports = new Map<string, { dispose: () => void }>();
 export async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
     const title = l10n.t("Conversion Report-{0}", itemName);
-
-    if (openReports.has(title)) {
-        openReports.get(title)?.dispose();
-        openReports.delete(title);
-    }
-
     const page = await commandReportUI(report).loadPage(title);
-    if (page) {
-        openReports.set(title, page.panel);
-    }
-
 }
+
+
 
 function commandReportUI(report: ExecutionReport[]) {
     return Code4i.customUI()

@@ -226,18 +226,10 @@ export async function addMembersToConversionList(node: MemberItem | ObjectItem):
         const newMembers = membersToAdd.filter(m => !existingMembers.has(m.name));
 
         if (newMembers.length === 0) {
-            return;
-        }
-
-        const existingMemberNames = membersToAdd
-            .filter(m => existingMembers.has(m.name))
-            .map(m => m.name)
-            .join(', ');
-
-        if (existingMemberNames) {
-            window.showInformationMessage(
-                l10n.t("The following members already exist in the conversion list: {0}", existingMemberNames)
+            window.showWarningMessage(
+                l10n.t("The selected member(s) already exist in the conversion list: {0}", selectedList.listname)
             );
+            return;
         }
 
         addMembersToList(selectedList, newMembers);
