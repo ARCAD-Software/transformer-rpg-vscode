@@ -51,6 +51,10 @@ export function getWarningOptions() {
     return ['*YES', '*NO'];
 }
 
+export function getAlphaToNumOptions() {
+    return ['*WNG1', '*YES', '*NO'];
+}
+
 export function getTruncationOptions() {
     return ['*WNG1', '*WNG2', '*YES', '*NO'];
 }

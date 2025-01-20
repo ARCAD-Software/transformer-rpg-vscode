@@ -1,7 +1,7 @@
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
-import { l10n, window } from "vscode";
+import { l10n } from "vscode";
 import { Code4i } from "../../code4i";
-import { convertBool, filterConversionMessage, generateOptions, getBooleanOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
+import { convertBool, filterConversionMessage, generateOptions, getAlphaToNumOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
 import { ExecutionReport } from "../controller";
 import { getStatusColor } from "../conversionMessage";
 import { CommandParams, ConversionTarget } from "../model";
@@ -111,7 +111,7 @@ function createAdvancedOptions(config: CommandParams): CustomUI {
         .addSelect("NUMTRUNCD", l10n.t("DIV:"), generateOptions(getTruncationOptions(), config.NUMTRUNCD))
         .addSelect("KEEPDSIND", l10n.t("Keep indentation in the DS:"), generateOptions(getWarningOptions(), config.KEEPDSIND))
         .addHorizontalRule()
-        .addSelect("ALPHTONUM", l10n.t("Analyze Alpha to num. MOVE:"), generateOptions(getBooleanOptions(), config.ALPHTONUM))
+        .addSelect("ALPHTONUM", l10n.t("Analyze Alpha to num. MOVE:"), generateOptions(getAlphaToNumOptions(), config.ALPHTONUM))
         .addSelect("PRECPL", l10n.t("Precompilation Clauses:"), generateOptions(getPrecompilationOptions(), config.PRECPL))
         .addSelect("SRCDATE", l10n.t("Source Line Date:"), generateOptions(getSourceLineDate(), config.SRCDATE))
         .addSelect("FLGCVTTYPE", l10n.t("Mark the conversion type:"), generateOptions(getBooleanOptionsWithKeep(), config.FLGCVTTYPE))
