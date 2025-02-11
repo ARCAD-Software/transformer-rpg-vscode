@@ -7,7 +7,7 @@
   "icon": "images/tfrrpg.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ARCAD-Software/arcad-transformer-rpg"
+    "url": "https://github.com/ARCAD-Software/transformer-rpg-vscode"
   },
   "engines": {
     "vscode": "^1.84.0"
