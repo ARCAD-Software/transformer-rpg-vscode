@@ -72,6 +72,7 @@ export class ProductStatusDataProvider extends ExplorerDataProvider {
             return { ...updatePackage, releaseUrl: release.html_url };
           }
         })
+        .filter(Boolean)
         .at(0)
     );
 
