@@ -1,4 +1,4 @@
-import { CodeForIBMi, IBMiEvent, OpenEditableOptions } from "@halcyontech/vscode-ibmi-types";
+import { CodeForIBMi, IBMiEvent, QsysFsOptions } from "@halcyontech/vscode-ibmi-types";
 import IBMiContent from "@halcyontech/vscode-ibmi-types/api/IBMiContent";
 import vscode from "vscode";
 import { TransformerRPGLicense } from "./components/TFRRPGLIC";
@@ -25,7 +25,7 @@ export namespace Code4i {
   }
 
   export function getContent(): IBMiContent {
-    return codeForIBMi.instance.getContent();
+    return getConnection().getContent();
   }
 
   export function customUI() {
@@ -36,7 +36,7 @@ export namespace Code4i {
     return codeForIBMi.tools;
   }
 
-  export function open(path: string, options?: OpenEditableOptions) {
+  export function open(path: string, options?: QsysFsOptions) {
     vscode.commands.executeCommand("code-for-ibmi.openEditable", path, options);
   }
 }

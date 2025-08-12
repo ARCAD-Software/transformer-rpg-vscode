@@ -1,5 +1,5 @@
+import { ComponentIdentification, ComponentState, IBMiComponent } from "@halcyontech/vscode-ibmi-types/api/components/component";
 import IBMi from "@halcyontech/vscode-ibmi-types/api/IBMi";
-import { ComponentIdentification, ComponentState, IBMiComponent } from "@halcyontech/vscode-ibmi-types/components/component";
 import { posix } from "path";
 import vscode, { l10n } from "vscode";
 import { Code4i } from "../code4i";
@@ -20,6 +20,7 @@ type Message = {
 export type LicenseInformation = {
   message?: Message,
   serial: string
+  lparId: number
   arcadVersion: string
   key?: string,
   permanentUnits?: Units
@@ -31,7 +32,7 @@ export type LicenseInformation = {
 export class TransformerRPGLicense implements IBMiComponent {
   static ID = "TransformerRPGLicense";
   private readonly functionName = 'TFRRPGLIC';
-  private readonly currentVersion = 1;
+  private readonly currentVersion = 2;
 
   private installedVersion = 0;
   private library = "";
@@ -46,7 +47,7 @@ export class TransformerRPGLicense implements IBMiComponent {
   }
 
   async getRemoteState(connection: IBMi) {
-    this.library = connection.config?.tempLibrary.toUpperCase() || "ILEDITOR";
+    this.library = connection.getConfig().tempLibrary.toUpperCase() || "ILEDITOR";
     const [result] = await connection.runSQL(`select cast(LONG_COMMENT as VarChar(200)) LONG_COMMENT from qsys2.sysroutines where routine_schema = '${this.library}' and routine_name = '${this.functionName}'`);
     if (result?.LONG_COMMENT) {
       const comment = String(result.LONG_COMMENT);
@@ -65,7 +66,7 @@ export class TransformerRPGLicense implements IBMiComponent {
   update(connection: IBMi): ComponentState | Promise<ComponentState> {
     return connection.withTempDirectory(async tempDir => {
       const tempSourcePath = posix.join(tempDir, `TFRRPGLIC.sql`);
-      await connection.content.writeStreamfileRaw(tempSourcePath, Buffer.from(this.getSource(), "utf-8"));
+      await connection.getContent().writeStreamfileRaw(tempSourcePath, this.getSource(), "utf-8");
       const result = await connection.runCommand({
         command: `RUNSQLSTM SRCSTMF('${tempSourcePath}') COMMIT(*NONE) NAMING(*SYS)`,
         noLibList: true
@@ -87,6 +88,7 @@ export class TransformerRPGLicense implements IBMiComponent {
       MESSAGE_TEXT char(255),
       MESSAGE_HELP char(4000),
       SERIAL_NUMBER char(7),
+      LPAR_ID INTEGER,
       ARCAD_VERSION char(8),
       KEY_SERIAL char(7),
       KEY_MAX_DATE char(10),
@@ -108,6 +110,7 @@ export class TransformerRPGLicense implements IBMiComponent {
       Declare MESSAGE_TEXT char(255) default '';
       Declare MESSAGE_HELP char(4000) default '';
       Declare SERIAL_NUMBER char(7) default '';
+      Declare LPAR_ID INTEGER default 0;
       Declare ARCAD_VERSION char(8) default '';
       Declare KEY_SERIAL char(7) default '';
       Declare KEY_MAX_DATE char(10) default '';
@@ -144,12 +147,15 @@ export class TransformerRPGLicense implements IBMiComponent {
         TEMPORARY_MAX_DATE
       );
 
+      select PARTITION_ID into LPAR_ID from table (QSYS2.SYSTEM_STATUS ());
+
       Return values (
         MESSAGE_TYPE,
         MESSAGE_ID,
         MESSAGE_TEXT,
         MESSAGE_HELP,
         SERIAL_NUMBER,
+        LPAR_ID,
         ARCAD_VERSION,
         KEY_SERIAL,
         KEY_MAX_DATE,
@@ -197,6 +203,7 @@ export class TransformerRPGLicense implements IBMiComponent {
         return {
           message,
           serial: result.SERIAL_NUMBER as string,
+          lparId: result.LPAR_ID as number,
           arcadVersion: result.ARCAD_VERSION as string,
           key: result.KEY_TYPE as string,
           permanentUnits,

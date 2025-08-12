@@ -214,7 +214,7 @@ class LicenseNode extends ExplorerNode {
     const nodes: ExplorerNode[] = [];
     if (this.license) {
       nodes.push(
-        new TextNode(l10n.t("LPAR Serial"), { description: this.license.serial, icon: "symbol-numeric" }),
+        new TextNode(l10n.t("LPAR Serial/ID"), { description: `${this.license.serial}/${this.license.lparId}`, icon: "symbol-numeric" }),
         new TextNode(l10n.t("Version"), { description: this.license.arcadVersion, icon: "circuit-board" })
       );
 
