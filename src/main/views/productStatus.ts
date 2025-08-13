@@ -218,12 +218,12 @@ class LicenseNode extends ExplorerNode {
         new TextNode(l10n.t("Version"), { description: this.license.arcadVersion, icon: "circuit-board" })
       );
 
-      if (this.license.temporaryUnits?.maxDate) {
+      if (this.license.temporaryUnits.maxDate) {
         nodes.push(new TextNode(l10n.t("Limit date"), { description: this.license.temporaryUnits.maxDate, icon: "calendar" }));
       }
 
-      const total = (this.license.permanentUnits || this.license.temporaryUnits)?.total || 0;
-      const used = (this.license.permanentUnits || this.license.temporaryUnits)?.used || 0;
+      const total = this.license.permanentUnits.total || this.license.temporaryUnits.total || 0;
+      const used = this.license.permanentUnits.total || this.license.temporaryUnits.used || 0;
       nodes.push(
         new TextNode(l10n.t("Total units"), { description: String(total) }),
         new TextNode(l10n.t("Used units"), { description: String(used) }),

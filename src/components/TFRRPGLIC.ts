@@ -10,6 +10,10 @@ type Units = {
   used: number
 };
 
+type TemporaryUnits = Units & {
+  maxDate: string
+};
+
 type Message = {
   id: string
   type: string
@@ -23,10 +27,8 @@ export type LicenseInformation = {
   lparId: number
   arcadVersion: string
   key?: string,
-  permanentUnits?: Units
-  temporaryUnits?: Units & {
-    maxDate: string
-  }
+  permanentUnits: Units
+  temporaryUnits: TemporaryUnits
 };
 
 export class TransformerRPGLicense implements IBMiComponent {
@@ -189,12 +191,12 @@ export class TransformerRPGLicense implements IBMiComponent {
           help: (result.MESSAGE_HELP as string).replaceAll("&N", "\n")
         } : undefined;
 
-        const permanentUnits: Units | undefined = {
+        const permanentUnits: Units = {
           total: toNumber(result.PERMANENT_UNITS),
           used: toNumber(result.PERMANENT_UNITS_USED),
         };
 
-        const temporaryUnits: Units & { maxDate: string } | undefined = {
+        const temporaryUnits: TemporaryUnits = {
           total: toNumber(result.TEMPORARY_UNITS),
           used: toNumber(result.TEMPORARY_UNITS_USED),
           maxDate: result.TEMPORARY_MAX_DATE as string,
