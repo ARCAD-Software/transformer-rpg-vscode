@@ -54,7 +54,7 @@ async function convertMultipleMembers(data: CommandParams, conversionTarget: Con
             .map(member => `- ${member.member}`)
             .join('\n');
 
-        const detail = `${memberNames}${sourceMembersList.length > 10 ? l10n.t(`\n- ${sourceMembersList.length - 10} more...`) : ''}`;
+        const detail = `${memberNames}${sourceMembersList.length > 10 ? l10n.t(`\n- {0} more...`, sourceMembersList.length - 10) : ''}`;
         const isConfirmtoConvert = await window.showWarningMessage(
             l10n.t(`Do you confirm the conversion of {0} members?`, sourceMembersList.length),
             { modal: true, detail },
