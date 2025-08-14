@@ -3,7 +3,7 @@
   "publisher": "arcadsoftware",
   "displayName": "ARCAD-Transformer RPG",
   "description": "%description%",
-  "version": "0.0.6",
+  "version": "0.0.7-dev.0",
   "icon": "images/tfrrpg.png",
   "repository": {
     "type": "git",
