@@ -309,7 +309,7 @@
       "view/item/context": [
         {
           "submenu": "arcad-tfrrpg",
-          "when": "view == objectBrowser && viewItem == member || viewItem == SPF"
+          "when": "view == objectBrowser && viewItem =~ /^(member|SPF)/"
         },
         {
           "command": "tfrrpg-list-delete",
@@ -382,12 +382,12 @@
         {
           "command": "tfrrpg-list-add",
           "group": "tfrrgp@2",
-          "when": "view == objectBrowser && viewItem == member"
+          "when": "view == objectBrowser && viewItem =~ /^member/"
         },
         {
           "command": "tfrrpg-list-add-multiple",
           "group": "tfrrgp@3",
-          "when": "view == objectBrowser && viewItem == SPF"
+          "when": "view == objectBrowser && viewItem =~ /^SPF/"
         }
       ]
     }
