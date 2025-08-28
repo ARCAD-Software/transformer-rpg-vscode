@@ -1,5 +1,4 @@
 import { l10n } from "vscode";
-import { CommandParams } from "../main/model";
 
 export const SUPPORTED_SOURCE_TYPES = ['RPGLE', 'SQLRPGLE', 'RPG', 'RPG38', 'RPT', 'RPT38', 'SQLRPG'];
 
@@ -28,48 +27,4 @@ export const COMMANDS = {
     NO_MEMBERS_FOUND: l10n.t("No members found in the source file. Please check your configuration.")
   };
 
-  export const defaultConfig: CommandParams = {
-    SRCLIB: "",
-    SRCMBR: "",
-    SRCTYPE: "",
-    SRCFILE: "",
-    CVTCLCSPEC: "*FREE",
-    CVTDCLSPEC: "*YES",
-    EXPCSPECPY: "*NO",
-    FULLYFREE: "*YES",
-    MAXNOTFREE: "*NONE",
-    FIRSTCOL: 1,
-    USEPARMNUM: "*NO",
-    TOSRCFILE: "*NONE",
-    TOSRCMBR: "*FROMMBR",
-    TOSRCLIB: "",
-    REPLACE: "*NO",
-    CVT_CALL: "*YES",
-    CVT_GOTO: "*ADVANCED",
-    TAGFLDNAME: "ATag",
-    CVT_KLIST: "*YES",
-    CVT_MOVEA: "*ADVANCED",
-    INDENT: 2,
-    INDENTCMT: "*YES",
-    OPCODECASE: "*MIXED",
-    BLTFNCCASE: "*MIXED",
-    SPCWRDCASE: "*MIXED",
-    KEYWRDCASE: "*MIXED",
-    FLGCVTTYPE: "*NO",
-    CLRXREF: "*YES",
-    CLRFRMCHG: "*YES",
-    PRECPL: "*ARCAD",
-    SRCDATE: "*CURRENT",
-    CVT_SUBR: "*NO",
-    CHECKIND: "*WNG1",
-    SCANIND: "*WNG1",
-    LOOKUPIND: "*WNG1",
-    NUMTRUNCZ: "*YES",
-    NUMTRUNCA: "*YES",
-    NUMTRUNCB: "*NO",
-    NUMTRUNCM: "*YES",
-    NUMTRUNCD: "*YES",
-    EMPTYCMT: "*KEEP",
-    ALPHTONUM: "*YES",
-    KEEPDSIND: "*NO"
-};
+  

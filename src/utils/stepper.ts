@@ -6,9 +6,9 @@ class InputFlowAction {
     static readonly resume = new InputFlowAction();
 }
 
-type InputStep = (input: MultiStepInput) => Thenable<InputStep | void>;
+export type InputStep = (input: MultiStepInput) => Thenable<InputStep | void>;
 
-interface QuickPickParameters<T extends QuickPickItem> {
+export interface QuickPickParameters<T extends QuickPickItem> {
     title: string;
     step: number;
     totalSteps: number;

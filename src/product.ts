@@ -1,8 +1,8 @@
 import { extname, posix } from "path";
 import vscode, { l10n } from "vscode";
-import { Code4i } from "./code4i";
+import { Code4i } from "./platform/ibmi/code4i";
 import { TransformerRPGLicense } from "./components/TFRRPGLIC";
-import { ConfigManager } from "./configuration";
+import { ConfigManager } from "./config/configuration";
 import { getARCADInstance, tfrrpgOutput } from "./extension";
 
 const VERSION = /(\d+)\.(\d+)\.(\d+)/;

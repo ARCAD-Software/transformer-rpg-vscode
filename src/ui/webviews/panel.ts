@@ -1,10 +1,12 @@
-import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
+
 import { l10n } from "vscode";
-import { Code4i } from "../../code4i";
+import { Code4i } from "../../platform/ibmi/code4i";
 import { convertBool, filterConversionMessage, generateOptions, getAlphaToNumOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
-import { ExecutionReport } from "../controller";
-import { getStatusColor } from "../conversionMessage";
-import { CommandParams, ConversionTarget } from "../model";
+import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/webviews/CustomUI";
+import { getStatusColor } from "../../utils/messages";
+import { ExecutionReport } from "../../services/conversionExecutionService";
+import { CommandParams } from "../../models/command";
+import { ConversionTarget } from "../../models/conversionTarget";
 
 export function createTabs(member: ConversionTarget, config: CommandParams): ComplexTab[] {
     return [

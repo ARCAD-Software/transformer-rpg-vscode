@@ -1,8 +1,9 @@
 import { ConfigurationTarget, ExtensionContext, l10n, workspace } from 'vscode';
-import { tfrrpgOutput } from './extension';
-import { CommandParams, Connections } from './main/model';
-import { ConversionItem, ConversionList } from './main/views/conversionListBrowser';
-import { defaultConfig } from './utils/constants';
+import { tfrrpgOutput } from '../extension';
+import { defaultConfig } from './defaults';
+import { ConversionList, ConversionItem } from '../models/conversionListBrowser';
+import { CommandParams } from '../models/command';
+import { Connections } from '../models/connection';
 
 export namespace ConfigManager {
     let extensioncontext: ExtensionContext;

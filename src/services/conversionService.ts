@@ -1,11 +1,17 @@
 import { BrowserItem, CommandResult, IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { commands, l10n, ProgressLocation, window } from "vscode";
-import { Code4i } from "../code4i";
-import { tfrrpgOutput } from "../extension";
-import { generateCommand } from "../rpgcommands/commandUtils";
-import { ConversionOKs } from "./conversionMessage";
-import { CommandParams, ConversionTarget } from "./model";
-import { showConversionReport } from "./webviews/panel";
+import { window, ProgressLocation, l10n, commands } from "vscode";
+import { ConversionOKs } from "../utils/messages";
+import { Code4i } from "../platform/ibmi/code4i";
+import { showConversionReport } from "../ui/webviews/panel";
+import { generateCommand, executeConversionCommand } from "../platform/ibmi/commandRunner";
+import { CommandParams } from "../models/command";
+import { ConversionTarget } from "../models/conversionTarget";
+
+export async function openMember(param: IBMiMember, readonly: boolean): Promise<void> {
+    const path = `${param.library}/${param.file}/${param.name}.${param.extension}`;
+    Code4i.open(path, { readonly });
+}
+
 
 export async function handleConversion(params: CommandParams, target: ConversionTarget, parentnode?: BrowserItem) {
     const command = await generateCommand(params, target);
@@ -53,18 +59,3 @@ function processCommandResult(
         }
     }
 }
-
-export async function openMember(param: IBMiMember, readonly: boolean): Promise<void> {
-    const path = `${param.library}/${param.file}/${param.name}.${param.extension}`;
-    Code4i.open(path, { readonly });
-}
-
-export async function executeConversionCommand(command: string): Promise<CommandResult | undefined> {
-    try {
-        return await Code4i.getConnection().runCommand({ command, environment: "ile" });
-    } catch (error: any) {
-        tfrrpgOutput().appendLine(l10n.t('Error executing conversion command: {0}', JSON.stringify(error)));
-        window.showErrorMessage(l10n.t('Error executing conversion command'), l10n.t("Open output"));
-    }
-}
-

@@ -1,7 +1,4 @@
-import { IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { Code4i } from "../code4i";
-import { filterMembers } from "../utils/helper";
-import { ConversionTarget } from "./model";
+import { Code4i } from "./ibmi/code4i";
 
 function getLibraryList(mainLibrary: string) {
   return [mainLibrary, ...(Code4i.getConnection().config?.libraryList || []).filter(library => library !== mainLibrary)];
@@ -51,12 +48,3 @@ export async function findObjectType(memberLibrary: string, name: string, librar
   return "*NONE";
 };
 
-export async function listConvertibleMembers(target: ConversionTarget): Promise<IBMiMember[]> {
-  return (await Code4i.getContent().getMemberList({
-    library: target.library,
-    sourceFile: target.file,
-    members: target.filter?.members,
-    extensions: target.filter?.extensions,
-    filterType: target.filter?.type
-  })).filter(filterMembers);
-}
