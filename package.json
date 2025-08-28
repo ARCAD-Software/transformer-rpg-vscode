@@ -143,13 +143,13 @@
         "title": "%arcad-tfrrpg-list-item-update-objtype%",
         "command": "tfrrpg-list-item-update-objtype",
         "enablement": "code-for-ibmi:connected",
-        "icon": "$(references)"
+        "icon": "$(edit)"
       },
       {
         "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-member-convert%",
         "command": "tfrrpg-list-item-member-convert",
-        "icon": "$(run-coverage)"
+        "icon": "$(play)"
       },
       {
         "category": "ARCAD-Transformer RPG",
@@ -323,27 +323,27 @@
         },
         {
           "command": "tfrrpg-list-item-delete",
-          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem.*/",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem(Pending|Ready).*/",
           "group": "inline"
         },
         {
           "command": "tfrrpg-list-item-update-objtype",
-          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversion.*/",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem(Pending|Ready).*/",
           "group": "inline"
         },
         {
           "command": "tfrrpg-list-item-member-convert",
-          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversion.*/",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItemReady.*/",
           "group": "inline"
         },
         {
           "command": "tfrrpg-list-item-source-edit",
-          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem.*/",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem(Pending|Ready).*/",
           "group": "conversion@1"
         },
         {
           "command": "tfrrpg-list-item-converted-source-edit",
-          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem_succeed.*/",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItemReady_succeed.*/",
           "group": "conversion@2"
         },
         {

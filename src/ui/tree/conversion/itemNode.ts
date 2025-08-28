@@ -26,9 +26,10 @@ export class ConversionItemNode extends BaseConversionNode {
     constructor(item: ConversionItem, parent: ConversionListNode) {
         const status = getStatusColorFromCode(item.status);
         const suffix = statusSuffixes[item.status] || '';
+        const readiness = (item.objtype && item.objtype.trim() !== '') ? 'conversionItemReady' : 'conversionItemPending';
         super(
             item.member,
-            `conversionItem${suffix}`,
+            `${readiness}${suffix}`,
             TreeItemCollapsibleState.None,
             { codicon: 'settings-gear', themeColor: status, refreshable: true },
             parent

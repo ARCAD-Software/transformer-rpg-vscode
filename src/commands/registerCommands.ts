@@ -28,7 +28,6 @@ export function registerCommands(
         commands.registerCommand(COMMANDS.MEMBER_CONVERT, handleMemberConvert),
         commands.registerCommand(COMMANDS.ADD_MEMBER, addMembersToConversionList),
         commands.registerCommand(COMMANDS.ADD_MULTIPLE_MEMBERS, addMembersToConversionList),
-
         commands.registerCommand(COMMANDS.REFRESH_LIST, () => conversionProvider.refresh()),
         commands.registerCommand(COMMANDS.NEW_CONVERSION_LIST, () => conversionProvider.addNewConversionList()),
         commands.registerCommand(COMMANDS.DELETE_LIST, (node: ConversionListNode) => node.deleteConversionList(node)),
@@ -37,17 +36,9 @@ export function registerCommands(
         commands.registerCommand(COMMANDS.EDIT_SOURCE, (node: ConversionItemNode) => node.editMember()),
         commands.registerCommand(COMMANDS.EDIT_CONVERTED_SOURCE, (node: ConversionItemNode) => node.editConvertedMember()),
         commands.registerCommand(COMMANDS.FOCUS_OBJECT_BROWSER, (node: ConversionListNode) => node.openIBMiObjectBrowser()),
+        commands.registerCommand(COMMANDS.VIEW_PRODUCT_DESCRIPTION, (description: string) => productView.description = description),
         commands.registerCommand(COMMANDS.CONVERT_TARGET_MEMBER, (node: ConversionItemNode | ConversionListNode) => {
-            if (node instanceof ConversionItemNode) {
-                node.startSingleItemConversion();
-            } else {
-                node.processBatchConversion();
-            }
-        }),
-
-       
-        commands.registerCommand('tfrrpg-product-view-description', (description: string) => {
-            productView.description = description;
+            node instanceof ConversionItemNode ? node.startSingleItemConversion() : node.processBatchConversion();
         }),
 
         workspace.onDidChangeConfiguration(change => {
