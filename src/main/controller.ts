@@ -180,72 +180,103 @@ async function lookupMemberObjectTypes(targets: ConversionTarget[], library: str
     });
 }
 
-export async function addMembersToConversionList(node: MemberItem | ObjectItem): Promise<void> {
+export async function addMembersToConversionList(node: MemberItem | ObjectItem, nodes: MemberItem[] | ObjectItem[]): Promise<void> {
     try {
         const conversionList = await ConfigManager.getConversionList();
 
         if (!conversionList.length) {
-            const selection = await window.showInformationMessage(
-                l10n.t("No conversion list found. Create a conversion list first."),
-                l10n.t("Create new Conversion List"),
-                l10n.t("Cancel")
-            );
-            if (selection === l10n.t("Create new Conversion List")) {
-                await commands.executeCommand('tfrrpg-list-create');
-            }
+            await handleNoConversionList();
             return;
         }
 
-        // Prompt the user to select a conversion list
-        const selectedListName = await window.showQuickPick(
-            conversionList.map(list => list.listname),
-            { title: l10n.t("Select Conversion List") }
-        );
+        const selectedList = await promptUserToSelectList(conversionList);
+        if (!selectedList) { return; }
 
-        if (!selectedListName) {
-            window.showInformationMessage(l10n.t("No conversion list selected."));
+        const membersToAdd = await getMembersToAdd(node, nodes);
+        if (!membersToAdd.length) { return; }
+
+        const newMembers = filterNewMembers(selectedList, membersToAdd);
+        if (!newMembers.length) {
+            notifyMembersAlreadyExist(selectedList.listname);
             return;
         }
 
-        const selectedList = conversionList.find(list => list.listname === selectedListName);
-        if (!selectedList) {
-            window.showErrorMessage(l10n.t("Selected conversion list not found."));
-            return;
-        }
-
-        const membersToAdd: IBMiMember[] = [];
-        if ("member" in node) {
-            membersToAdd.push(node.member);
-        } else {
-            const selectedMembers = await getSelectedMembers(node);
-            if (selectedMembers) {
-                membersToAdd.push(...selectedMembers);
-            }
-        }
-        const existingMembers = new Set(selectedList.items.map(item => item.member));
-        const newMembers = membersToAdd.filter(m => !existingMembers.has(m.name));
-
-        if (newMembers.length === 0) {
-            window.showWarningMessage(
-                l10n.t("The selected member(s) already exist in the conversion list: {0}", selectedList.listname)
-            );
-            return;
-        }
-
-        addMembersToList(selectedList, newMembers);
-        await ConfigManager.updateConversionList(selectedList);
-
-        window.showInformationMessage(
-            l10n.t("{0} added to the conversion list.", newMembers.length > 1 ? l10n.t("Members") : l10n.t("Member"))
-        );
-
-        refreshListExplorer();
-
+        await updateConversionList(selectedList, newMembers);
+        notifyMembersAdded(newMembers.length);
 
     } catch (error) {
-        window.showErrorMessage(l10n.t("An error occurred while adding members to the conversion list."));
-        console.error(error);
+        handleError(error);
     }
+}
+
+async function handleNoConversionList(): Promise<void> {
+    const selection = await window.showInformationMessage(
+        l10n.t("No conversion list found. Create a conversion list first."),
+        l10n.t("Create new Conversion List"),
+        l10n.t("Cancel")
+    );
+    if (selection === l10n.t("Create new Conversion List")) {
+        await commands.executeCommand('tfrrpg-list-create');
+    }
+}
+
+async function promptUserToSelectList(conversionList: ConversionList[]): Promise<ConversionList | undefined> {
+    const selectedListName = await window.showQuickPick(
+        conversionList.map(list => list.listname),
+        { title: l10n.t("Select Conversion List") }
+    );
+
+    if (!selectedListName) {
+        window.showInformationMessage(l10n.t("No conversion list selected."));
+        return undefined;
+    }
+
+    const selectedList = conversionList.find(list => list.listname === selectedListName);
+    if (!selectedList) {
+        window.showErrorMessage(l10n.t("Selected conversion list not found."));
+        return undefined;
+    }
+
+    return selectedList;
+}
+
+async function getMembersToAdd(
+    node: MemberItem | ObjectItem,
+    nodes?: (MemberItem | ObjectItem)[]
+): Promise<IBMiMember[]> {
+    return nodes?.length
+        ? nodes.filter((n): n is MemberItem => "member" in n).map(n => n.member)
+        : "member" in node
+            ? [node.member]
+            : (await getSelectedMembers(node)) ?? [];
+}
+
+function filterNewMembers(selectedList: ConversionList, membersToAdd: IBMiMember[]): IBMiMember[] {
+    const existingMembers = new Set(selectedList.items.map(item => item.member));
+    return membersToAdd.filter(m => !existingMembers.has(m.name));
+}
+
+async function updateConversionList(selectedList: ConversionList, newMembers: IBMiMember[]): Promise<void> {
+    addMembersToList(selectedList, newMembers);
+    await ConfigManager.updateConversionList(selectedList);
+    refreshListExplorer();
+}
+
+function notifyMembersAlreadyExist(listName: string): void {
+    window.showWarningMessage(
+        l10n.t("The selected member(s) already exist in the conversion list: {0}", listName)
+    );
+}
+
+function notifyMembersAdded(count: number): void {
+    window.showInformationMessage(
+        l10n.t("{0} added to the conversion list.", count > 1 ? l10n.t("Members") : l10n.t("Member"))
+    );
+}
+
+function handleError(error: unknown): void {
+    window.showErrorMessage(l10n.t("An error occurred while adding members to the conversion list."));
+    console.error(error);
 }
 
 function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
