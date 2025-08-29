@@ -17,14 +17,19 @@ export class ConversionListProvider extends ExplorerDataProvider {
         }
     }
 
-    public addNewConversionList(): void {
-        ConversionListItemStepper().then(async (item) => {
-            if (item) {
-                ConfigManager.addConversionList(item).then(() => {
-                    vscode.window.showInformationMessage(vscode.l10n.t("Conversion list added successfully."));
-                    this.refresh();
-                });
-            }
+    public addNewConversionList(): Promise<boolean> {
+        return new Promise((resolve) => {
+            ConversionListItemStepper().then(async (item) => {
+                if (item) {
+                    ConfigManager.addConversionList(item).then(() => {
+                        vscode.window.showInformationMessage(vscode.l10n.t(`Conversion list {0} added successfully.`, item.listname));
+                        this.refresh();
+                        resolve(true);
+                    });
+                } else {
+                    resolve(false);
+                }
+            });
         });
     }
 }

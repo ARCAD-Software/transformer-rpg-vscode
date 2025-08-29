@@ -24,14 +24,43 @@ export class ConversionItemNode extends BaseConversionNode {
     parent: ConversionListNode;
 
     constructor(item: ConversionItem, parent: ConversionListNode) {
-        const status = getStatusColorFromCode(item.status);
         const suffix = statusSuffixes[item.status] || '';
-        const readiness = (item.objtype && item.objtype.trim() !== '') ? 'conversionItemReady' : 'conversionItemPending';
+        const hasObjectType = !!(item.objtype && item.objtype.trim() !== '');
+        const readiness = hasObjectType ? 'conversionItemReady' : 'conversionItemPending';
+
+        let codicon = 'settings-gear';
+        let themeColor: string = 'vscode-editor-foreground';
+
+        if (!hasObjectType) {
+            codicon = 'circle-large-outline';
+            themeColor = 'disabledForeground';
+        } else {
+            switch (item.status) {
+                case ConversionStatus.SUCCEED:
+                    codicon = 'check';
+                    themeColor = getStatusColorFromCode(item.status);
+                    break;
+                case ConversionStatus.WARNING:
+                    codicon = 'warning';
+                    themeColor = getStatusColorFromCode(item.status);
+                    break;
+                case ConversionStatus.FAILED:
+                    codicon = 'error';
+                    themeColor = getStatusColorFromCode(item.status);
+                    break;
+                case ConversionStatus.NA:
+                default:
+                    codicon = 'circle-large-outline';
+                    themeColor = 'vscode-editor-foreground';
+                    break;
+            }
+        }
+
         super(
             item.member,
             `${readiness}${suffix}`,
             TreeItemCollapsibleState.None,
-            { codicon: 'settings-gear', themeColor: status, refreshable: true },
+            { codicon, themeColor, refreshable: true },
             parent
         );
         this.description = `${item.member} | ${item.objtype}`;

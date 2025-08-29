@@ -1,5 +1,5 @@
 import { MemberItem, ObjectItem, IBMiMember } from "@halcyontech/vscode-ibmi-types";
-import { window, l10n, commands } from "vscode";
+import { window, l10n, commands, QuickPickItem, ThemeIcon, QuickInputButton } from "vscode";
 import { ConfigManager } from "../../config/configuration";
 import { refreshListExplorer, tfrrpgOutput } from "../../extension";
 import { ConversionStatus } from "../../utils/messages";
@@ -50,31 +50,56 @@ async function handleNoConversionList(): Promise<void> {
 async function promptUserToSelectList(
     conversionLists: ConversionList[]
 ): Promise<ConversionList | undefined> {
-    const quickPickItems = conversionLists.map(list => ({
-        label: `$(list) ${list.listname}`,
-        description: list.description || l10n.t("No description"),
-        detail: l10n.t(
-            "Library: {0}, Source File: {1}, Items: {2}",
-            list.targetlibrary,
-            list.targetsourcefile,
-            list.items.length
-        ),
+    interface ListQuickPick extends QuickPickItem { list: ConversionList; }
+
+    const createButton: QuickInputButton = {
+        iconPath: new ThemeIcon('add'),
+        tooltip: l10n.t('Create new conversion list')
+    };
+
+    const qp = window.createQuickPick<ListQuickPick>();
+    qp.title = l10n.t('Select Conversion List');
+    qp.matchOnDescription = true;
+    qp.matchOnDetail = true;
+    qp.placeholder = l10n.t('Choose a conversion list (use + to create new)');
+    qp.ignoreFocusOut = true;
+    qp.buttons = [createButton];
+
+    const toItems = (lists: ConversionList[]): ListQuickPick[] => lists.map(list => ({
+        label: list.listname,
+        description: list.description || l10n.t('No description'),
+        detail: l10n.t('Library: {0}, Source File: {1}, Items: {2}', list.targetlibrary, list.targetsourcefile, list.items.length),
         list
     }));
 
-    const selected = await window.showQuickPick(quickPickItems, {
-        title: l10n.t("Select Conversion List"),
-        matchOnDescription: true,
-        matchOnDetail: true,
-        placeHolder: l10n.t("Choose a conversion list to continue")
+    qp.items = toItems(conversionLists);
+    qp.show();
+
+    return await new Promise<ConversionList | undefined>(resolve => {
+        qp.onDidTriggerButton(async (button) => {
+            if (button === createButton) {
+                await commands.executeCommand('tfrrpg-list-create');
+                const updatedLists = await ConfigManager.getConversionList();
+                qp.items = toItems(updatedLists);
+
+                const newest = updatedLists[updatedLists.length - 1];
+                const match = qp.items.find(i => i.list.listname === newest.listname);
+                if (match) {
+                    qp.selectedItems = [match];
+                }
+            }
+        });
+
+        qp.onDidAccept(() => {
+            const sel = qp.selectedItems[0];
+            qp.dispose();
+            resolve(sel?.list);
+        });
+
+        qp.onDidHide(() => {
+            qp.dispose();
+        });
     });
-
-    if (!selected) {
-        window.showInformationMessage(l10n.t("No conversion list selected."));
-        return undefined;
-    }
-
-    return selected.list;
 }
 
 

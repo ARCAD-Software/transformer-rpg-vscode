@@ -1,8 +1,5 @@
 import {
-    ExtensionContext,
-    commands,
-    workspace,
-    TreeView
+    ExtensionContext, commands, workspace, TreeView
 } from 'vscode';
 
 import { COMMANDS } from '../utils/constants';
