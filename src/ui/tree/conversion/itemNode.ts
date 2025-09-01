@@ -118,9 +118,11 @@ export class ConversionItemNode extends BaseConversionNode {
                     member: this.conversionItem.member,
                     objectType: this.conversionItem.objtype
                 }],
+
                 conversionList.targetlibrary,
                 conversionList.targetsourcefile,
                 this.conversionItem.member
+
             ).then((report) => {
                 if (report.length) {
                     this.conversionItem.status = setConverionStatus(report[0].result.stdout || report[0].result.stderr || "");
@@ -129,6 +131,10 @@ export class ConversionItemNode extends BaseConversionNode {
                     ConfigManager.updateConversionItem(conversionList.listname, this.conversionItem.member, this.conversionItem).then(() => {
                         refreshListExplorer(this.parent);
                     });
+
+                    if (this.conversionItem.message.startsWith('MSG4178')) {
+                        return;
+                    }
 
                     if (this.conversionItem.status === ConversionStatus.SUCCEED || this.conversionItem.status === ConversionStatus.WARNING) {
                         openMember({

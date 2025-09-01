@@ -328,12 +328,12 @@
         },
         {
           "command": "tfrrpg-list-item-update-objtype",
-          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem(Pending|Ready).*/",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItem(Pending|Ready).*/ || viewItem =~ /^conversionList.*/",
           "group": "inline"
         },
         {
           "command": "tfrrpg-list-item-member-convert",
-          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItemReady.*/",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionItemReady.*/ || viewItem =~ /^conversionList.*/",
           "group": "inline"
         },
         {
