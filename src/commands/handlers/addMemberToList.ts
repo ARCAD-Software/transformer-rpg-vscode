@@ -107,11 +107,15 @@ async function getMembersToAdd(
     node: MemberItem | ObjectItem,
     nodes?: (MemberItem | ObjectItem)[]
 ): Promise<IBMiMember[]> {
-    return nodes?.length
-        ? nodes.filter((n): n is MemberItem => "member" in n).map(n => n.member)
-        : "member" in node
-            ? [node.member]
-            : (await getSelectedMembers(node)) ?? [];
+    if (nodes?.length) {
+        return nodes.filter((n): n is MemberItem => "member" in n).map(n => n.member);
+    }
+
+    if ("member" in node) {
+        return [node.member];
+    }
+
+    return (await getSelectedMembers(node)) ?? [];
 }
 
 function filterNewMembers(selectedList: ConversionList, membersToAdd: IBMiMember[]): IBMiMember[] {
