@@ -113,7 +113,7 @@ export abstract class BaseConversionNode extends ExplorerNode {
             const commandParameters = page.data as CommandParams;
             commandParameters.TOSRCLIB = targetlibrary;
             commandParameters.TOSRCFILE = targetFile;
-            return convertTargets(commandParameters, members, name) || [];
+            return await convertTargets(commandParameters, members, name) || [];
         }
         return [];
     }
@@ -156,43 +156,77 @@ export class ConversionListNode extends BaseConversionNode {
                 { placeHolder: l10n.t("Select members to update"), canPickMany: true });
             if (response) {
                 const selectedItems = items.filter(item => response.includes(item.member));
-                await this.updateObjectTypeForMembers(selectedItems, this.label?.toString() ?? "");
+                await this.updateObjectTypeForMembers(selectedItems, this.label as string);
             }
         }
     }
 
+
     async processBatchConversion(): Promise<void> {
-        if (this.conversionList) {
-            const listItem = this.conversionList;
-            if (listItem?.items.length) {
-                const items = listItem.items;
-                const response = await window.showQuickPick(items.map(item => item.member),
-                    { placeHolder: l10n.t("Select members to convert"), canPickMany: true });
-                if (response) {
-                    const selectedItems = items.filter(item => response.includes(item.member));
-                    if (!this.validateObjectType(selectedItems)) {
-                        window.showWarningMessage(l10n.t("Please update object type for all selected members."));
-                        return;
-                    }
-                    const ibmiMembers: ConversionTarget[] = selectedItems.map(member => ({
-                        extension: member.srctype,
-                        file: this.conversionList!.targetsourcefile,
-                        library: member.library,
-                        member: member.member,
-                        objectType: member.objtype
-                    }));
-                    const report = await this.convertMembers(ibmiMembers, listItem.targetlibrary, listItem.targetsourcefile, this.conversionList.listname);
-                    if (report.length) {
-                        this.conversionList.items.forEach((item, index) => {
-                            item.status = setConverionStatus(report[index].result.stdout || report[index].result.stderr || "");
-                            item.message = report[index].result.stderr || report[index].result.stdout || "";
-                            item.conversiondate = new Date().toISOString();
-                        });
-                        await ConfigManager.updateConversionList(this.conversionList);
-                        refreshListExplorer(this);
-                    }
-                }
+        if (!this.conversionList) {
+            return;
+        }
+
+        const conversionList = this.conversionList;
+
+        if (conversionList.items.length === 0) {
+            return;
+        }
+
+        const availableItems = conversionList.items
+            .filter(item => item.objtype !== '')
+            .map(item => item.member);
+
+        const selectedMembers = await window.showQuickPick(
+            availableItems,
+            {
+                placeHolder: l10n.t("Select members to convert"),
+                canPickMany: true
             }
+        );
+
+        if (!selectedMembers) {
+            return;
+        }
+
+        const selectedItems = conversionList.items.filter(item =>
+            selectedMembers.includes(item.member)
+        );
+
+        if (!this.validateObjectType(selectedItems)) {
+            window.showWarningMessage(
+                l10n.t("Please update object type for all selected members.")
+            );
+            return;
+        }
+
+        const conversionTargets: ConversionTarget[] = selectedItems.map(item => ({
+            extension: item.srctype,
+            file: item.targetmember,
+            library: item.library,
+            member: item.member,
+            objectType: item.objtype
+        }));
+
+        const conversionReport = await this.convertMembers(
+            conversionTargets,
+            conversionList.targetlibrary,
+            conversionList.targetsourcefile,
+            conversionList.listname
+        );
+
+        if (conversionReport.length > 0) {
+            this.conversionList.items.forEach((item, index) => {
+                const reportEntry = conversionReport[index].result;
+                const outputMessage = reportEntry.stdout || reportEntry.stderr || "";
+
+                item.status = setConverionStatus(outputMessage);
+                item.message = reportEntry.stderr || reportEntry.stdout || "";
+                item.conversiondate = new Date().toISOString();
+            });
+
+            await ConfigManager.updateConversionList(this.conversionList);
+            refreshListExplorer(this);
         }
     }
 
@@ -269,7 +303,7 @@ export class ConversionItemNode extends BaseConversionNode {
         if (node.label) {
             window.showInformationMessage(l10n.t('Are you sure you want to remove {0} from the list?', node.label as string), l10n.t("Yes"), l10n.t("No")).then(async (response) => {
                 if (response === l10n.t("Yes") && node.parent?.label && node.label) {
-                    await ConfigManager.removeConversionItem(String(node.parent.label), node.label as string);
+                    await ConfigManager.removeConversionItem(String(node.parent.label as string), node.label as string);
                     refreshListExplorer(node.parent);
                 }
             });
@@ -277,7 +311,7 @@ export class ConversionItemNode extends BaseConversionNode {
     }
 
     async updateMemberObjectType(): Promise<void> {
-        await this.updateObjectTypeForMembers([this.conversionItem], this.parent.label?.toString() ?? "");
+        await this.updateObjectTypeForMembers([this.conversionItem], this.parent.label as string);
     }
 
     startSingleItemConversion(): void {
