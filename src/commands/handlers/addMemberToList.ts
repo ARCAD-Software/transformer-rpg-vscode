@@ -4,8 +4,8 @@ import { ConfigManager } from "../../config/configuration";
 import { refreshListExplorer, tfrrpgOutput } from "../../extension";
 import { ConversionStatus } from "../../utils/messages";
 import { SourceMemberList, SourceMemberItem } from "../../models/conversionListBrowser";
-import { getMembersListWithProgress } from "../../services/conversionBatchService";
 import { SourceMember } from "../../models/conversionTarget";
+import { getSourceMembersList } from "../../utils/helper";
 
 export async function addMembersToConversionList(node: MemberItem | ObjectItem, nodes: MemberItem[] | ObjectItem[]): Promise<void> {
     try {
@@ -156,9 +156,9 @@ async function getSelectedMembers(node: ObjectItem): Promise<IBMiMember[] | unde
     memberQuickPick.ignoreFocusOut = true;
 
     try {
-        const members = await getMembersListWithProgress({
-            library: node.object.library, file: node.object.name,
-        } as SourceMember);
+        const members = await getSourceMembersList({
+            library: node.object.library, sourceFile: node.object.name,
+        });
 
         memberQuickPick.items = members.map(member => ({ label: member.name, description: member.text }));
         memberQuickPick.busy = false;

@@ -1,12 +1,14 @@
-import { window, l10n } from "vscode";
+import { window, l10n, MarkdownString } from "vscode";
 import { ConfigManager } from "../../../config/configuration";
 import { refreshListExplorer } from "../../../extension";
-import { SourceMemberItem } from "../../../models/conversionListBrowser";
+import { SourceMemberItem, SourceMemberList } from "../../../models/conversionListBrowser";
 import { createTargetLibTabs, setupTabWindow } from "../../webviews/panel";
 import { ExplorerNode } from "../common/explorerNode";
-import { ExecutionReport, convertTargets } from "../../../services/conversionExecutionService";
 import { CommandParams } from "../../../models/command";
 import { SourceMember } from "../../../models/conversionTarget";
+import { ExecutionReport, MemberConversionService } from "../../../services/memberConversionService";
+import { setConverionStatus } from "../../../utils/messages";
+import { Code4i } from "../../../platform/ibmi/code4i";
 
 
 export abstract class BaseConversionNode extends ExplorerNode {
@@ -23,7 +25,7 @@ export abstract class BaseConversionNode extends ExplorerNode {
         }
     }
 
-    async convertMembers(members: SourceMember[], targetlibrary: string, targetFile: string, name: string): Promise<ExecutionReport[]> {
+    async convertMembers(members: SourceMember[], targetlibrary: string, targetFile: string, name: string): Promise<ExecutionReport | ExecutionReport[]> {
         const config = ConfigManager.getParams();
         if (!config) { return []; }
         const isMultiple = members.length > 1;
@@ -36,12 +38,72 @@ export abstract class BaseConversionNode extends ExplorerNode {
             const commandParameters = formData.data;
             commandParameters.TOSRCLIB = targetlibrary;
             commandParameters.TOSRCFILE = targetFile;
-            return convertTargets(commandParameters, members, name) || [];
+            if (isMultiple) {
+                return await MemberConversionService.convertMultiple(commandParameters, members, false, targetlibrary) || [];
+            } else {
+                return await MemberConversionService.convertSingle(commandParameters, members[0]) as ExecutionReport;
+            }
         }
         return [];
     }
 
-    validateObjectType(conversionItems: SourceMemberItem[]): boolean {
-        return conversionItems.every(item => item.objectType !== "");
+    protected validateObjectTypes(items: SourceMemberItem | SourceMemberItem[]): boolean {
+        const list = Array.isArray(items) ? items : [items];
+        const isValid = list.every(item => item.objectType?.trim() !== "");
+
+        if (!isValid) {
+            window.showWarningMessage(
+                l10n.t("Please update object type for all selected members.")
+            );
+        }
+
+        return isValid;
+    }
+
+    protected updateItemStatus(item: SourceMemberItem, report: ExecutionReport): void {
+        const output = report.result.stdout || report.result.stderr || "";
+        item.status = setConverionStatus(output);
+        item.message = report.result.stderr || report.result.stdout || "";
+        item.date = new Date().toISOString();
+    }
+
+    protected async persistConversionItem(parentLabel: string, item: SourceMemberItem): Promise<void> {
+        await ConfigManager.updateConversionItem(parentLabel, item.name, item);
+    }
+
+    protected async persistConversionList(list: SourceMemberList): Promise<void> {
+        await ConfigManager.updateConversionList(list);
+    }
+
+    protected refreshExplorer(node: ExplorerNode = this): void {
+        refreshListExplorer(node);
+    }
+
+    protected prepareMember(item: SourceMemberItem): SourceMember {
+        return { ...item, file: item.targetmember };
+    }
+
+    protected prepareMembers(items: SourceMemberItem[]): SourceMember[] {
+        return items.map(item => this.prepareMember(item));
+    }
+
+    protected buildTooltip(fields: { icon: string, label: string, value: string }[]): MarkdownString {
+        const tooltip = new MarkdownString();
+        tooltip.supportThemeIcons = true;
+        fields.forEach(field =>
+            tooltip.appendMarkdown(l10n.t(`$(${field.icon}) ${field.label}: {0}  \n`, field.value))
+        );
+        return tooltip;
+    }
+
+    protected openMemberInEditor(
+        library: string,
+        file: string,
+        name: string,
+        extension: string,
+        readonly: boolean = false
+    ): void {
+        const path = `${library}/${file}/${name}.${extension}`;
+        Code4i.open(path, { readonly });
     }
 }

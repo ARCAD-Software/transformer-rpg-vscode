@@ -1,5 +1,9 @@
 import type { IBMiMember, IBMiMessage } from "@halcyontech/vscode-ibmi-types";
-import { SUPPORTED_SOURCE_TYPES } from "./constants";
+import { MESSAGES, SUPPORTED_SOURCE_TYPES } from "./constants";
+import { window, ProgressLocation, l10n } from "vscode";
+import { tfrrpgOutput } from "../extension";
+import { SourceMember } from "../models/conversionTarget";
+import { listConvertibleMembers, MemberListParam } from "../services/objectDiscoveryService";
 
 export function generateOptions(options: string[], selectedValue?: string) {
     return options.map((type) => {
@@ -69,4 +73,25 @@ export function filterMembers(member: IBMiMember) {
 
 export function filterConversionMessage(message: IBMiMessage) {
     return !["MSG3565", "CPC0904", "CPD4090"].includes(message.id);
+}
+
+export async function getSourceMembersList(param: MemberListParam): Promise<IBMiMember[]> {
+    return window.withProgress({
+        location: ProgressLocation.Notification,
+        title: MESSAGES.FETCHING_MEMBERS,
+        cancellable: false
+    }, async () => {
+        try {
+            return listConvertibleMembers(param);
+        } catch (error) {
+            tfrrpgOutput().appendLine(l10n.t("Failed to fetch members list: {0}", JSON.stringify(error)));
+            window.showErrorMessage(MESSAGES.FETCH_FAILED, l10n.t("Open output"))
+                .then(open => {
+                    if (open) {
+                        tfrrpgOutput().show();
+                    }
+                });
+            return [];
+        }
+    });
 }

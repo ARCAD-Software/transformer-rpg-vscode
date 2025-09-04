@@ -1,12 +1,12 @@
-
 import { l10n } from "vscode";
 import { Code4i } from "../../platform/ibmi/code4i";
 import { convertBool, filterConversionMessage, generateOptions, getAlphaToNumOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
 import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/webviews/CustomUI";
 import { getStatusColor } from "../../utils/messages";
-import { ExecutionReport } from "../../services/conversionExecutionService";
 import { CommandParams } from "../../models/command";
 import { SourceMember } from "../../models/conversionTarget";
+import { ExecutionReport } from "../../services/memberConversionService";
+import { REPORT_TABLE_CSS, REPORT_UI_GLOBAL_CSS } from "./cutomcss";
 
 export function createTabs(member: SourceMember, config: CommandParams): ComplexTab[] {
     return [
@@ -148,53 +148,53 @@ function addRow(key: string, value?: any): string {
 
 export async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
     const title = l10n.t("Conversion Report-{0}", itemName);
-    const page = await commandReportUI(report).loadPage(title);
+    await commandReportUI(report).loadPage(title);
 }
-
 
 
 function commandReportUI(report: ExecutionReport[]) {
     return Code4i.customUI()
-        .setOptions({ fullWidth: true })
+        .setOptions({
+            fullWidth: true,
+            css: REPORT_UI_GLOBAL_CSS
+        })
         .addHeading(l10n.t("Conversion Results"), 3)
         .addParagraph(createReportTable(report));
 }
-
 function createReportTable(results: ExecutionReport[]): string {
-    return /* html */ `
-        <style>
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            th, td {
-                border: 1px solid var(--vscode-editor-foreground);
-                padding: 8px;
-                text-align: left;
-            }
-            th {
-                background-color: var(--vscode-editor-background);
-                color: var(--vscode-editor-foreground);
-            }
-            tr:nth-child(even) {
-                background-color: var(--vscode-editor-background);
-            }
-            tr:hover {
-                background-color: var(--vscode-editor-hoverHighlightBackground);
-            }
-        </style>
-        <table>
-            <tr>
-              <th>${l10n.t("Member Name")}</th>
-              <th>${l10n.t("Output")}</th>
-            </tr>
-            ${results.map(result => {
-        const ok = result.result.code === 0;
+    const rows = results.map(result => {
+        const isSuccess = result.result.code === 0;
         const messages = Code4i.getTools().parseMessages(result.result.stdout || result.result.stderr);
-        return /* html */` <tr style="color: ${getStatusColor(ok, messages)};">
-                  <td>${result.target.name} (${result.target.objectType || '-'})</td>
-                  <td>${messages.messages.filter(filterConversionMessage).map(m => `- [${m.id}] ${m.text}`).join("<br />")}</td>
-              </tr>`;
-    }).join("")}
-        </table>`;
+        const filteredMessages = messages.messages
+            .filter(filterConversionMessage)
+            .map(m => `<span class="message-item"><span class="message-id">[${m.id}]</span> ${m.text}</span>`)
+            .join("");
+
+        return /* html */ `
+            <tr style="color: ${getStatusColor(isSuccess, messages)};">
+                <td>
+                    <span class="member-name">${result.target.name}</span>
+                    <span class="object-type">(${result.target.objectType || '-'})</span>
+                </td>
+                <td>${filteredMessages}</td>
+            </tr>
+        `;
+    }).join("");
+
+    return /* html */ `
+        <style>${REPORT_TABLE_CSS}</style>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>${l10n.t("Member Name")}</th>
+                        <th>${l10n.t("Output")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </div>
+    `;
 }
