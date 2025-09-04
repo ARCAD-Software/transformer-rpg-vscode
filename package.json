@@ -116,6 +116,13 @@
       },
       {
         "category": "ARCAD-Transformer RPG",
+        "title": "%arcad-tfrrpg-list-edit-properties%",
+        "command": "tfrrpg-list-edit-properties",
+        "enablement": "code-for-ibmi:connected",
+        "icon": "$(edit)"
+      },
+      {
+        "category": "ARCAD-Transformer RPG",
         "title": "%arcad-tfrrpg-list-add%",
         "command": "tfrrpg-list-add"
       },
@@ -254,6 +261,10 @@
           "when": "never"
         },
         {
+          "command": "tfrrpg-list-edit-properties",
+          "when": "never"
+        },
+        {
           "command": "tfrrpg-list-add",
           "when": "never"
         },
@@ -315,6 +326,11 @@
           "command": "tfrrpg-list-delete",
           "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionList.*/",
           "group": "inline"
+        },
+        {
+          "command": "tfrrpg-list-edit-properties",
+          "when": "view == arcad-tfrrpg-conversion-list && viewItem =~ /^conversionList.*/",
+          "group": "conversion@1"
         },
         {
           "command": "tfrrpg-list-objectbrowser.focus",
@@ -400,7 +416,6 @@
     "package": "vsce package --pre-release"
   },
   "devDependencies": {
-    "@halcyontech/vscode-ibmi-types": "^2.16.3",
     "@types/node": "18.x",
     "@types/tmp": "^0.2.6",
     "@types/vscode": "^1.84.0",
@@ -412,6 +427,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@halcyontech/vscode-ibmi-types": "^2.17.0",
     "axios": "^1.11",
     "tmp": "^0.2.3"
   }

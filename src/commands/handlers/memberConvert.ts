@@ -1,68 +1,90 @@
 import { Uri, window } from "vscode";
 import { Code4i } from "../../platform/ibmi/code4i";
-import { BrowserItem, IBMiMember, MemberItem, ObjectItem } from "@halcyontech/vscode-ibmi-types";
 import { MESSAGES } from "../../utils/constants";
 import { validateSourceType } from "../../utils/helper";
-import { openConfigWindow } from "./openConfigWindow";
 import { getObjectType } from "../../platform/api";
-import { ConversionTarget } from "../../models/conversionTarget";
-
+import { SourceMember } from "../../models/conversionTarget";
+import { openConfigWindow, ConversionConfiguration } from "./openConfigWindow";
+import { convertMultipleMembers } from "../../services/conversionBatchService";
+import { ConfigManager } from "../../config/configuration";
+import { handleConversion } from "../../services/conversionService";
+import type { BrowserItem, ObjectItem, MemberItem, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 
 type ConversionActionTarget = (BrowserItem & (ObjectItem | MemberItem));
 
 export async function handleMemberConvert(item: ConversionActionTarget | Uri): Promise<void> {
-    if (!item || item instanceof Uri) {
-        const conversionTarget = await getConversionTargetFromEditor();
-        if (conversionTarget) {
-            openConfigWindow({ conversionTarget });
+    switch (true) {
+        // Case 1: Fired from Editor
+        case !item || item instanceof Uri: {
+            await convertMemberFromEditor();
+            break;
         }
-    } else {
-        const parentnode = item.parent;
-        if ("object" in item) {
-            //Converting members from a source file
-            openConfigWindow({
-                conversionTarget: {
-                    library: item.object.library,
-                    file: item.object.name,
-                    filter: {
-                        type: item.filter.filterType,
-                        members: item.filter.member,
-                        extensions: item.filter.memberType
-                    }
-                },
-                parentnode
-            });
-        }
-        else {
-            const conversionTarget = await getConverionTarget(item.member);
-            if (conversionTarget) {
-                openConfigWindow({
-                    conversionTarget,
-                    parentnode
-                });
+
+        // Case 2: Multiple Members (Source File Selected) 
+        case "object" in (item as ObjectItem): {
+            const config = getWindowConfig(item as ObjectItem);
+            const commandParams = await openConfigWindow(config);
+            if (commandParams) {
+                await convertMultipleMembers(commandParams, config.conversionTarget);
             }
+            break;
+        }
+
+        // Case 3: Single Item
+        default: {
+            const memberItem = item as MemberItem & { parent: BrowserItem };
+            const conversionTarget = await getConversionTarget(memberItem.member);
+            if (conversionTarget) {
+                const commandParameters = await openConfigWindow({ conversionTarget, parentnode: memberItem.parent });
+                if (commandParameters) {
+                    if (commandParameters.buttons === 'convertnsave') {
+                        ConfigManager.setParams(commandParameters);
+                    }
+                    handleConversion(commandParameters, conversionTarget, memberItem.parent);
+                }
+            }
+            break;
         }
     }
 }
 
+async function convertMemberFromEditor() {
+    const conversionTarget = await getConversionTargetFromEditor();
+    if (conversionTarget) {
+        openConfigWindow({ conversionTarget });
+    }
+}
 
-async function getConversionTargetFromEditor(): Promise<ConversionTarget | undefined> {
+function getWindowConfig(item: ObjectItem): ConversionConfiguration {
+    return {
+        conversionTarget: {
+            file: item.object.name,
+            library: item.object.library,
+        } as SourceMember
+    };
+}
+
+async function getConversionTargetFromEditor(): Promise<SourceMember | undefined> {
     const editor = window.activeTextEditor;
     if (editor) {
         const member = Code4i.getConnection().parserMemberPath(editor.document.uri.path);
         if (member) {
-            return { library: member.library, file: member.file, member: member.name, extension: member.extension, objectType: await getObjectType(member.library, member.name) };
+            return {
+                ...member,
+                objectType: await getObjectType(member.library, member.name)
+            };
         }
     }
 }
 
-
-async function getConverionTarget(member: IBMiMember): Promise<ConversionTarget | undefined> {
+async function getConversionTarget(member: IBMiMember): Promise<SourceMember | undefined> {
     try {
         if (validateSourceType(member.extension)) {
-            return { library: member.library, file: member.file, member: member.name, extension: member.extension, objectType: await getObjectType(member.library, member.name) };
-        }
-        else {
+            return {
+                ...member,
+                objectType: await getObjectType(member.library, member.name)
+            };
+        } else {
             window.showErrorMessage(MESSAGES.UNSUPPORTED_SOURCE_TYPE, { modal: true });
         }
     } catch (error) {

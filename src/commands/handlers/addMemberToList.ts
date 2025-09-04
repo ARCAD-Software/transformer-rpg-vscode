@@ -1,10 +1,11 @@
-import { MemberItem, ObjectItem, IBMiMember } from "@halcyontech/vscode-ibmi-types";
+import type { MemberItem, ObjectItem, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { window, l10n, commands, QuickPickItem, ThemeIcon, QuickInputButton } from "vscode";
 import { ConfigManager } from "../../config/configuration";
 import { refreshListExplorer, tfrrpgOutput } from "../../extension";
 import { ConversionStatus } from "../../utils/messages";
-import { ConversionList } from "../../models/conversionListBrowser";
+import { SourceMemberList, SourceMemberItem } from "../../models/conversionListBrowser";
 import { getMembersListWithProgress } from "../../services/conversionBatchService";
+import { SourceMember } from "../../models/conversionTarget";
 
 export async function addMembersToConversionList(node: MemberItem | ObjectItem, nodes: MemberItem[] | ObjectItem[]): Promise<void> {
     try {
@@ -48,9 +49,9 @@ async function handleNoConversionList(): Promise<void> {
 }
 
 async function promptUserToSelectList(
-    conversionLists: ConversionList[]
-): Promise<ConversionList | undefined> {
-    interface ListQuickPick extends QuickPickItem { list: ConversionList; }
+    conversionLists: SourceMemberList[]
+): Promise<SourceMemberList | undefined> {
+    interface ListQuickPick extends QuickPickItem { list: SourceMemberList; }
 
     const createButton: QuickInputButton = {
         iconPath: new ThemeIcon('add'),
@@ -65,7 +66,7 @@ async function promptUserToSelectList(
     qp.ignoreFocusOut = true;
     qp.buttons = [createButton];
 
-    const toItems = (lists: ConversionList[]): ListQuickPick[] => lists.map(list => ({
+    const toItems = (lists: SourceMemberList[]): ListQuickPick[] => lists.map(list => ({
         label: list.listname,
         description: list.description || l10n.t('No description'),
         detail: l10n.t('Library: {0}, Source File: {1}, Items: {2}', list.targetlibrary, list.targetsourcefile, list.items.length),
@@ -75,7 +76,7 @@ async function promptUserToSelectList(
     qp.items = toItems(conversionLists);
     qp.show();
 
-    return await new Promise<ConversionList | undefined>(resolve => {
+    return await new Promise<SourceMemberList | undefined>(resolve => {
         qp.onDidTriggerButton(async (button) => {
             if (button === createButton) {
                 await commands.executeCommand('tfrrpg-list-create');
@@ -118,12 +119,12 @@ async function getMembersToAdd(
     return (await getSelectedMembers(node)) ?? [];
 }
 
-function filterNewMembers(selectedList: ConversionList, membersToAdd: IBMiMember[]): IBMiMember[] {
-    const existingMembers = new Set(selectedList.items.map(item => item.member));
+function filterNewMembers(selectedList: SourceMemberList, membersToAdd: IBMiMember[]): IBMiMember[] {
+    const existingMembers = new Set(selectedList.items.map(item => item.name));
     return membersToAdd.filter(m => !existingMembers.has(m.name));
 }
 
-async function updateConversionList(selectedList: ConversionList, newMembers: IBMiMember[]): Promise<void> {
+async function updateConversionList(selectedList: SourceMemberList, newMembers: IBMiMember[]): Promise<void> {
     addMembersToList(selectedList, newMembers);
     await ConfigManager.updateConversionList(selectedList);
     refreshListExplorer();
@@ -157,8 +158,8 @@ async function getSelectedMembers(node: ObjectItem): Promise<IBMiMember[] | unde
     try {
         const members = await getMembersListWithProgress({
             library: node.object.library, file: node.object.name,
-            filter: { type: node.filter.filterType, members: node.filter.member, extensions: node.filter.memberType }
-        });
+        } as SourceMember);
+
         memberQuickPick.items = members.map(member => ({ label: member.name, description: member.text }));
         memberQuickPick.busy = false;
         memberQuickPick.show();
@@ -193,17 +194,17 @@ async function getSelectedMembers(node: ObjectItem): Promise<IBMiMember[] | unde
 
 
 
-function addMembersToList(list: ConversionList, members: IBMiMember[]): void {
+function addMembersToList(list: SourceMemberList, members: IBMiMember[]): void {
     members.forEach(memberItem => {
         list.items.push({
-            conversiondate: "",
+            date: "",
             library: memberItem.library,
-            member: memberItem.name,
+            name: memberItem.name,
             message: "",
-            objtype: "",
-            srctype: memberItem.extension!,
+            objectType: "",
+            extension: memberItem.extension!,
             status: ConversionStatus.NA,
-            targetmember: memberItem.file
-        });
+            targetmember: memberItem.file,
+        } as SourceMemberItem);
     });
 }

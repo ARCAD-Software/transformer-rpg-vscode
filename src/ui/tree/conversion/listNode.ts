@@ -4,14 +4,14 @@ import { refreshListExplorer } from "../../../extension";
 import { setConverionStatus } from "../../../utils/messages";
 import { ConversionItemNode } from "./itemNode";
 import { BaseConversionNode } from "./baseNode";
-import { ConversionList } from "../../../models/conversionListBrowser";
+import { SourceMemberList } from "../../../models/conversionListBrowser";
 import { ExplorerNode } from "../common/explorerNode";
-import { ConversionTarget } from "../../../models/conversionTarget";
+import { SourceMember } from "../../../models/conversionTarget";
 
 export class ConversionListNode extends BaseConversionNode {
-    conversionList: ConversionList | undefined;
+    conversionList: SourceMemberList | undefined;
 
-    constructor(conversionList: ConversionList) {
+    constructor(conversionList: SourceMemberList) {
         super(
             conversionList.listname.toUpperCase(),
             "conversionList",
@@ -54,7 +54,7 @@ export class ConversionListNode extends BaseConversionNode {
             return;
         }
 
-        const availableMembers = currentList.items.map(item => item.member);
+        const availableMembers = currentList.items.map(item => item.name);
 
         const selectedMembers = await window.showQuickPick(
             availableMembers,
@@ -69,7 +69,7 @@ export class ConversionListNode extends BaseConversionNode {
         }
 
         const membersToUpdate = currentList.items.filter(item =>
-            selectedMembers.includes(item.member)
+            selectedMembers.includes(item.name)
         );
 
         await this.updateObjectTypeForMembers(
@@ -91,8 +91,8 @@ export class ConversionListNode extends BaseConversionNode {
         }
 
         const availableItems = conversionList.items
-            .filter(item => item.objtype !== '')
-            .map(item => item.member);
+            .filter(item => item.objectType !== '')
+            .map(item => item.name);
 
         const selectedMembers = await window.showQuickPick(
             availableItems,
@@ -107,7 +107,7 @@ export class ConversionListNode extends BaseConversionNode {
         }
 
         const selectedItems = conversionList.items.filter(item =>
-            selectedMembers.includes(item.member)
+            selectedMembers.includes(item.name)
         );
 
         if (!this.validateObjectType(selectedItems)) {
@@ -117,12 +117,9 @@ export class ConversionListNode extends BaseConversionNode {
             return;
         }
 
-        const conversionTargets: ConversionTarget[] = selectedItems.map(item => ({
-            extension: item.srctype,
+        const conversionTargets: SourceMember[] = selectedItems.map(item => ({
+            ...item,
             file: item.targetmember,
-            library: item.library,
-            member: item.member,
-            objectType: item.objtype
         }));
 
         const conversionReport = await this.convertMembers(
@@ -139,7 +136,7 @@ export class ConversionListNode extends BaseConversionNode {
 
                 item.status = setConverionStatus(outputMessage);
                 item.message = reportEntry.stderr || reportEntry.stdout || "";
-                item.conversiondate = new Date().toISOString();
+                item.date = new Date().toISOString();
             });
 
             await ConfigManager.updateConversionList(this.conversionList);
@@ -147,7 +144,7 @@ export class ConversionListNode extends BaseConversionNode {
         }
     }
 
-    private getTooltip(conversionList: ConversionList): MarkdownString {
+    private getTooltip(conversionList: SourceMemberList): MarkdownString {
         const tooltip = new MarkdownString();
         tooltip.supportThemeIcons = true;
 

@@ -4,6 +4,7 @@ import {
 
 import { COMMANDS } from '../utils/constants';
 import { handleMemberConvert } from './handlers/memberConvert';
+import { handleEditListProperties } from './handlers/editListProperties';
 import { ConversionListProvider } from '../ui/tree/conversion/provider';
 import { ConversionListNode } from '../ui/tree/conversion/listNode';
 import { ConversionItemNode } from '../ui/tree/conversion/itemNode';
@@ -28,6 +29,7 @@ export function registerCommands(
         commands.registerCommand(COMMANDS.REFRESH_LIST, () => conversionProvider.refresh()),
         commands.registerCommand(COMMANDS.NEW_CONVERSION_LIST, () => conversionProvider.addNewConversionList()),
         commands.registerCommand(COMMANDS.DELETE_LIST, (node: ConversionListNode) => node.deleteConversionList(node)),
+        commands.registerCommand(COMMANDS.EDIT_LIST_PROPERTIES, (node: ConversionListNode) => handleEditListProperties(node)),
         commands.registerCommand(COMMANDS.DELETE_LIST_ITEM, (node: ConversionItemNode) => node.removeMemberFromList(node)),
         commands.registerCommand(COMMANDS.UPDATE_OBJECT_TYPE, (node: ConversionItemNode | ConversionListNode) => node.updateMemberObjectType()),
         commands.registerCommand(COMMANDS.EDIT_SOURCE, (node: ConversionItemNode) => node.editMember()),

@@ -1,4 +1,4 @@
-import { IBMiMessages } from "@halcyontech/vscode-ibmi-types";
+import type { IBMiMessages } from "@halcyontech/vscode-ibmi-types";
 
 export enum ConversionStatus {
     NA = -1,

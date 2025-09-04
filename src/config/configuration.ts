@@ -1,7 +1,7 @@
 import { ConfigurationTarget, ExtensionContext, l10n, workspace } from 'vscode';
 import { tfrrpgOutput } from '../extension';
 import { defaultConfig } from './defaults';
-import { ConversionList, ConversionItem } from '../models/conversionListBrowser';
+import { SourceMemberList, SourceMemberItem } from '../models/conversionListBrowser';
 import { CommandParams } from '../models/command';
 import { Connections } from '../models/connection';
 
@@ -35,15 +35,15 @@ export namespace ConfigManager {
         return workspace.getConfiguration('code-for-ibmi').get('connections');
     }
 
-    export async function getConversionList(): Promise<ConversionList[]> {
-        return extensioncontext.globalState.get<ConversionList[]>('conversionList', []);
+    export async function getConversionList(): Promise<SourceMemberList[]> {
+        return extensioncontext.globalState.get<SourceMemberList[]>('conversionList', []);
     }
 
-    export async function saveConversionList(list: ConversionList[]): Promise<void> {
+    export async function saveConversionList(list: SourceMemberList[]): Promise<void> {
         await extensioncontext.globalState.update('conversionList', list);
     }
 
-    export async function addConversionList(newList: ConversionList): Promise<void> {
+    export async function addConversionList(newList: SourceMemberList): Promise<void> {
         const conversionList = await getConversionList();
         conversionList.push(newList);
         await saveConversionList(conversionList);
@@ -54,14 +54,14 @@ export namespace ConfigManager {
         return conversionList.findIndex(list => list.listname.toUpperCase() === listname.toUpperCase());
     }
 
-    async function saveConversionListIfNeeded(conversionList: ConversionList[], index: number, action: () => void): Promise<void> {
+    async function saveConversionListIfNeeded(conversionList: SourceMemberList[], index: number, action: () => void): Promise<void> {
         if (index !== -1) {
             action();
             await saveConversionList(conversionList);
         }
     }
 
-    export async function updateConversionList(updatedList: ConversionList): Promise<void> {
+    export async function updateConversionList(updatedList: SourceMemberList): Promise<void> {
         const conversionList = await getConversionList();
         const index = await getConversionListIndex(updatedList.listname);
 
@@ -85,19 +85,19 @@ export namespace ConfigManager {
         const listIndex = await getConversionListIndex(listname);
 
         if (listIndex !== -1) {
-            const itemIndex = conversionList[listIndex].items.findIndex(item => item.member === itemname);
+            const itemIndex = conversionList[listIndex].items.findIndex(item => item.name === itemname);
             await saveConversionListIfNeeded(conversionList, itemIndex, () => {
                 conversionList[listIndex].items.splice(itemIndex, 1);
             });
         }
     }
 
-    export async function updateConversionItem(listname: string, itemname: string, newItem: Partial<ConversionItem>): Promise<void> {
+    export async function updateConversionItem(listname: string, itemname: string, newItem: Partial<SourceMemberItem>): Promise<void> {
         const conversionList = await getConversionList();
         const listIndex = await getConversionListIndex(listname);
 
         if (listIndex !== -1) {
-            const itemIndex = conversionList[listIndex].items.findIndex(item => item.member === itemname);
+            const itemIndex = conversionList[listIndex].items.findIndex(item => item.name === itemname);
             await saveConversionListIfNeeded(conversionList, itemIndex, () => {
                 conversionList[listIndex].items[itemIndex] = {
                     ...conversionList[listIndex].items[itemIndex],

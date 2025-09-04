@@ -6,9 +6,9 @@ import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/webviews/Cu
 import { getStatusColor } from "../../utils/messages";
 import { ExecutionReport } from "../../services/conversionExecutionService";
 import { CommandParams } from "../../models/command";
-import { ConversionTarget } from "../../models/conversionTarget";
+import { SourceMember } from "../../models/conversionTarget";
 
-export function createTabs(member: ConversionTarget, config: CommandParams): ComplexTab[] {
+export function createTabs(member: SourceMember, config: CommandParams): ComplexTab[] {
     return [
         { label: l10n.t("Properties"), fields: createPropertiesUI(member, config).fields },
         { label: l10n.t("Conversion Options"), fields: createConversionOptions(config).fields },
@@ -34,12 +34,12 @@ export function setupTabWindow(tabs: ComplexTab[], multiple: boolean): CustomUI 
 
 
 // Properties Tab
-function createPropertiesUI(conversion: ConversionTarget, config: CommandParams): CustomUI {
+function createPropertiesUI(conversion: SourceMember, config: CommandParams): CustomUI {
     const ui = Code4i.customUI();
     ui.addHeading(l10n.t("Converted Source Member Properties"), 3)
         .addParagraph(createPropertiesTable(conversion));
 
-    if (conversion.member) {
+    if (conversion.name) {
         ui.addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions([...getObjectTypes(), "*NONE"], conversion.objectType));
     }
 
@@ -51,7 +51,7 @@ function createPropertiesUI(conversion: ConversionTarget, config: CommandParams)
         .addInput("TOSRCLIB", l10n.t("Library"), "", { default: conversion.library })
         .addInput("TOSRCFILE", l10n.t("Source File"), l10n.t("<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify source file name for converted source"), { default: conversion.file, readonly: false });
 
-    if (conversion.member) {
+    if (conversion.name) {
         ui.addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same member name | Specify member name for converted source"), { default: "*FROMMBR" });
     }
 
@@ -122,11 +122,11 @@ function createAdvancedOptions(config: CommandParams): CustomUI {
 
 }
 
-function createPropertiesTable(target: ConversionTarget): string {
+function createPropertiesTable(target: SourceMember): string {
     return `<table>
         ${addRow(l10n.t("Source Library"), target.library)}
         ${addRow(l10n.t("Source File"), target.file)}
-        ${addRow(l10n.t("Source Member"), target.member || "*ALL")}
+        ${addRow(l10n.t("Source Member"), target.name || "*ALL")}
         ${target.extension ? addRow(l10n.t("Source Type"), target.extension) : ""}
     </table>`;
 }
@@ -192,7 +192,7 @@ function createReportTable(results: ExecutionReport[]): string {
         const ok = result.result.code === 0;
         const messages = Code4i.getTools().parseMessages(result.result.stdout || result.result.stderr);
         return /* html */` <tr style="color: ${getStatusColor(ok, messages)};">
-                  <td>${result.target.member} (${result.target.objectType || '-'})</td>
+                  <td>${result.target.name} (${result.target.objectType || '-'})</td>
                   <td>${messages.messages.filter(filterConversionMessage).map(m => `- [${m.id}] ${m.text}`).join("<br />")}</td>
               </tr>`;
     }).join("")}

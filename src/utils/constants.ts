@@ -10,6 +10,7 @@ export const COMMANDS = {
   REFRESH_LIST: 'tfrrpg-list-refresh',
   DELETE_LIST: 'tfrrpg-list-delete',
   DELETE_LIST_ITEM: 'tfrrpg-list-item-delete',
+  EDIT_LIST_PROPERTIES: 'tfrrpg-list-edit-properties',
   UPDATE_OBJECT_TYPE: 'tfrrpg-list-item-update-objtype',
   CONVERT_TARGET_MEMBER: 'tfrrpg-list-item-member-convert',
   EDIT_SOURCE: 'tfrrpg-list-item-source-edit',

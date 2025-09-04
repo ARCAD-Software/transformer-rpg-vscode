@@ -4,7 +4,7 @@ import { refreshListExplorer } from "../../../extension";
 import { getStatusColorFromCode, getConversionStatus, setConverionStatus, ConversionStatus } from "../../../utils/messages";
 import { ConversionListNode } from "./listNode";
 import { BaseConversionNode } from "./baseNode";
-import { ConversionItem } from "../../../models/conversionListBrowser";
+import { SourceMemberItem } from "../../../models/conversionListBrowser";
 import { ExplorerNode } from "../common/explorerNode";
 import { openMember } from "../../../services/conversionService";
 
@@ -17,15 +17,13 @@ const statusSuffixes: { [key in ConversionStatus]: string } = {
     [ConversionStatus.FAILED]: l10n.t('_failed')
 };
 
-
-
 export class ConversionItemNode extends BaseConversionNode {
-    private readonly conversionItem: ConversionItem;
+    private readonly conversionItem: SourceMemberItem;
     parent: ConversionListNode;
 
-    constructor(item: ConversionItem, parent: ConversionListNode) {
+    constructor(item: SourceMemberItem, parent: ConversionListNode) {
         const suffix = statusSuffixes[item.status] || '';
-        const hasObjectType = !!(item.objtype && item.objtype.trim() !== '');
+        const hasObjectType = !!(item.objectType && item.objectType.trim() !== '');
         const readiness = hasObjectType ? 'conversionItemReady' : 'conversionItemPending';
 
         let codicon = 'settings-gear';
@@ -57,13 +55,13 @@ export class ConversionItemNode extends BaseConversionNode {
         }
 
         super(
-            item.member,
+            item.name,
             `${readiness}${suffix}`,
             TreeItemCollapsibleState.None,
             { codicon, themeColor, refreshable: true },
             parent
         );
-        this.description = `${item.member} | ${item.objtype}`;
+        this.description = `${item.name} | ${item.objectType}`;
         this.tooltip = this.getTooltip(item);
         this.conversionItem = item;
         this.parent = parent;
@@ -73,15 +71,15 @@ export class ConversionItemNode extends BaseConversionNode {
         return [];
     }
 
-    getTooltip(listItem: ConversionItem): MarkdownString {
+    getTooltip(listItem: SourceMemberItem): MarkdownString {
         const tooltip = new MarkdownString();
         tooltip.supportThemeIcons = true;
-        tooltip.appendMarkdown(l10n.t(`$(symbol-interface)Member Name: {0}  \n`, listItem.member));
+        tooltip.appendMarkdown(l10n.t(`$(symbol-interface)Member Name: {0}  \n`, listItem.name));
         tooltip.appendMarkdown(l10n.t(`$(library)Source Library: {0}  \n`, listItem.library));
         tooltip.appendMarkdown(l10n.t(`$(file-code) Source File: {0}  \n`, listItem.targetmember));
-        tooltip.appendMarkdown(l10n.t(`$(link) Source Type: {0}  \n`, listItem.srctype));
-        tooltip.appendMarkdown(l10n.t(`$(comment) Object Type: {0}  \n`, listItem.objtype));
-        tooltip.appendMarkdown(l10n.t(`$(comment) Conversion Date: {0}  \n`, listItem.conversiondate.toString()));
+        tooltip.appendMarkdown(l10n.t(`$(link) Source Type: {0}  \n`, listItem.extension));
+        tooltip.appendMarkdown(l10n.t(`$(comment) Object Type: {0}  \n`, listItem.objectType!));
+        tooltip.appendMarkdown(l10n.t(`$(comment) Conversion Date: {0}  \n`, listItem.date.toString()));
         tooltip.appendMarkdown(l10n.t(`$(comment) Status: {0}  \n`, getConversionStatus(listItem.status)));
         tooltip.appendCodeblock(listItem.message);
 
@@ -90,12 +88,13 @@ export class ConversionItemNode extends BaseConversionNode {
 
     removeMemberFromList(node: ConversionItemNode): void {
         if (node.label) {
-            window.showInformationMessage(l10n.t('Are you sure you want to remove {0} from the list?', node.label as string), l10n.t("Yes"), l10n.t("No")).then(async (response) => {
-                if (response === l10n.t("Yes") && node.parent?.label && node.label) {
-                    await ConfigManager.removeConversionItem(String(node.parent.label), node.label as string);
-                    refreshListExplorer(node.parent);
-                }
-            });
+            window.showInformationMessage(l10n.t('Are you sure you want to remove {0} from the list?',
+                node.label as string), l10n.t("Yes"), l10n.t("No")).then(async (response) => {
+                    if (response === l10n.t("Yes") && node.parent?.label && node.label) {
+                        await ConfigManager.removeConversionItem(String(node.parent.label), node.label as string);
+                        refreshListExplorer(node.parent);
+                    }
+                });
         }
     }
 
@@ -104,7 +103,7 @@ export class ConversionItemNode extends BaseConversionNode {
     }
 
     startSingleItemConversion(): void {
-        if (this.conversionItem.objtype === "") {
+        if (this.conversionItem.objectType === "") {
             window.showWarningMessage(l10n.t("Please update object type for this member."));
             return;
         }
@@ -112,23 +111,19 @@ export class ConversionItemNode extends BaseConversionNode {
         if (conversionList) {
             this.convertMembers(
                 [{
-                    extension: this.conversionItem.srctype,
+                    ...this.conversionItem,
                     file: this.conversionItem.targetmember,
-                    library: this.conversionItem.library,
-                    member: this.conversionItem.member,
-                    objectType: this.conversionItem.objtype
                 }],
 
                 conversionList.targetlibrary,
                 conversionList.targetsourcefile,
-                this.conversionItem.member
-
+                this.conversionItem.name
             ).then((report) => {
                 if (report.length) {
                     this.conversionItem.status = setConverionStatus(report[0].result.stdout || report[0].result.stderr || "");
                     this.conversionItem.message = report[0].result.stderr || report[0].result.stdout || "";
-                    this.conversionItem.conversiondate = new Date().toISOString();
-                    ConfigManager.updateConversionItem(conversionList.listname, this.conversionItem.member, this.conversionItem).then(() => {
+                    this.conversionItem.date = new Date().toISOString();
+                    ConfigManager.updateConversionItem(conversionList.listname, this.conversionItem.name, this.conversionItem).then(() => {
                         refreshListExplorer(this.parent);
                     });
 
@@ -140,8 +135,8 @@ export class ConversionItemNode extends BaseConversionNode {
                         openMember({
                             library: conversionList.targetlibrary,
                             file: conversionList.targetsourcefile,
-                            name: this.conversionItem.member,
-                            extension: this.conversionItem.srctype
+                            name: this.conversionItem.name,
+                            extension: this.conversionItem.extension
                         }, true);
                     }
                 }
@@ -153,8 +148,8 @@ export class ConversionItemNode extends BaseConversionNode {
         openMember({
             library: this.conversionItem.library,
             file: this.conversionItem.targetmember,
-            name: this.conversionItem.member,
-            extension: this.conversionItem.srctype
+            name: this.conversionItem.name,
+            extension: this.conversionItem.extension
         }, false);
     }
 
@@ -162,8 +157,8 @@ export class ConversionItemNode extends BaseConversionNode {
         openMember({
             library: this.parent.conversionList?.targetlibrary ?? "",
             file: this.parent.conversionList?.targetsourcefile ?? "",
-            name: this.conversionItem.member,
-            extension: this.conversionItem.srctype
+            name: this.conversionItem.name,
+            extension: this.conversionItem.extension
         }, false);
     }
 }

@@ -1,4 +1,4 @@
-import { IBMiMember, IBMiMessage } from "@halcyontech/vscode-ibmi-types";
+import type { IBMiMember, IBMiMessage } from "@halcyontech/vscode-ibmi-types";
 import { SUPPORTED_SOURCE_TYPES } from "./constants";
 
 export function generateOptions(options: string[], selectedValue?: string) {

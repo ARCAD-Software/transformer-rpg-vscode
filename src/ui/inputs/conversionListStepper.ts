@@ -1,22 +1,37 @@
 import { l10n } from "vscode";
 import { ConfigManager } from "../../config/configuration";
-import { ConversionList } from "../../models/conversionListBrowser";
+import { SourceMemberList } from "../../models/conversionListBrowser";
 import { MultiStepInput, InputStep } from "../../utils/stepper";
 import { Connections } from "../../models/connection";
 
-
-type NewConversionListState = Omit<ConversionList, 'items'> & {
+type NewConversionListState = Omit<SourceMemberList, 'items'> & {
     title?: string;
     step: number;
     totalSteps: number;
+    isEditing?: boolean;
+    existingListName?: string;
 };
 
 const initState = (): NewConversionListState => ({} as NewConversionListState);
 
 
-export async function ConversionListItemStepper(): Promise<ConversionList | undefined> {
+export async function ConversionListItemStepper(existingList?: SourceMemberList): Promise<SourceMemberList | undefined> {
     const state = initState();
-    state.title = l10n.t('Create Conversion List');
+
+    if (existingList) {
+        Object.assign(state, {
+            title: l10n.t('Edit Conversion List Properties'),
+            isEditing: true,
+            existingListName: existingList.listname,
+            ...existingList
+        });
+    } else {
+        Object.assign(state, {
+            title: l10n.t('Create Conversion List'),
+            isEditing: false
+        });
+    }
+
     state.step = 1;
     state.totalSteps = 5;
     await MultiStepInput.run(async (input: MultiStepInput) => getIbmiConnection(input, state));
@@ -25,7 +40,7 @@ export async function ConversionListItemStepper(): Promise<ConversionList | unde
     } else {
         return {
             ...state,
-            items: []
+            items: existingList?.items || []
         };
     }
 }
@@ -41,6 +56,9 @@ async function getIbmiConnection(input: MultiStepInput, state: NewConversionList
     });
 
     state.connectionname = connection.label;
+    if (state.isEditing) {
+        return (input: MultiStepInput) => getDescription(input, state);
+    }
     return (input: MultiStepInput) => getListName(input, state);
 }
 
@@ -112,11 +130,6 @@ async function validateListName(name: string): Promise<string | undefined> {
     if (!name) {
         return l10n.t('List name is required.');
     }
-    const existingLists = await ConfigManager.getConversionList();
-    if (existingLists.some(list => list.listname === name)) {
-        return l10n.t('The list name "{0}" already exists. Please choose a different name.', name);
-    }
-    return undefined;
 }
 
 function getIbmiConnections(): Connections {

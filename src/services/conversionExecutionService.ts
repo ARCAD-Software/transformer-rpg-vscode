@@ -1,20 +1,20 @@
-import { CommandResult } from "@halcyontech/vscode-ibmi-types";
+import type { CommandResult } from "@halcyontech/vscode-ibmi-types";
 import { window, ProgressLocation, l10n } from "vscode";
 import { Code4i } from "../platform/ibmi/code4i";
 import { generateCommand, executeConversionCommand } from "../platform/ibmi/commandRunner";
 import { showConversionReport } from "../ui/webviews/panel";
 import { CommandParams } from "../models/command";
-import { ConversionTarget } from "../models/conversionTarget";
+import { SourceMember } from "../models/conversionTarget";
 
 
 export interface ExecutionReport {
-    target: ConversionTarget
+    target: SourceMember
     result: CommandResult
 }
 
 export async function convertTargets(
     commandParam: CommandParams,
-    conversions: ConversionTarget[],
+    members: SourceMember[],
     name: string
 ): Promise<ExecutionReport[]> {
     return await window.withProgress({
@@ -22,18 +22,18 @@ export async function convertTargets(
         title: l10n.t("Converting members"),
         cancellable: true
     }, async (progress, token) => {
-        const totalMembers = conversions.length;
+        const totalMembers = members.length;
         const executionResult: ExecutionReport[] = [];
-        const increment = 100 / conversions.length;
+        const increment = 100 / members.length;
         let current = 1;
         let converted = 0;
-        for (const conversion of conversions) {
+        for (const member of members) {
             if (token.isCancellationRequested) {
                 window.showInformationMessage(l10n.t("Conversion cancelled"));
                 break;
             }
 
-            if (await convertMember(commandParam, conversion, executionResult)) {
+            if (await convertMember(commandParam, member, executionResult)) {
                 converted++;
             }
             progress.report({
@@ -66,7 +66,7 @@ export async function convertTargets(
 
 async function convertMember(
     data: CommandParams,
-    member: ConversionTarget,
+    member: SourceMember,
     executionResult: ExecutionReport[]
 ) {
     const cmd = await generateCommand(data, member);
