@@ -60,7 +60,7 @@ async function convertMultipleMemberFromSourceFile(item: ObjectItem) {
     if (!commandParams) { return; }
 
     const members = await getSourceMembersList({ library: item.object.library, sourceFile: item.object.name });
-    if (!members.length) {
+    if (members.length === 0) {
         window.showInformationMessage(l10n.t("No members found to convert"));
         return;
     }

@@ -2,7 +2,6 @@ import type { IBMiMember, IBMiMessage } from "@halcyontech/vscode-ibmi-types";
 import { MESSAGES, SUPPORTED_SOURCE_TYPES } from "./constants";
 import { window, ProgressLocation, l10n } from "vscode";
 import { tfrrpgOutput } from "../extension";
-import { SourceMember } from "../models/conversionTarget";
 import { listConvertibleMembers, MemberListParam } from "../services/objectDiscoveryService";
 
 export function generateOptions(options: string[], selectedValue?: string) {
