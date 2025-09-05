@@ -46,7 +46,6 @@ function initializeTreeViews(context: ExtensionContext) {
     treeDataProvider: conversionProvider,
     showCollapseAll: true,
     canSelectMany: true,
-    manageCheckboxStateManually: true
   });
 
   const productProvider = new ProductStatusDataProvider(context);
