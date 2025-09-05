@@ -31,7 +31,14 @@ export async function handleMemberConvert(item: ConversionActionTarget | Uri): P
 async function convertMemberFromEditor() {
     const member = await getConversionTargetFromEditor();
     if (member) {
-        openConfigWindow({ member });
+        const param = await openConfigWindow({ member });
+        if (param) {
+            const report = await MemberConversionService.convertSingle(param, member);
+            if (report?.result && report.target) {
+                const path = `${param.TOSRCLIB}/${param.TOSRCFILE}/${report.target.name}.${report.target.extension}`;
+                Code4i.open(path, { readonly: true });
+            }
+        }
     }
 }
 
