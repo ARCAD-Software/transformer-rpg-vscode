@@ -45,6 +45,8 @@ function initializeTreeViews(context: ExtensionContext) {
   const conversionListView = window.createTreeView('arcad-tfrrpg-conversion-list', {
     treeDataProvider: conversionProvider,
     showCollapseAll: true,
+    canSelectMany: true,
+    manageCheckboxStateManually: true
   });
 
   const productProvider = new ProductStatusDataProvider(context);

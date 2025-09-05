@@ -93,25 +93,64 @@ export class ConversionItemNode extends BaseConversionNode {
         return tooltip;
     }
 
-    removeMemberFromList(node: ConversionItemNode): void {
-        if (!node.label) { return; }
+    private async confirmRemoval(items: ConversionItemNode[]): Promise<boolean> {
+        const count = items.length;
+        const itemNames = items
+            .slice(0, 5)
+            .map(n => `- ${n.label}`)
+            .join("\n");
 
-        window
-            .showInformationMessage(
-                l10n.t("Are you sure you want to remove {0} from the list?", node.label as string),
-                l10n.t("Yes"),
-                l10n.t("No")
-            )
-            .then(async (response) => {
-                if (response === l10n.t("Yes") && node.parent?.label && node.label) {
-                    await ConfigManager.removeConversionItem(
-                        String(node.parent.label),
-                        node.label as string
-                    );
-                    refreshListExplorer(node.parent);
-                }
-            });
+        const detail =
+            count > 5
+                ? `${itemNames}\n...and ${count - 5} more`
+                : itemNames;
+
+        const message =
+            count === 1
+                ? l10n.t("Are you sure you want to remove {0} from the list?", items[0].label as string)
+                : l10n.t("Are you sure you want to remove {0} items from the list?", count);
+
+        const response = await window.showInformationMessage(
+            message,
+            { modal: true, detail },
+            l10n.t("Yes"),
+            l10n.t("No")
+        );
+
+        return response === l10n.t("Yes");
     }
+
+    private async removeItems(items: ConversionItemNode[]): Promise<void> {
+        for (const item of items) {
+            if (item?.parent?.label && item.label) {
+                await ConfigManager.removeConversionItem(
+                    String(item.parent.label),
+                    item.label as string
+                );
+            }
+        }
+    }
+
+    async removeMemberFromList(
+        node: ConversionItemNode,
+        nodes: ConversionItemNode[]
+    ): Promise<void> {
+        const itemsToRemove = nodes?.length ? nodes : node ? [node] : [];
+        if (!itemsToRemove.length) { return; }
+
+        const validitems = itemsToRemove.filter(item => item.contextValue?.startsWith("conversionItem"));
+        if (!validitems.length) { return; }
+
+        const confirmed = await this.confirmRemoval(validitems);
+        if (!confirmed) { return; }
+
+        await this.removeItems(validitems);
+
+        if (validitems[0]?.parent) {
+            refreshListExplorer(validitems[0].parent);
+        }
+    }
+
 
     async updateMemberObjectType(): Promise<void> {
         await this.updateObjectTypeForMembers(
@@ -120,7 +159,7 @@ export class ConversionItemNode extends BaseConversionNode {
         );
     }
 
-    async startSingleItemConversion(): Promise<void> {
+    async startItemConversion(): Promise<void> {
         if (!this.validateObjectTypes(this.conversionItem)) { return; }
 
         const conversionList = this.parent.conversionList;
@@ -132,6 +171,7 @@ export class ConversionItemNode extends BaseConversionNode {
         if (!report) { return; }
 
         this.updateItemStatus(this.conversionItem, report);
+
         await this.persistConversionList(conversionList);
         this.refreshExplorer();
 
