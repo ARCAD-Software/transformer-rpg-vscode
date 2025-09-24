@@ -223,7 +223,7 @@ class LicenseNode extends ExplorerNode {
       }
 
       const total = this.license.permanentUnits.total || this.license.temporaryUnits.total || 0;
-      const used = this.license.permanentUnits.total || this.license.temporaryUnits.used || 0;
+      const used = this.license.permanentUnits.used || this.license.temporaryUnits.used || 0;
       nodes.push(
         new TextNode(l10n.t("Total units"), { description: String(total) }),
         new TextNode(l10n.t("Used units"), { description: String(used) }),
