@@ -1,8 +1,8 @@
 import { extname, posix } from "path";
 import vscode, { l10n } from "vscode";
-import { Code4i } from "./code4i";
+import { Code4i } from "./platform/ibmi/code4i";
 import { TransformerRPGLicense } from "./components/TFRRPGLIC";
-import { ConfigManager } from "./configuration";
+import { ConfigManager } from "./config/configuration";
 import { getARCADInstance, tfrrpgOutput } from "./extension";
 
 const VERSION = /(\d+)\.(\d+)\.(\d+)/;
@@ -135,9 +135,9 @@ class TransformerRPGProduct {
         const connection = Code4i.getConnection();
         return connection.withTempDirectory(async directory => {
           const workFile = "ARCAD_RPGS";
-          const workLibrary = connection.config?.tempLibrary || "ILEDITOR";
+          const workLibrary = connection.getConfig()?.tempLibrary || "ILEDITOR";
           const runCommand = (command: string) => connection.runCommand({ command, noLibList: true });
-          const clearSAVF = () => connection.content.checkObject({ library: workLibrary, name: workFile, type: "*FILE" })
+          const clearSAVF = () => connection.getContent().checkObject({ library: workLibrary, name: workFile, type: "*FILE" })
             .then(exists => exists ? runCommand(`DLTF FILE(${workLibrary}/${workFile})`) : undefined);
 
           try {
@@ -146,7 +146,7 @@ class TransformerRPGProduct {
             const increment = unzip ? 20 : 25;
             progress.report({ message: l10n.t("uploading update package..."), increment });
             let streamfile = posix.join(directory, `tfrrpg${extension}`);
-            await connection.uploadFiles([{ local: installPackage, remote: streamfile }]);
+            await connection.getContent().uploadFiles([{ local: installPackage, remote: streamfile }]);
 
             if (unzip) {
               progress.report({ message: l10n.t("unzipping update package..."), increment });

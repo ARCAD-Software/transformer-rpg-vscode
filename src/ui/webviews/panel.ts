@@ -1,12 +1,14 @@
-import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/api/CustomUI";
 import { l10n } from "vscode";
-import { Code4i } from "../../code4i";
+import { Code4i } from "../../platform/ibmi/code4i";
 import { convertBool, filterConversionMessage, generateOptions, getAlphaToNumOptions, getBooleanOptionsWithKeep, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getIndentSizeOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "../../utils/helper";
-import { ExecutionReport } from "../controller";
-import { getStatusColor } from "../conversionMessage";
-import { CommandParams, ConversionTarget } from "../model";
+import { ComplexTab, CustomUI } from "@halcyontech/vscode-ibmi-types/webviews/CustomUI";
+import { getStatusColor } from "../../utils/messages";
+import { CommandParams } from "../../models/command";
+import { SourceMember } from "../../models/conversionTarget";
+import { ExecutionReport } from "../../services/memberConversionService";
+import { REPORT_TABLE_CSS, REPORT_UI_GLOBAL_CSS } from "./cutomcss";
 
-export function createTabs(member: ConversionTarget, config: CommandParams): ComplexTab[] {
+export function createTabs(member: SourceMember, config: CommandParams): ComplexTab[] {
     return [
         { label: l10n.t("Properties"), fields: createPropertiesUI(member, config).fields },
         { label: l10n.t("Conversion Options"), fields: createConversionOptions(config).fields },
@@ -32,12 +34,12 @@ export function setupTabWindow(tabs: ComplexTab[], multiple: boolean): CustomUI 
 
 
 // Properties Tab
-function createPropertiesUI(conversion: ConversionTarget, config: CommandParams): CustomUI {
+function createPropertiesUI(conversion: SourceMember, config: CommandParams): CustomUI {
     const ui = Code4i.customUI();
     ui.addHeading(l10n.t("Converted Source Member Properties"), 3)
         .addParagraph(createPropertiesTable(conversion));
 
-    if (conversion.member) {
+    if (conversion.name) {
         ui.addSelect("OBJTYPE", l10n.t("Object Type"), generateOptions([...getObjectTypes(), "*NONE"], conversion.objectType));
     }
 
@@ -49,7 +51,7 @@ function createPropertiesUI(conversion: ConversionTarget, config: CommandParams)
         .addInput("TOSRCLIB", l10n.t("Library"), "", { default: conversion.library })
         .addInput("TOSRCFILE", l10n.t("Source File"), l10n.t("<code>*NONE</code>: No output | <code>*FROMFILE</code>: Same destination | Specify source file name for converted source"), { default: conversion.file, readonly: false });
 
-    if (conversion.member) {
+    if (conversion.name) {
         ui.addInput("TOSRCMBR", l10n.t("Source Member"), l10n.t("<code>*FROMMBR</code>: Same member name | Specify member name for converted source"), { default: "*FROMMBR" });
     }
 
@@ -120,11 +122,11 @@ function createAdvancedOptions(config: CommandParams): CustomUI {
 
 }
 
-function createPropertiesTable(target: ConversionTarget): string {
+function createPropertiesTable(target: SourceMember): string {
     return `<table>
         ${addRow(l10n.t("Source Library"), target.library)}
         ${addRow(l10n.t("Source File"), target.file)}
-        ${addRow(l10n.t("Source Member"), target.member || "*ALL")}
+        ${addRow(l10n.t("Source Member"), target.name || "*ALL")}
         ${target.extension ? addRow(l10n.t("Source Type"), target.extension) : ""}
     </table>`;
 }
@@ -146,53 +148,53 @@ function addRow(key: string, value?: any): string {
 
 export async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
     const title = l10n.t("Conversion Report-{0}", itemName);
-    const page = await commandReportUI(report).loadPage(title);
+    await commandReportUI(report).loadPage(title);
 }
-
 
 
 function commandReportUI(report: ExecutionReport[]) {
     return Code4i.customUI()
-        .setOptions({ fullWidth: true })
+        .setOptions({
+            fullWidth: true,
+            css: REPORT_UI_GLOBAL_CSS
+        })
         .addHeading(l10n.t("Conversion Results"), 3)
         .addParagraph(createReportTable(report));
 }
-
 function createReportTable(results: ExecutionReport[]): string {
-    return /* html */ `
-        <style>
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            th, td {
-                border: 1px solid var(--vscode-editor-foreground);
-                padding: 8px;
-                text-align: left;
-            }
-            th {
-                background-color: var(--vscode-editor-background);
-                color: var(--vscode-editor-foreground);
-            }
-            tr:nth-child(even) {
-                background-color: var(--vscode-editor-background);
-            }
-            tr:hover {
-                background-color: var(--vscode-editor-hoverHighlightBackground);
-            }
-        </style>
-        <table>
-            <tr>
-              <th>${l10n.t("Member Name")}</th>
-              <th>${l10n.t("Output")}</th>
-            </tr>
-            ${results.map(result => {
-        const ok = result.result.code === 0;
+    const rows = results.map(result => {
+        const isSuccess = result.result.code === 0;
         const messages = Code4i.getTools().parseMessages(result.result.stdout || result.result.stderr);
-        return /* html */` <tr style="color: ${getStatusColor(ok, messages)};">
-                  <td>${result.target.member} (${result.target.objectType || '-'})</td>
-                  <td>${messages.messages.filter(filterConversionMessage).map(m => `- [${m.id}] ${m.text}`).join("<br />")}</td>
-              </tr>`;
-    }).join("")}
-        </table>`;
+        const filteredMessages = messages.messages
+            .filter(filterConversionMessage)
+            .map(m => `<span class="message-item"><span class="message-id">[${m.id}]</span> ${m.text}</span>`)
+            .join("");
+
+        return /* html */ `
+            <tr style="color: ${getStatusColor(isSuccess, messages)};">
+                <td>
+                    <span class="member-name">${result.target.name}</span>
+                    <span class="object-type">(${result.target.objectType || '-'})</span>
+                </td>
+                <td>${filteredMessages}</td>
+            </tr>
+        `;
+    }).join("");
+
+    return /* html */ `
+        <style>${REPORT_TABLE_CSS}</style>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>${l10n.t("Member Name")}</th>
+                        <th>${l10n.t("Output")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </div>
+    `;
 }

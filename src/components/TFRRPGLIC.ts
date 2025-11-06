@@ -2,7 +2,7 @@ import { ComponentIdentification, ComponentState, IBMiComponent } from "@halcyon
 import IBMi from "@halcyontech/vscode-ibmi-types/api/IBMi";
 import { posix } from "path";
 import vscode, { l10n } from "vscode";
-import { Code4i } from "../code4i";
+import { Code4i } from "../platform/ibmi/code4i";
 import { getARCADInstance, tfrrpgOutput } from "../extension";
 
 type Units = {

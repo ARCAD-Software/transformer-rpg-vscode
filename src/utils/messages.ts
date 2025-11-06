@@ -1,4 +1,4 @@
-import { IBMiMessages } from "@halcyontech/vscode-ibmi-types";
+import type { IBMiMessages } from "@halcyontech/vscode-ibmi-types";
 
 export enum ConversionStatus {
     NA = -1,
@@ -11,6 +11,7 @@ const MSGID_SUCCEED1 = 'MSG3867';
 const MSGID_SUCCEED2 = 'MSG3868';
 const MSGID_SUCCEED3 = 'MSG4330';
 const MSGID_SUCCEED4 = 'MSG4409';
+
 export const ConversionOKs = [MSGID_SUCCEED1, MSGID_SUCCEED2, MSGID_SUCCEED3, MSGID_SUCCEED4];
 
 const MSGID_WARNING1 = 'MSG4178';

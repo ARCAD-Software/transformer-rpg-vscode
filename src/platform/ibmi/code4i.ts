@@ -1,9 +1,10 @@
 import { CodeForIBMi, IBMiEvent, QsysFsOptions } from "@halcyontech/vscode-ibmi-types";
 import IBMiContent from "@halcyontech/vscode-ibmi-types/api/IBMiContent";
 import vscode from "vscode";
-import { TransformerRPGLicense } from "./components/TFRRPGLIC";
+import { TransformerRPGLicense } from "../../components/TFRRPGLIC";
 
 let codeForIBMi: CodeForIBMi;
+
 export namespace Code4i {
   export async function initialize(context: vscode.ExtensionContext) {
     const codeForIBMiExtension = vscode.extensions.getExtension<CodeForIBMi>('halcyontechltd.code-for-ibmi');
