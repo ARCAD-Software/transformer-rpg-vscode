@@ -147,7 +147,7 @@ function addRow(key: string, value?: any): string {
 
 
 export async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
-    const title = l10n.t("Conversion Report-{0}", itemName);
+    const title = l10n.t(`(${generateShortId()})Conversion Report-{0}`, itemName);
     commandReportUI(report).loadPage(title);
 }
 
@@ -198,3 +198,13 @@ function createReportTable(results: ExecutionReport[]): string {
         </div>
     `;
 }
+
+export const generateShortId = (): string => {
+    const now = new Date();
+    return now.getFullYear().toString().slice(-2) +
+        (now.getMonth() + 1).toString().padStart(2, "0") +
+        now.getDate().toString().padStart(2, "0") +
+        now.getHours().toString().padStart(2, "0") +
+        now.getMinutes().toString().padStart(2, "0") +
+        now.getSeconds().toString().padStart(2, "0");
+};
