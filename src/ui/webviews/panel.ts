@@ -148,7 +148,7 @@ function addRow(key: string, value?: any): string {
 
 export async function showConversionReport(report: ExecutionReport[], itemName: string): Promise<void> {
     const title = l10n.t("Conversion Report-{0}", itemName);
-    await commandReportUI(report).loadPage(title);
+    commandReportUI(report).loadPage(title);
 }
 
 

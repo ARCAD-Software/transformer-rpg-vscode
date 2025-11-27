@@ -8,6 +8,7 @@ import { openConfigWindow } from "./openConfigWindow";
 import { ConfigManager } from "../../config/configuration";
 import type { BrowserItem, ObjectItem, MemberItem, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { MemberConversionService } from "../../services/memberConversionService";
+import { MSGID_SUCCEED1, MSGID_SUCCEED2, MSGID_SUCCEED3, MSGID_SUCCEED4 } from "../../utils/messages";
 
 type ConversionActionTarget = (BrowserItem & (ObjectItem | MemberItem));
 
@@ -55,8 +56,11 @@ async function convertSingleMember(item: MemberItem & { parent: BrowserItem }) {
 
     const report = await MemberConversionService.convertSingle(commandParams, conversionTarget, item.parent);
     if (report?.result && report.target) {
-        const path = `${report.target.library}/${report.target.file}/${report.target.name}.${report.target.extension}`;
-        Code4i.open(path, { readonly: true });
+        const msg = report.result.stdout || report.result.stderr || "";
+        if (msg.includes(MSGID_SUCCEED1) || msg.includes(MSGID_SUCCEED2) || msg.includes(MSGID_SUCCEED3) || msg.includes(MSGID_SUCCEED4)) {
+            const path = `${report.target.library}/${report.target.file}/${report.target.name}.${report.target.extension}`;
+            Code4i.open(path, { readonly: true });
+        }
     }
 }
 

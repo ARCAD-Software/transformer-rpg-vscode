@@ -120,7 +120,7 @@ export class MemberConversionService {
         const openReport = (open?: string) => { if (open) { showConversionReport(executionResult, member.name!); } };
 
         if (result.code === 0 || Code4i.getTools().parseMessages(result.stderr || result.stdout).findId("MSG4178")) {
-            window.showInformationMessage(l10n.t("{0} successfully converted.", member.name), l10n.t("Show Report")).then(openReport);
+            window.showInformationMessage(l10n.t("{0} {1}.", member.name, result.stderr || result.stdout), l10n.t("Show Report")).then(openReport);
         } else {
             window.showErrorMessage(l10n.t("Failed to convert {0}", member.name), l10n.t("Show Report")).then(openReport);
         }

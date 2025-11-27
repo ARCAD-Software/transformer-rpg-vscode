@@ -1,4 +1,4 @@
-export const REPORT_UI_GLOBAL_CSS = /* html */ `
+export const REPORT_UI_GLOBAL_CSS = /* css */ `
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
@@ -29,7 +29,7 @@ h3 {
 }
 `;
 
-export const REPORT_TABLE_CSS = /* html */ `
+export const REPORT_TABLE_CSS = /* css */ `
 .table-container {
     width: 75vw;
     min-width: 800px;
@@ -54,7 +54,6 @@ table {
 }
 
 th {
-    background: linear-gradient(135deg, var(--vscode-button-background), var(--vscode-button-hoverBackground));
     color: var(--vscode-button-foreground);
     font-weight: 600;
     padding: 6px 14px;
@@ -62,7 +61,6 @@ th {
     font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid var(--vscode-button-background);
     position: sticky;
     top: 0;
     z-index: 10;

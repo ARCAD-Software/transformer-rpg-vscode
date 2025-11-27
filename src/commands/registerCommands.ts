@@ -39,7 +39,6 @@ export function registerCommands(
         commands.registerCommand(COMMANDS.CONVERT_TARGET_MEMBER, (node: ConversionItemNode | ConversionListNode) => {
             node instanceof ConversionItemNode ? node.startItemConversion() : node.processBatchConversion();
         }),
-
         workspace.onDidChangeConfiguration(change => {
             if (['arcad.connection.instance', 'arcad-transformer-rpg.forceUseOfStandaloneProduct']
                 .some(conf => change.affectsConfiguration(conf))) {

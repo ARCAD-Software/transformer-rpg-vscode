@@ -66,7 +66,7 @@ export class ConversionItemNode extends BaseConversionNode {
         );
 
         this.description = `${item.name} | ${item.objectType}`;
-        this.tooltip = this.buildTooltipDetails(item);
+        this.tooltip = this.getTooltip(item);
         this.conversionItem = item;
         this.parent = parent;
     }
@@ -76,7 +76,7 @@ export class ConversionItemNode extends BaseConversionNode {
     }
 
 
-    private buildTooltipDetails(listItem: SourceMemberItem): MarkdownString {
+    private getTooltip(listItem: SourceMemberItem): MarkdownString {
         const tooltip = this.buildTooltip([
             { icon: "symbol-interface", label: "Member Name", value: listItem.name },
             { icon: "library", label: "Source Library", value: listItem.library },
@@ -176,7 +176,13 @@ export class ConversionItemNode extends BaseConversionNode {
         this.refreshExplorer();
 
         if (this.shouldOpenMember()) {
-            this.openConvertedMember(conversionList);
+            this.openMemberInEditor(
+                conversionList.targetlibrary,
+                conversionList.targetsourcefile,
+                this.conversionItem.name,
+                this.conversionItem.extension,
+                true
+            );
         }
     }
 
@@ -198,16 +204,6 @@ export class ConversionItemNode extends BaseConversionNode {
             ConversionStatus.SUCCEED,
             ConversionStatus.WARNING
         ].includes(this.conversionItem.status);
-    }
-
-    private openConvertedMember(conversionList: any) {
-        this.openMemberInEditor(
-            conversionList.targetlibrary,
-            conversionList.targetsourcefile,
-            this.conversionItem.name,
-            this.conversionItem.extension,
-            true
-        );
     }
 
     public editMember(): void {
