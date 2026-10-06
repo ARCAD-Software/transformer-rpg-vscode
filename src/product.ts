@@ -113,16 +113,16 @@ class TransformerRPGProduct {
     );
   }
 
-  private getLicenseProgram() {
-    return Code4i.getConnection().getComponent<TransformerRPGLicense>(TransformerRPGLicense.ID);
+  private async getLicenseProgram() {
+    return await Code4i.getConnection().getComponent<TransformerRPGLicense>(TransformerRPGLicense.ID);
   }
 
-  getCurrentLicense() {
-    return this.getLicenseProgram().call(this.isStandalone(), "USE");
+  async getCurrentLicense() {
+    return (await this.getLicenseProgram())?.call(this.isStandalone(), "USE");
   }
 
-  applyLicense(key: string, checkonly?: boolean) {
-    return this.getLicenseProgram().call(this.isStandalone(), checkonly ? "CHK" : "ACT", key);
+  async applyLicense(key: string, checkonly?: boolean) {
+    return (await this.getLicenseProgram())?.call(this.isStandalone(), checkonly ? "CHK" : "ACT", key);
   }
 
   changeLanguage(language: string) {

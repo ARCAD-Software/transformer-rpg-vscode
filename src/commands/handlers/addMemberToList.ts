@@ -4,7 +4,6 @@ import { ConfigManager } from "../../config/configuration";
 import { refreshListExplorer, tfrrpgOutput } from "../../extension";
 import { ConversionStatus } from "../../utils/messages";
 import { SourceMemberList, SourceMemberItem } from "../../models/conversionListBrowser";
-import { SourceMember } from "../../models/conversionTarget";
 import { getSourceMembersList } from "../../utils/helper";
 
 export async function addMembersToConversionList(node: MemberItem | ObjectItem, nodes: MemberItem[] | ObjectItem[]): Promise<void> {
