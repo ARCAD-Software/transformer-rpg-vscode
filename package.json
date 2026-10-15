@@ -59,11 +59,13 @@
         {
           "id": "arcad-tfrrpg-conversion-list",
           "name": "%conversion_list%",
+          "icon": "$(list-unordered)",
           "when": "code-for-ibmi:connected && !code-for-ibmi:objectBrowserDisabled"
         },
         {
           "id": "arcad-tfrrpg-product-status",
           "name": "%product.status%",
+          "icon": "$(info)",
           "when": "code-for-ibmi:connected"
         }
       ]

@@ -1,11 +1,11 @@
-import { extname, posix } from "path";
+import { extname, posix } from "node:path";
 import vscode, { l10n } from "vscode";
 import { Code4i } from "./platform/ibmi/code4i";
 import { TransformerRPGLicense } from "./components/TFRRPGLIC";
 import { ConfigManager } from "./config/configuration";
 import { getARCADInstance, tfrrpgOutput } from "./extension";
 
-const VERSION = /(\d+)\.(\d+)\.(\d+)/;
+const VERSION = /(\d{1,9})\.(\d{1,9})\.(\d{1,9})/;
 
 async function readDataArea(library: string, name: string) {
   const [versionRow] = await Code4i.getConnection().runSQL(`Select DATA_AREA_VALUE From Table(QSYS2.DATA_AREA_INFO( DATA_AREA_NAME => '${name}', DATA_AREA_LIBRARY => '${library}'))`);
@@ -27,32 +27,52 @@ class TransformerRPGProduct {
   private arcadProductLibrary = "";
   private arcadCommandLibrary = "";
 
+  private static checkCommand(library: string) {
+    return Code4i.getContent().checkObject({ library, name: "ACVTRPGFRE", type: "*CMD" });
+  }
+
+  private async loadStandalone() {
+    if (await TransformerRPGProduct.checkCommand(this.getStandaloneLibrary())) {
+      this.standaloneVersion = await readDataArea(this.getStandaloneLibrary(), "ARCVERSION");
+    }
+    vscode.commands.executeCommand("setContext", "tfrrpgStandaloneInstalled", Boolean(this.standaloneVersion));
+  }
+
+  private async loadARCAD() {
+    const instance = getARCADInstance();
+    const arcadProductLibrary = `ARC${instance}_PRD`;
+    if (!await Code4i.getContent().checkObject({ library: "QSYS", name: arcadProductLibrary, type: "*LIB" })) {
+      return;
+    }
+
+    try {
+      this.arcadVersion = await readDataArea(arcadProductLibrary, "ARCVERSION");
+      for (const language of ["ENG", "FRA"]) {
+        const commandLibrary = `ARC${instance}_${language}`;
+        if (await TransformerRPGProduct.checkCommand(commandLibrary)) {
+          this.arcadCommandLibrary = commandLibrary;
+          break;
+        }
+      }
+      this.arcadProductLibrary = this.arcadCommandLibrary ? arcadProductLibrary : "";
+    }
+    catch (err: any) {
+      tfrrpgOutput().appendLine(l10n.t("Error occurred while ARCAD runtime information: {0}", JSON.stringify(err)));
+    }
+  }
+
+  private getViewDescription() {
+    if (!this.isInstalled()) {
+      return l10n.t("Not installed");
+    }
+    return this.isStandalone() ? l10n.t("Standalone mode") : "";
+  }
+
   async load(force?: boolean) {
     if (!this.loaded || force) {
-      const checkCommand = (library: string) => Code4i.getContent().checkObject({ library, name: "ACVTRPGFRE", type: "*CMD" });
-      if (await checkCommand(this.getStandaloneLibrary())) {
-        this.standaloneVersion = await readDataArea(this.getStandaloneLibrary(), "ARCVERSION");
-      }
-      vscode.commands.executeCommand("setContext", "tfrrpgStandaloneInstalled", Boolean(this.standaloneVersion));
-
-      const arcadProductLibrary = `ARC${getARCADInstance()}_PRD`;
-      if (await Code4i.getContent().checkObject({ library: "QSYS", name: arcadProductLibrary, type: "*LIB" })) {
-        try {
-          this.arcadVersion = await readDataArea(arcadProductLibrary, "ARCVERSION");
-          const checkARCADLanguage = (language: string) => checkCommand(`ARC${getARCADInstance()}_${language}`);
-          if (await checkARCADLanguage("ENG")) {
-            this.arcadCommandLibrary = `ARC${getARCADInstance()}_ENG`;
-          }
-          else if (await checkARCADLanguage("FRA")) {
-            this.arcadCommandLibrary = `ARC${getARCADInstance()}_FRA`;
-          }
-          this.arcadProductLibrary = this.arcadCommandLibrary ? arcadProductLibrary : "";
-        }
-        catch (err: any) {
-          tfrrpgOutput().appendLine(l10n.t("Error occurred while ARCAD runtime information: {0}", JSON.stringify(err)));
-        }
-      }
-      vscode.commands.executeCommand("tfrrpg-product-view-description", this.isInstalled() ? (this.isStandalone() ? l10n.t("Standalone mode") : "") : l10n.t("Not installed"));
+      await this.loadStandalone();
+      await this.loadARCAD();
+      vscode.commands.executeCommand("tfrrpg-product-view-description", this.getViewDescription());
       this.loaded = true;
     }
   }
@@ -82,7 +102,7 @@ class TransformerRPGProduct {
   }
 
   isStandalone() {
-    return !Boolean(this.arcadVersion) || ConfigManager.forceStandaloneProduct();
+    return !this.arcadVersion || ConfigManager.forceStandaloneProduct();
   }
 
   async getProductLibrary() {
