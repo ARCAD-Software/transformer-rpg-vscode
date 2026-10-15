@@ -1,5 +1,5 @@
 import { l10n, TreeItemCollapsibleState } from "vscode";
-import { LicenseInformation } from "../../../components/TFRRPGLIC";
+import { LicenseInformation } from "../../../product/license";
 import { ExplorerNode, TextNode } from "../common/explorerNode";
 
 export class LicenseNode extends ExplorerNode {

@@ -1,7 +1,7 @@
 import { CodeForIBMi, IBMiEvent, QsysFsOptions } from "@halcyontech/vscode-ibmi-types";
 import IBMiContent from "@halcyontech/vscode-ibmi-types/api/IBMiContent";
 import vscode from "vscode";
-import { TransformerRPGLicense } from "../../components/TFRRPGLIC";
+import { TransformerRPGLicense } from "../../product/license";
 
 let codeForIBMi: CodeForIBMi;
 

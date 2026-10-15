@@ -2,7 +2,7 @@ import { l10n } from "vscode";
 import { ConfigManager } from "../../../config/configuration";
 import { tfrrpgOutput } from "../../../extension";
 import { Code4i } from "../../../platform/ibmi/code4i";
-import { product, tfrrpgLanguages } from "../../../product";
+import { product, tfrrpgLanguages } from "../../../product/product";
 import { GitHubREST } from "../../../utils/githubRest";
 import { ExplorerNode } from "../common/explorerNode";
 import { ExplorerDataProvider } from "../common/provider";

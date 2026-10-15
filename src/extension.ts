@@ -1,6 +1,6 @@
 import { ExtensionContext, OutputChannel, commands, l10n, window, workspace } from "vscode";
 import { Code4i } from "./platform/ibmi/code4i";
-import { initializeProduct } from "./product";
+import { initializeProduct } from "./product/product";
 import { COMMANDS, MESSAGES } from "./utils/constants";
 import { ConfigManager } from "./config/configuration";
 import { ConversionListProvider } from "./ui/tree/conversion/provider";

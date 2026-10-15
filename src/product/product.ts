@@ -1,9 +1,9 @@
 import { extname, posix } from "node:path";
 import vscode, { l10n } from "vscode";
-import { Code4i } from "./platform/ibmi/code4i";
-import { TransformerRPGLicense } from "./components/TFRRPGLIC";
-import { ConfigManager } from "./config/configuration";
-import { getARCADInstance, tfrrpgOutput } from "./extension";
+import { Code4i } from "../platform/ibmi/code4i";
+import { TransformerRPGLicense } from "./license";
+import { ConfigManager } from "../config/configuration";
+import { getARCADInstance, tfrrpgOutput } from "../extension";
 
 const VERSION = /(\d{1,9})\.(\d{1,9})\.(\d{1,9})/;
 

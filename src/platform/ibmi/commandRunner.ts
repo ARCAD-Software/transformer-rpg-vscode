@@ -1,7 +1,7 @@
 import type { CommandResult } from "@halcyontech/vscode-ibmi-types";
 import { l10n, window } from "vscode";
 import { tfrrpgOutput } from "../../extension";
-import { product } from "../../product";
+import { product } from "../../product/product";
 import { convertBool } from "../../utils/helper";
 import { Code4i } from "./code4i";
 import { CommandParams } from "../../models/command";

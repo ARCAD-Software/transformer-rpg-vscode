@@ -6,7 +6,7 @@ import { getStatusColor } from "../../utils/messages";
 import { CommandParams } from "../../models/command";
 import { SourceMember } from "../../models/conversionTarget";
 import { ExecutionReport } from "../../services/memberConversionService";
-import { REPORT_TABLE_CSS, REPORT_UI_GLOBAL_CSS } from "./cutomcss";
+import { REPORT_TABLE_CSS, REPORT_UI_GLOBAL_CSS } from "./customCss";
 
 export function createTabs(member: SourceMember, config: CommandParams): ComplexTab[] {
     return [
