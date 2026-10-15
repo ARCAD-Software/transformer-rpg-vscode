@@ -1,6 +1,6 @@
-import { ComponentIdentification, ComponentState, IBMiComponent } from "@halcyontech/vscode-ibmi-types/api/components/component";
+import { ComponentIdentification, IBMiComponent, SecureComponentState } from "@halcyontech/vscode-ibmi-types/api/components/component";
 import IBMi from "@halcyontech/vscode-ibmi-types/api/IBMi";
-import { posix } from "path";
+import { posix } from "node:path";
 import vscode, { l10n } from "vscode";
 import { Code4i } from "../platform/ibmi/code4i";
 import { getARCADInstance, tfrrpgOutput } from "../extension";
@@ -32,7 +32,7 @@ export type LicenseInformation = {
 };
 
 export class TransformerRPGLicense implements IBMiComponent {
-  static ID = "TransformerRPGLicense";
+  static readonly ID = "TransformerRPGLicense";
   private readonly functionName = 'TFRRPGLIC';
   private readonly currentVersion = 2;
 
@@ -45,10 +45,14 @@ export class TransformerRPGLicense implements IBMiComponent {
   }
 
   getIdentification(): ComponentIdentification {
-    return { name: TransformerRPGLicense.ID, version: this.installedVersion };
+    return { name: TransformerRPGLicense.ID, version: this.installedVersion, signature: this.signatureOf(this.currentVersion) };
   }
 
-  async getRemoteState(connection: IBMi) {
+  private signatureOf(version: number) {
+    return `v${version}`;
+  }
+
+  async getRemoteState(connection: IBMi): Promise<SecureComponentState> {
     this.library = connection.getConfig().tempLibrary.toUpperCase() || "ILEDITOR";
     const [result] = await connection.runSQL(`select cast(LONG_COMMENT as VarChar(200)) LONG_COMMENT from qsys2.sysroutines where routine_schema = '${this.library}' and routine_name = '${this.functionName}'`);
     if (result?.LONG_COMMENT) {
@@ -59,13 +63,13 @@ export class TransformerRPGLicense implements IBMiComponent {
       }
     }
     if (this.installedVersion < this.currentVersion) {
-      return `NeedsUpdate`;
+      return { status: "NeedsUpdate", remoteSignature: this.installedVersion ? this.signatureOf(this.installedVersion) : undefined };
     }
 
-    return `Installed`;
+    return { status: "Installed", remoteSignature: this.signatureOf(this.installedVersion) };
   }
 
-  update(connection: IBMi): ComponentState | Promise<ComponentState> {
+  update(connection: IBMi): Promise<SecureComponentState> {
     return connection.withTempDirectory(async tempDir => {
       const tempSourcePath = posix.join(tempDir, `TFRRPGLIC.sql`);
       await connection.getContent().writeStreamfileRaw(tempSourcePath, this.getSource(), "utf-8");
@@ -75,9 +79,9 @@ export class TransformerRPGLicense implements IBMiComponent {
       });
 
       if (result.code) {
-        return `Error`;
+        return { status: "Error" };
       } else {
-        return `Installed`;
+        return { status: "Installed", remoteSignature: this.signatureOf(this.currentVersion) };
       }
     });
   }
