@@ -2,8 +2,8 @@ import { l10n } from "vscode";
 import { ConfigManager } from "../../config/configuration";
 import { createTabs, setupTabWindow } from "../../ui/webviews/panel";
 import type { BrowserItem } from "@halcyontech/vscode-ibmi-types";
-import { CommandParams } from "../../models/command";
-import { SourceMember } from "../../models/conversionTarget";
+import { CommandParams } from "../../models/commandParams";
+import { SourceMember } from "../../models/sourceMember";
 
 
 export interface ConversionConfiguration {

@@ -3,7 +3,7 @@ import vscode, { l10n } from "vscode";
 import { Code4i } from "../platform/ibmi/code4i";
 import { TransformerRPGLicense } from "./license";
 import { ConfigManager } from "../config/configuration";
-import { getARCADInstance, tfrrpgOutput } from "../extension";
+import { tfrrpgOutput } from "../utils/output";
 
 const VERSION = /(\d{1,9})\.(\d{1,9})\.(\d{1,9})/;
 
@@ -39,7 +39,7 @@ class TransformerRPGProduct {
   }
 
   private async loadARCAD() {
-    const instance = getARCADInstance();
+    const instance = ConfigManager.getARCADInstance();
     const arcadProductLibrary = `ARC${instance}_PRD`;
     if (!await Code4i.getContent().checkObject({ library: "QSYS", name: arcadProductLibrary, type: "*LIB" })) {
       return;

@@ -1,4 +1,4 @@
-import { Code4i } from "./ibmi/code4i";
+import { Code4i } from "./code4i";
 
 function getLibraryList(mainLibrary: string) {
   return [mainLibrary, ...(Code4i.getConnection().config?.libraryList || []).filter(library => library !== mainLibrary)];

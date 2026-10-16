@@ -8,7 +8,7 @@ import { handleEditListProperties } from './handlers/editListProperties';
 import { ConversionListProvider } from '../ui/tree/conversion/provider';
 import { ConversionListNode } from '../ui/tree/conversion/listNode';
 import { ConversionItemNode } from '../ui/tree/conversion/itemNode';
-import { ProductStatusDataProvider } from '../ui/tree/productstatus/productStatusProvider';
+import { ProductStatusDataProvider } from '../ui/tree/productStatus/provider';
 import { addMembersToConversionList } from './handlers/addMemberToList';
 
 export function registerCommands(

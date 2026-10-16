@@ -3,7 +3,8 @@ import IBMi from "@halcyontech/vscode-ibmi-types/api/IBMi";
 import { posix } from "node:path";
 import vscode, { l10n } from "vscode";
 import { Code4i } from "../platform/ibmi/code4i";
-import { getARCADInstance, tfrrpgOutput } from "../extension";
+import { ConfigManager } from "../config/configuration";
+import { tfrrpgOutput } from "../utils/output";
 
 type Units = {
   total: number
@@ -183,7 +184,7 @@ export class TransformerRPGLicense implements IBMiComponent {
   }
 
   async call(standalone: boolean, action: "CHK" | "ACT" | "USE", key: string = ""): Promise<LicenseInformation | undefined> {
-    const instance = standalone ? "" : getARCADInstance();
+    const instance = standalone ? "" : ConfigManager.getARCADInstance();
     try {
       const [result] = await Code4i.getConnection().runSQL(`select * from table(${this.library}.${this.functionName}('${instance}', '*${action}', '${key}'))`);
       if (result) {

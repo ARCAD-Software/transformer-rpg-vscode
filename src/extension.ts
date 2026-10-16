@@ -1,32 +1,20 @@
-import { ExtensionContext, OutputChannel, commands, l10n, window, workspace } from "vscode";
+import { ExtensionContext, window } from "vscode";
 import { Code4i } from "./platform/ibmi/code4i";
 import { initializeProduct } from "./product/product";
-import { COMMANDS, MESSAGES } from "./utils/constants";
+import { MESSAGES } from "./utils/constants";
+import { initializeOutput } from "./utils/output";
 import { ConfigManager } from "./config/configuration";
 import { ConversionListProvider } from "./ui/tree/conversion/provider";
-import { ExplorerNode } from "./ui/tree/common/explorerNode";
-import { ProductStatusDataProvider } from "./ui/tree/productstatus/productStatusProvider";
+import { ProductStatusDataProvider } from "./ui/tree/productStatus/provider";
 import { registerCommands } from "./commands/registerCommands";
 
-
-let output: OutputChannel;
-export function tfrrpgOutput() {
-  if (output) {
-    return output;
-  }
-  else {
-    throw new Error(l10n.t("ARCAD-Transformer RPG is not active"));
-  }
-}
 
 export function activate(context: ExtensionContext): void {
   Code4i.initialize(context);
   initializeExtension(context);
   console.log(MESSAGES.ACTIVATED);
 
-  output = window.createOutputChannel("ARCAD-Transformer RPG", { log: true });
-  output.clear();
-  context.subscriptions.push(output);
+  initializeOutput(context);
 }
 
 export function deactivate(): void {
@@ -56,13 +44,4 @@ function initializeTreeViews(context: ExtensionContext) {
 
   context.subscriptions.push(conversionListView, productView);
   return { conversionProvider, productProvider, productView };
-}
-
-export function refreshListExplorer(node?: ExplorerNode): void {
-  commands.executeCommand(COMMANDS.REFRESH_LIST, node);
-}
-
-
-export function getARCADInstance() {
-  return workspace.getConfiguration('arcad').get<string>('connection.instance', 'AD');
 }

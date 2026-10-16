@@ -6,14 +6,14 @@ import {
     commands
 } from "vscode";
 import { ConfigManager } from "../../../config/configuration";
-import { refreshListExplorer } from "../../../extension";
-import { setConverionStatus } from "../../../utils/messages";
+import { refreshListExplorer } from "./refresh";
+import { setConverionStatus } from "../../../models/conversionStatus";
 import { ConversionItemNode } from "./itemNode";
 import { BaseConversionNode } from "./baseNode";
-import { SourceMemberList } from "../../../models/conversionListBrowser";
+import { SourceMemberList } from "../../../models/conversionList";
 import { ExplorerNode } from "../common/explorerNode";
-import { SourceMember } from "../../../models/conversionTarget";
-import { ExecutionReport } from "../../../services/memberConversionService";
+import { SourceMember } from "../../../models/sourceMember";
+import { ExecutionReport } from "../../../models/executionReport";
 
 export class ConversionListNode extends BaseConversionNode {
     public conversionList: SourceMemberList;

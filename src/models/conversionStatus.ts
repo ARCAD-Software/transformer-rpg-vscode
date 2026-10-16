@@ -1,4 +1,4 @@
-import type { IBMiMessages } from "@halcyontech/vscode-ibmi-types";
+import type { IBMiMessage, IBMiMessages } from "@halcyontech/vscode-ibmi-types";
 
 export enum ConversionStatus {
     NA = -1,
@@ -74,4 +74,6 @@ export function getStatusColor(ok: boolean, messages: IBMiMessages) {
     }
 }
 
-
+export function filterConversionMessage(message: IBMiMessage) {
+    return !["MSG3565", "CPC0904", "CPD4090"].includes(message.id);
+}

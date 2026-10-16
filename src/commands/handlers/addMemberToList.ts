@@ -1,10 +1,11 @@
 import type { MemberItem, ObjectItem, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { window, l10n, commands, QuickPickItem, ThemeIcon, QuickInputButton } from "vscode";
 import { ConfigManager } from "../../config/configuration";
-import { refreshListExplorer, tfrrpgOutput } from "../../extension";
-import { ConversionStatus } from "../../utils/messages";
-import { SourceMemberList, SourceMemberItem } from "../../models/conversionListBrowser";
-import { getSourceMembersList } from "../../utils/helper";
+import { tfrrpgOutput } from "../../utils/output";
+import { refreshListExplorer } from "../../ui/tree/conversion/refresh";
+import { ConversionStatus } from "../../models/conversionStatus";
+import { SourceMemberList, SourceMemberItem } from "../../models/conversionList";
+import { getSourceMembersList } from "../../services/objectDiscoveryService";
 
 export async function addMembersToConversionList(node: MemberItem | ObjectItem, nodes: MemberItem[] | ObjectItem[]): Promise<void> {
     try {

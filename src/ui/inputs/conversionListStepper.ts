@@ -1,7 +1,7 @@
 import { l10n } from "vscode";
 import { ConfigManager } from "../../config/configuration";
-import { SourceMemberList } from "../../models/conversionListBrowser";
-import { MultiStepInput, InputStep } from "../../utils/stepper";
+import { SourceMemberList } from "../../models/conversionList";
+import { MultiStepInput, InputStep } from "./multiStepInput";
 import { Connections } from "../../models/connection";
 
 type NewConversionListState = Omit<SourceMemberList, 'items'> & {

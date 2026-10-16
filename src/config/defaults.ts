@@ -1,4 +1,4 @@
-import { CommandParams } from "../models/command";
+import { CommandParams } from "../models/commandParams";
 
 export const defaultConfig: CommandParams = {
     SRCLIB: "",

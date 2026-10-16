@@ -1,5 +1,5 @@
-import { ConversionStatus } from "../utils/messages";
-import { SourceMember } from "./conversionTarget";
+import { ConversionStatus } from "./conversionStatus";
+import { SourceMember } from "./sourceMember";
 
 
 export type SourceMemberItem = SourceMember & {

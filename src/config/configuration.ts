@@ -1,8 +1,8 @@
 import { ConfigurationTarget, ExtensionContext, l10n, workspace } from 'vscode';
-import { tfrrpgOutput } from '../extension';
+import { tfrrpgOutput } from '../utils/output';
 import { defaultConfig } from './defaults';
-import { SourceMemberList, SourceMemberItem } from '../models/conversionListBrowser';
-import { CommandParams } from '../models/command';
+import { SourceMemberList, SourceMemberItem } from '../models/conversionList';
+import { CommandParams } from '../models/commandParams';
 import { Connections } from '../models/connection';
 
 export namespace ConfigManager {
@@ -114,6 +114,10 @@ export namespace ConfigManager {
 
     export function checkPrereleaseUpdates() {
         return getConfiguration().get<boolean>("checkPrereleaseUpdates", false);
+    }
+
+    export function getARCADInstance() {
+        return workspace.getConfiguration('arcad').get<string>('connection.instance', 'AD');
     }
 
     export async function initializeConfiguration(context: ExtensionContext): Promise<void> {

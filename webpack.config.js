@@ -26,7 +26,11 @@ const extensionConfig = {
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    // 'debug' optionally requires 'supports-color' inside a try/catch; stub it out to silence the warning
+    fallback: {
+      'supports-color': false
+    }
   },
   module: {
     rules: [

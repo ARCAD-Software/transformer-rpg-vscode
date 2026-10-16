@@ -155,3 +155,106 @@ tr:nth-child(odd) {
     }
 }
 `;
+
+export const CONFIG_PANEL_CSS = /* css */ `
+body {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 12px 24px 24px;
+}
+
+h2 {
+    margin-bottom: 4px;
+}
+
+h3 {
+    margin: 20px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    color: var(--vscode-foreground);
+}
+
+h4 {
+    margin: 14px 0 4px;
+    color: var(--vscode-descriptionForeground);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.85em;
+}
+
+code {
+    padding: 0 4px;
+    border-radius: 3px;
+    background: var(--vscode-textCodeBlock-background);
+    font-family: var(--vscode-editor-font-family);
+}
+
+.hint {
+    margin: 2px 0 8px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.fixed-value {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-left: 3px solid var(--vscode-textLink-foreground);
+    border-radius: 3px;
+    background: var(--vscode-textBlockQuote-background);
+}
+
+.fixed-value .badge {
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: var(--vscode-badge-background);
+    color: var(--vscode-badge-foreground);
+    font-size: 0.8em;
+}
+
+.hlp-sum {
+    display: block;
+    color: var(--vscode-descriptionForeground);
+}
+
+details.hlp {
+    margin: 4px 0 2px;
+}
+
+details.hlp > summary {
+    cursor: pointer;
+    color: var(--vscode-textLink-foreground);
+    font-size: 0.9em;
+    user-select: none;
+}
+
+details.hlp[open] {
+    padding: 6px 10px;
+    border-radius: 4px;
+    background: var(--vscode-textBlockQuote-background);
+}
+
+details.hlp p {
+    margin: 6px 0 0;
+}
+
+details.hlp ul {
+    margin: 4px 0 0;
+    padding-left: 20px;
+}
+
+details.hlp pre {
+    margin: 6px 0;
+    padding: 8px 10px;
+    overflow-x: auto;
+    border-radius: 4px;
+    background: var(--vscode-textCodeBlock-background);
+    font-family: var(--vscode-editor-font-family);
+    font-size: 0.9em;
+}
+
+details.hlp .hlp-value {
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+`;

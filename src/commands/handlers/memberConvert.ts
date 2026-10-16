@@ -1,14 +1,15 @@
 import { l10n, Uri, window } from "vscode";
 import { Code4i } from "../../platform/ibmi/code4i";
 import { MESSAGES } from "../../utils/constants";
-import { getSourceMembersList, validateSourceType } from "../../utils/helper";
-import { getObjectType } from "../../platform/api";
-import { SourceMember } from "../../models/conversionTarget";
+import { getSourceMembersList, validateSourceType } from "../../services/objectDiscoveryService";
+import { getObjectType } from "../../platform/ibmi/objectApi";
+import { SourceMember } from "../../models/sourceMember";
+import { CommandParams } from "../../models/commandParams";
 import { openConfigWindow } from "./openConfigWindow";
 import { ConfigManager } from "../../config/configuration";
 import type { BrowserItem, ObjectItem, MemberItem, IBMiMember } from "@halcyontech/vscode-ibmi-types";
 import { MemberConversionService } from "../../services/memberConversionService";
-import { MSGID_SUCCEED1, MSGID_SUCCEED2, MSGID_SUCCEED3, MSGID_SUCCEED4 } from "../../utils/messages";
+import { MSGID_SUCCEED1, MSGID_SUCCEED2, MSGID_SUCCEED3, MSGID_SUCCEED4 } from "../../models/conversionStatus";
 
 type ConversionActionTarget = (BrowserItem & (ObjectItem | MemberItem));
 
@@ -29,6 +30,15 @@ export async function handleMemberConvert(item: ConversionActionTarget | Uri): P
     }
 }
 
+function openConvertedMember(params: CommandParams, source: SourceMember) {
+    const name = params.TOSRCMBR && params.TOSRCMBR !== "*FROMMBR" ? params.TOSRCMBR : source.name;
+    const fromFile = params.TOSRCFILE === "*FROMFILE";
+    const library = fromFile ? source.library : params.TOSRCLIB;
+    const file = fromFile ? source.file : params.TOSRCFILE;
+    const path = `${library}/${file}/${name}.${source.extension}`;
+    Code4i.open(path, { readonly: true });
+}
+
 async function convertMemberFromEditor() {
     const member = await getConversionTargetFromEditor();
     if (member) {
@@ -36,8 +46,7 @@ async function convertMemberFromEditor() {
         if (param) {
             const report = await MemberConversionService.convertSingle(param, member);
             if (report?.result && report.target) {
-                const path = `${param.TOSRCLIB}/${param.TOSRCFILE}/${report.target.name}.${report.target.extension}`;
-                Code4i.open(path, { readonly: true });
+                openConvertedMember(param, report.target);
             }
         }
     }
@@ -58,8 +67,7 @@ async function convertSingleMember(item: MemberItem & { parent: BrowserItem }) {
     if (report?.result && report.target) {
         const msg = report.result.stdout || report.result.stderr || "";
         if (msg.includes(MSGID_SUCCEED1) || msg.includes(MSGID_SUCCEED2) || msg.includes(MSGID_SUCCEED3) || msg.includes(MSGID_SUCCEED4)) {
-            const path = `${report.target.library}/${report.target.file}/${report.target.name}.${report.target.extension}`;
-            Code4i.open(path, { readonly: true });
+            openConvertedMember(commandParams, report.target);
         }
     }
 }

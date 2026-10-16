@@ -1,13 +1,14 @@
 import { window, l10n, MarkdownString } from "vscode";
 import { ConfigManager } from "../../../config/configuration";
-import { refreshListExplorer } from "../../../extension";
-import { SourceMemberItem, SourceMemberList } from "../../../models/conversionListBrowser";
+import { refreshListExplorer } from "./refresh";
+import { SourceMemberItem, SourceMemberList } from "../../../models/conversionList";
 import { createTargetLibTabs, setupTabWindow } from "../../webviews/panel";
 import { ExplorerNode } from "../common/explorerNode";
-import { CommandParams } from "../../../models/command";
-import { SourceMember } from "../../../models/conversionTarget";
-import { ExecutionReport, MemberConversionService } from "../../../services/memberConversionService";
-import { setConverionStatus } from "../../../utils/messages";
+import { CommandParams } from "../../../models/commandParams";
+import { SourceMember } from "../../../models/sourceMember";
+import { MemberConversionService } from "../../../services/memberConversionService";
+import { ExecutionReport } from "../../../models/executionReport";
+import { setConverionStatus } from "../../../models/conversionStatus";
 import { Code4i } from "../../../platform/ibmi/code4i";
 
 

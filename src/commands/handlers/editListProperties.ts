@@ -2,7 +2,7 @@ import { l10n, window } from "vscode";
 import { ConversionListNode } from "../../ui/tree/conversion/listNode";
 import { ConversionListItemStepper } from "../../ui/inputs/conversionListStepper";
 import { ConfigManager } from "../../config/configuration";
-import { refreshListExplorer } from "../../extension";
+import { refreshListExplorer } from "../../ui/tree/conversion/refresh";
 
 export async function handleEditListProperties(node: ConversionListNode): Promise<void> {
     if (!node.conversionList) {

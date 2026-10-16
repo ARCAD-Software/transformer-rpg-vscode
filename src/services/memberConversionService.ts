@@ -1,18 +1,12 @@
 import { window, ProgressLocation, l10n, commands } from "vscode";
 import type { BrowserItem, CommandResult } from "@halcyontech/vscode-ibmi-types";
 import { generateCommand, executeConversionCommand } from "../platform/ibmi/commandRunner";
-import { findObjectType } from "../platform/api";
+import { findObjectType } from "../platform/ibmi/objectApi";
 import { showConversionReport } from "../ui/webviews/panel";
 import { Code4i } from "../platform/ibmi/code4i";
-import { CommandParams } from "../models/command";
-import { SourceMember } from "../models/conversionTarget";
-
-
-
-export interface ExecutionReport {
-    target: SourceMember
-    result: CommandResult
-}
+import { CommandParams } from "../models/commandParams";
+import { SourceMember } from "../models/sourceMember";
+import { ExecutionReport } from "../models/executionReport";
 
 export class MemberConversionService {
     static async convertSingle(

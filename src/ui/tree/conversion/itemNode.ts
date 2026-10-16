@@ -6,18 +6,18 @@ import {
     window
 } from "vscode";
 import { ConfigManager } from "../../../config/configuration";
-import { refreshListExplorer } from "../../../extension";
+import { refreshListExplorer } from "./refresh";
 import {
     getStatusColorFromCode,
     getConversionStatus,
     ConversionStatus
-} from "../../../utils/messages";
+} from "../../../models/conversionStatus";
 import { ConversionListNode } from "./listNode";
 import { BaseConversionNode } from "./baseNode";
-import { SourceMemberItem } from "../../../models/conversionListBrowser";
+import { SourceMemberItem } from "../../../models/conversionList";
 import { ExplorerNode } from "../common/explorerNode";
-import { ExecutionReport } from "../../../services/memberConversionService";
-import { SourceMember } from "../../../models/conversionTarget";
+import { ExecutionReport } from "../../../models/executionReport";
+import { SourceMember } from "../../../models/sourceMember";
 
 const statusSuffixes: Record<ConversionStatus, string> = {
     [ConversionStatus.NA]: "",
