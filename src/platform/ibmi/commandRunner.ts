@@ -34,7 +34,16 @@ export async function generateCommand(data: CommandParams, source: SourceMember)
 
 export async function executeConversionCommand(command: string): Promise<CommandResult | undefined> {
     try {
-        return await Code4i.getConnection().runCommand({ command, environment: "ile" });
+        const connection = Code4i.getConnection();
+        await product.load();
+        // ARCAD runtime: the product expects its instance libraries in *LIBL (standalone is left untouched).
+        const arcadLibraries = product.isStandalone() ? [] : [product.getARCADProductLibrary(), product.getARCADCommandLibrary()].filter(Boolean);
+        const libraries = [...new Set([...(connection.getConfig()?.libraryList || []), ...arcadLibraries])];
+        return await connection.runCommand({
+            command,
+            environment: "ile",
+            ...(arcadLibraries.length ? { env: { "&LIBL": libraries.join(" ") } } : {})
+        });
     } catch (error: any) {
         tfrrpgOutput().appendLine(l10n.t('Error executing conversion command: {0}', JSON.stringify(error)));
         window.showErrorMessage(l10n.t('Error executing conversion command'), l10n.t("Open output"));

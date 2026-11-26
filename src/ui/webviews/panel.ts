@@ -1,4 +1,5 @@
 import { l10n } from "vscode";
+import type { IBMiMessage } from "@halcyontech/vscode-ibmi-types";
 import { Code4i } from "../../platform/ibmi/code4i";
 import { convertBool } from "../../utils/helper";
 import { generateOptions, getAlphaToNumOptions, getBooleanOptions, getBooleanOptionsWithKeep, getCalculationSpecOptions, getCaseOptions, getConvertOptions, getEmptyCommentLinesOptions, getFirstColumnOptions, getIndentSizeOptions, getIndicatorOptions, getObjectTypes, getPrecompilationOptions, getSourceLineDate, getTruncationOptions, getWarningOptions } from "./commandOptions";
@@ -165,11 +166,28 @@ function commandReportUI(report: ExecutionReport[]) {
         .addHeading(l10n.t("Conversion Results"), 3)
         .addParagraph(createReportTable(report));
 }
+/**
+ * On success, shows every message of the job log (stderr).
+ * On failure, stdout only holds the message id(s) of the error: their descriptions are taken from stderr.
+ */
+function getReportMessages(result: ExecutionReport["result"], isSuccess: boolean, stderrMessages: IBMiMessage[]): IBMiMessage[] {
+    if (isSuccess) {
+        return stderrMessages;
+    }
+
+    const failedIds = [...(result.stdout || "").matchAll(/\[([A-Z0-9]{7})\]/g)].map(match => match[1]);
+    if (!failedIds.length) {
+        return stderrMessages;
+    }
+
+    return failedIds.map(id => stderrMessages.find(message => message.id === id) ?? { id, text: "" });
+}
+
 function createReportTable(results: ExecutionReport[]): string {
     const rows = results.map(result => {
         const isSuccess = result.result.code === 0;
-        const messages = Code4i.getTools().parseMessages(result.result.stdout || result.result.stderr);
-        const filteredMessages = messages.messages
+        const messages = Code4i.getTools().parseMessages(result.result.stderr || result.result.stdout);
+        const filteredMessages = getReportMessages(result.result, isSuccess, messages.messages)
             .filter(filterConversionMessage)
             .map(m => `<span class="message-item"><span class="message-id">[${m.id}]</span> ${m.text}</span>`)
             .join("");
